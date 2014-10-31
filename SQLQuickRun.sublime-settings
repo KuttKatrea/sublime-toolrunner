@@ -1,0 +1,16 @@
+// As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
+{
+    "executable": {
+        "mssql": "sqlcmd"
+    },
+    "connections": [
+        {
+            "name": "<Name>",
+            "type":"mssql",
+            "server": "<Hostname or IP>",
+            "user": "<Username>",
+            "password": "<Password>"
+        }
+    ],
+    "current_connection": "<Name>"
+}

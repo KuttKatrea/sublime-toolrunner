@@ -1,0 +1,26 @@
+[
+    {
+        "caption": "Preferences: SQLQuickRun Settings - Default",
+        "command": "sql_quick_run_open_settings", "args": { "scope": "default"}
+    },
+    {
+        "caption": "Preferences: SQLQuickRun Settings - User",
+        "command": "sql_quick_run_open_settings", "args": { "scope": "user"}
+    },
+    {
+        "caption": "Preferences: SQLQuickRun Settings - User (OS-Specific)",
+        "command": "sql_quick_run_open_settings", "args": { "scope": "os"}
+    },
+    {
+        "caption": "Preferences: SQLQuickRun Settings - User (Host-Specific)",
+        "command": "sql_quick_run_open_settings", "args": { "scope": "host"}
+    },
+    {
+        "caption": "SQLQuickRun: Switch connection",
+        "command": "sql_quick_run_switch_connection"
+    },
+    {
+        "caption": "SQLQuickRun: Run file/selection",
+        "command": "sql_quick_run"
+    }
+]
