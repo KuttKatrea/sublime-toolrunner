@@ -41,6 +41,8 @@ class SqlQuickRunHelper:
         
         host_settings.set(settingName, settingValue)
 
+        sublime.save_settings(cls.getHostSettingsFilePath())
+
     @classmethod
     def getConnectionList(cls):
         return cls.getSetting('connections')
