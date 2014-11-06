@@ -161,11 +161,6 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
 
         self.execute(active_view, textcommand)
 
-    def on_activated(self, view):
-        active_window = sublime.active_window()
-        panelname = 'sqlquickrun-%s' % ( view.buffer_id() )
-        active_window.run_command('show_panel', {'panel': 'output.' + panelname})
-
     def execute(self, view, textcommand):
         active_window = sublime.active_window()
         panelname = 'sqlquickrun-%s' % ( active_window.active_view().buffer_id() )
@@ -196,4 +191,9 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
         self.panelview.run_command('append', {'characters': outstring})
         self.panelview.set_read_only(True)
         sublime.status_message("Complete")
-        
+
+class SqlQuickRunListener(sublime_plugin.EventListener):
+    def on_activated(self, view):
+        active_window = sublime.active_window()
+        panelname = 'sqlquickrun-%s' % ( view.buffer_id() )
+        active_window.run_command('show_panel', {'panel': 'output.' + panelname})
