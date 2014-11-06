@@ -93,8 +93,6 @@ class SqlQuickRunCommand(object):
             if option_key in connection:
                 self.command_array += [ option_value, connection[option_key] ]
 
-        self.command_array += [ '-Q', sqltext ]
-
         self.sqltext = sqltext
         self.onDone = onDone
         self.panelview = panelview
@@ -105,12 +103,17 @@ class SqlQuickRunCommand(object):
         startupinfo = subprocess.STARTUPINFO() 
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        process = subprocess.Popen(self.command_array, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, startupinfo=startupinfo)
-        output, error = process.communicate()
+        process = subprocess.Popen(self.command_array, 
+            stdin=subprocess.PIPE, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, shell=False, startupinfo=startupinfo)
 
-        outstring = output.decode('utf-8', "replace").replace('\r','')
+        output, error = process.communicate(input=bytes(self.sqltext,'UTF-8'))
 
-        self.onDone(outstring)
+        outstring = output.decode('cp437', "replace").replace('\r','')
+        errorstring = error.decode('cp437', "replace").replace('\r','')
+
+        self.onDone(outstring + errorstring)
 
 class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
     def run(self, scope='default'):
