@@ -1,0 +1,28 @@
+[
+    {
+        "command": "sql_quick_run",
+        "context": [
+            {
+                "key": "selector",
+                "operand": "source.sql",
+                "operator": "equal"
+            }
+        ],
+        "keys": [
+            "f9"
+        ]
+    },
+    {
+        "command": "sql_quick_run",
+        "context": [
+            {
+                "key": "selector",
+                "operand": "source.tsql",
+                "operator": "equal"
+            }
+        ],
+        "keys": [
+            "f9"
+        ]
+    }
+]
