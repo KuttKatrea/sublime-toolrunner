@@ -1,10 +1,9 @@
 import sublime
 import sublime_plugin
 import subprocess
-import os
 import platform
-import threading
 import datetime
+
 
 class SqlQuickRunHelper:
     @classmethod
@@ -27,7 +26,7 @@ class SqlQuickRunHelper:
 
         user_settings = sublime.load_settings(
             cls.getSettingsFilePath())
-        
+
         return host_settings.get(
             settingName, user_settings.get(settingName, default))
 
@@ -36,9 +35,9 @@ class SqlQuickRunHelper:
         host_settings = sublime.load_settings(
             cls.getHostSettingsFilePath())
 
-        user_settings = sublime.load_settings(
-            cls.getSettingsFilePath())
-        
+        # user_settings = sublime.load_settings(
+        #     cls.getSettingsFilePath())
+
         host_settings.set(settingName, settingValue)
 
         sublime.save_settings(cls.getHostSettingsFilePath())
@@ -77,7 +76,7 @@ class SqlQuickRunCommand(object):
     def __init__(self, executable, connection, sqltext, view):
         self.view = view
 
-        self.command_array = [ executable ]
+        self.command_array = [executable, '-u']
 
         option_mapping = {
             'server': '-S',
@@ -88,7 +87,7 @@ class SqlQuickRunCommand(object):
 
         for option_key, option_value in option_mapping.items():
             if option_key in connection:
-                self.command_array += [ option_value, connection[option_key] ]
+                self.command_array += [option_value, connection[option_key]]
 
         self.sqltext = sqltext
 
@@ -98,26 +97,32 @@ class SqlQuickRunCommand(object):
         self.write("SQLQuickRun: Running query...", True)
         self.lock()
 
-        print("SQLQuickRun: Before Running %s" % ( datetime.datetime.now() ))
+        print("SQLQuickRun: Before Running %s" % (datetime.datetime.now()))
 
-        sublime.set_timeout_async(self.execute,0)
-
+        sublime.set_timeout_async(self.execute, 0)
 
     def execute(self):
-        startupinfo = subprocess.STARTUPINFO() 
+        startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        process = subprocess.Popen(self.command_array, 
-            stdin=subprocess.PIPE, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, shell=False, startupinfo=startupinfo)
+        process = subprocess.Popen(
+            self.command_array,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False,
+            startupinfo=startupinfo
+        )
 
-        output, error = process.communicate(input=bytes(self.sqltext,'UTF-8'))
+        output, error = process.communicate(input=bytes(self.sqltext, 'UTF-8'))
 
-        outstring = output.decode('cp437', "replace").replace('\r','')
-        errorstring = error.decode('cp437', "replace").replace('\r','')
+        outstring = output.decode('cp437', "replace").replace('\r', '')
+        errorstring = error.decode('cp437', "replace").replace('\r', '')
 
-        print("SQLQuickRun: Complete %s" % ( datetime.datetime.now() ))
+        # outstring = output.decode('UTF-8','replace').replace('\r','')
+        # errorstring = error.decode('UTF-8','replace').replace('\r','')
+
+        print("SQLQuickRun: Complete %s" % (datetime.datetime.now()))
 
         self.showWindow()
 
@@ -132,7 +137,7 @@ class SqlQuickRunCommand(object):
     def createWindow(self):
         self.window = self.view.window()
 
-        self.panelname = 'sqlquickrun-%s' % ( self.view.buffer_id() )
+        self.panelname = 'sqlquickrun-%s' % (self.view.buffer_id())
         self.panelview = self.window.create_output_panel(self.panelname)
         self.panelview.set_scratch(True)
         self.panelview.set_syntax_file('Find Results')
@@ -144,13 +149,18 @@ class SqlQuickRunCommand(object):
         self.clear()
 
     def showWindow(self):
-        self.window.run_command('show_panel', {'panel': 'output.' + self.panelname})
+        self.window.run_command(
+            'show_panel',
+            {'panel': 'output.' + self.panelname}
+        )
 
     def lock(self):
-        self.panelview.set_read_only(True)
+        # self.panelview.set_read_only(True)
+        pass
 
     def unlock(self):
-        self.panelview.set_read_only(False)     
+        # self.panelview.set_read_only(False)
+        pass
 
     def clear(self):
         self.panelview.run_command("move_to", {"extend": False, "to": "bof"})
@@ -162,6 +172,7 @@ class SqlQuickRunCommand(object):
 
         if on_status:
             sublime.status_message(text)
+
 
 class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
     def run(self, scope='default'):
@@ -180,17 +191,21 @@ class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
         else:  # default
             return (__package__, SqlQuickRunHelper.getSettingsFilePath())
 
+
 class SqlQuickRunSwitchConnection(sublime_plugin.WindowCommand):
     def run(self):
         connection_list = SqlQuickRunHelper.getConnectionList()
-        quick_panel_items = [ single_connection['name'] for single_connection in connection_list ]
+        quick_panel_items = [single_connection['name'] for single_connection in connection_list]  # noqa
 
         self.connection_list = connection_list
-        self.window.show_quick_panel(quick_panel_items, self.onDone, 0, 0, None)
+        self.window.show_quick_panel(
+            quick_panel_items, self.onDone, 0, 0, None)
 
     def onDone(self, selected_index):
         selected_connection_name = self.connection_list[selected_index]['name']
-        SqlQuickRunHelper.setSetting('current_connection', selected_connection_name)
+        SqlQuickRunHelper.setSetting(
+            'current_connection', selected_connection_name)
+
 
 class SqlQuickRun(sublime_plugin.WindowCommand):
     def run(self):
@@ -206,17 +221,21 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
             fullregion = sublime.Region(0, active_view.size())
             textcommand = active_view.substr(fullregion)
 
-        command = SqlQuickRunHelper.getConnectionCommand(textcommand, active_view)
+        command = SqlQuickRunHelper.getConnectionCommand(
+            textcommand, active_view)
 
         if command is None:
-            sublime.status_message("SQLQuickRun: Invalid connection selected", True)
+            sublime.status_message(
+                "SQLQuickRun: Invalid connection selected", True)
             return
 
         command.run()
+
 
 class SqlQuickRunListener(sublime_plugin.EventListener):
     def on_activated(self, view):
         results_panel = view.settings().get("sqlquickrun_panel_name")
 
         if results_panel is not None:
-            view.window().run_command('show_panel', {'panel': 'output.' + results_panel})
+            view.window().run_command(
+                'show_panel', {'panel': 'output.' + results_panel})
