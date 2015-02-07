@@ -4,7 +4,6 @@ import subprocess
 import platform
 import datetime
 
-
 class SqlQuickRunHelper:
     @classmethod
     def getPlatformSettingsFilePath(cls):
@@ -83,25 +82,23 @@ class SqlQuickRunCommand(object):
             'user': '-U',
             'password': '-P',
             'codepage': '-f',
+            'database': '-d',
         }
 
         for option_key, option_value in option_mapping.items():
             if option_key in connection:
                 self.command_array += [option_value, connection[option_key]]
 
+        self.serverdesc = connection.get('server')
         self.sqltext = sqltext
 
     def run(self):
-        self.createWindow()
-        self.showWindow()
-        self.write("SQLQuickRun: Running query...", True)
-        self.lock()
-
-        print("SQLQuickRun: Before Running %s" % (datetime.datetime.now()))
-
         sublime.set_timeout_async(self.execute, 0)
 
     def execute(self):
+        self.view.set_status("sqlquickrun", "SQLQuickRun: Running query on [%s]" % self.serverdesc)
+        starttime = datetime.datetime.now()
+
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
@@ -116,63 +113,49 @@ class SqlQuickRunCommand(object):
 
         output, error = process.communicate(input=bytes(self.sqltext, 'UTF-8'))
 
-        outstring = output.decode('cp437', "replace").replace('\r', '')
-        errorstring = error.decode('cp437', "replace").replace('\r', '')
+        outstring = output.decode('cp437', "replace").replace('\r\n', '\n')
+        errorstring = error.decode('cp437', "replace").replace('\r\n', '\n')
 
         # outstring = output.decode('UTF-8','replace').replace('\r','')
         # errorstring = error.decode('UTF-8','replace').replace('\r','')
 
-        print("SQLQuickRun: Complete %s" % (datetime.datetime.now()))
+        endtime = datetime.datetime.now()
+        timedelta = endtime - starttime
 
-        self.showWindow()
+        self.createWindow()
+        self.panelview.run_command("move_to", {"to": "eof"})
 
-        self.unlock()
-        self.clear()
-        self.write(errorstring)
+        current_cursor_position = self.panelview.sel()[0]
+
         self.write(outstring)
-        self.lock()
+        self.write(errorstring)
+        self.write('\n')
 
-        sublime.status_message("SQLQuickRun: Complete")
+        self.panelview.sel().clear()
+        self.panelview.sel().add(current_cursor_position)
+        self.panelview.show(current_cursor_position)
+        self.panelview.set_status("sqlquickrun", "SQLQuickRun [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+        self.view.set_status("sqlquickrun", "SQLQuickRun [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
 
     def createWindow(self):
         self.window = self.view.window()
 
-        self.panelname = 'sqlquickrun-%s' % (self.view.buffer_id())
-        self.panelview = self.window.create_output_panel(self.panelname)
+        self.panelview = view_manager.getViewForSource(self.view)
+        self.panelname = 'SQLQuickRun Results: %s' % (self.view.buffer_id())
+        self.panelview.set_name(self.panelname)
+
+        #self.panelview = self.window.create_output_panel(self.panelname)
         self.panelview.set_scratch(True)
-        self.panelview.set_syntax_file('Find Results')
+        self.panelview.set_syntax_file(
+            'Packages/sublime-sqlquickrun/MSSQL Query Results.tmLanguage')
         self.panelview.settings().set('line_numbers', False)
 
         self.view.settings().set('sqlquickrun_panel_name', self.panelname)
 
-        self.unlock()
-        self.clear()
+        self.window.focus_view(self.panelview)
 
-    def showWindow(self):
-        self.window.run_command(
-            'show_panel',
-            {'panel': 'output.' + self.panelname}
-        )
-
-    def lock(self):
-        # self.panelview.set_read_only(True)
-        pass
-
-    def unlock(self):
-        # self.panelview.set_read_only(False)
-        pass
-
-    def clear(self):
-        self.panelview.run_command("move_to", {"extend": False, "to": "bof"})
-        self.panelview.run_command("move_to", {"extend": True, "to": "eof"})
-        self.panelview.run_command("right_delete")
-
-    def write(self, text, on_status=False):
+    def write(self, text):
         self.panelview.run_command("append", {"characters": text})
-
-        if on_status:
-            sublime.status_message(text)
-
 
 class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
     def run(self, scope='default'):
@@ -233,9 +216,29 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
 
 
 class SqlQuickRunListener(sublime_plugin.EventListener):
-    def on_activated(self, view):
-        results_panel = view.settings().get("sqlquickrun_panel_name")
+    def on_close(self, view):
+        view_manager.remove(view)
 
-        if results_panel is not None:
-            view.window().run_command(
-                'show_panel', {'panel': 'output.' + results_panel})
+class SqlQuickRunViewManager(object):
+    def __init__(self):
+        self.views_by_source_id = dict()
+        self.sources_by_target_id = dict()
+
+    def getViewForSource(self, view):
+        source_id = str(view.id())
+
+        if source_id not in self.views_by_source_id:
+            new_view = view.window().new_file()
+
+            self.views_by_source_id[source_id] = new_view
+            self.sources_by_target_id[str(new_view.id())] = source_id
+
+        return self.views_by_source_id[source_id]
+
+    def remove(self, view):
+        target_id = str(view.id())
+        source_id = self.sources_by_target_id.pop(target_id, None)
+        if source_id is not None:
+            self.views_by_source_id.pop(str(source_id), None)
+
+view_manager = SqlQuickRunViewManager()
