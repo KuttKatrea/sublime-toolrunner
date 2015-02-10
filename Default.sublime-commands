@@ -22,5 +22,9 @@
     {
         "caption": "SQLQuickRun: Run file/selection",
         "command": "sql_quick_run"
+    },
+    {
+        "caption": "SQLQuickRun: Cancel running query",
+        "command": "sql_quick_run_cancel_running_query"
     }
 ]

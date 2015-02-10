@@ -70,9 +70,10 @@ class SqlQuickRunHelper:
             view
         )
 
-
 class SqlQuickRunCommand(object):
     def __init__(self, executable, connection, sqltext, view):
+        self.cancelled = False
+
         self.view = view
 
         self.command_array = [ executable['cmd'] ]
@@ -99,6 +100,10 @@ class SqlQuickRunCommand(object):
     def run(self):
         sublime.set_timeout_async(self.execute, 0)
 
+    def cancel(self):
+        self.process.terminate()
+        self.cancelled = True
+
     def execute(self):
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -112,20 +117,19 @@ class SqlQuickRunCommand(object):
             startupinfo=startupinfo
         )
 
-        #output, error = process.communicate(input=bytes(self.sqltext, self.input_codec))
-
-        #outstring = output.decode(self.output_codec, "replace").replace('\r\n', '\n')
-        #errorstring = error.decode(self.output_codec, "replace").replace('\r\n', '\n')
+        self.process = process
 
         self.createWindow()
+
+        view_manager.setCommandForView(self.panelview, self)
+
         self.panelview.run_command("move_to", {"to": "eof"})
+
         current_cursor_position = self.panelview.sel()[0]
 
         self.panelview.sel().clear()
         self.panelview.sel().add(current_cursor_position)
 
-        #print(process.stdout.read())
-        #
         process.stdin.write(bytes(self.sqltext, self.input_codec))
         process.stdin.close()
 
@@ -135,34 +139,29 @@ class SqlQuickRunCommand(object):
 
         while True:
             outstring = process.stdout.readline().decode(self.output_codec, "replace").replace('\r\n', '\n')
-            #errorstring = process.stderr.readline().decode(self.output_codec, "replace").replace('\r\n', '\n')
-
-            if (outstring == ""): break
-            
+            if outstring == "": break
             self.write(outstring)
-            #self.write(errorstring)
-
-
-        #out = None
-        #k = 0
-        #while (k < 120):
-        #    print(process.stdout.read())
-        #    out = process.poll()
-        #    if out != None: break
-        #    k+=1
-
 
         endtime = datetime.datetime.now()
         timedelta = endtime - starttime
-       
+
+        if self.cancelled:
+            self.write("\nQuery execution cancelled")
+
         self.write('\n')
 
         self.panelview.sel().clear()
         self.panelview.sel().add(current_cursor_position)
-        self.panelview.show_on_center(current_cursor_position)
+        self.panelview.show_at_center(current_cursor_position)
 
-        self.panelview.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
-        self.view.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+        if self.cancelled:
+            self.panelview.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.view.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+        else:
+            self.panelview.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.view.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+
+        view_manager.setCommandForView(self.panelview, None)
 
     def createWindow(self):
         self.window = self.view.window()
@@ -221,6 +220,9 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
     def run(self):
         textcommand = ''
         active_view = sublime.active_window().active_view()
+
+        cancel_command_for_view(active_view)
+
         current_selection = active_view.sel()
 
         if len(current_selection) > 0:
@@ -250,6 +252,7 @@ class SqlQuickRunViewManager(object):
     def __init__(self):
         self.views_by_source_id = dict()
         self.sources_by_target_id = dict()
+        self.commands_for_view = dict()
 
     def getViewForSource(self, view):
         source_id = str(view.id())
@@ -262,10 +265,41 @@ class SqlQuickRunViewManager(object):
 
         return self.views_by_source_id[source_id]
 
+    def getCommandForView(self, view):
+        view_id = str(view.id())
+
+        if view_id not in self.commands_for_view:
+            if view_id in self.views_by_source_id:
+                view_id = str(self.views_by_source_id[view_id].id())
+            else:
+                return None
+
+        if view_id in self.commands_for_view:
+            return self.commands_for_view[view_id]
+
+        return None
+
+    def setCommandForView(self, target_view, command):
+        view_id = str(target_view.id())
+        if command is None:
+            self.commands_for_view.pop(view_id,None)
+        else:
+            self.commands_for_view[view_id] = command
+
     def remove(self, view):
         target_id = str(view.id())
         source_id = self.sources_by_target_id.pop(target_id, None)
         if source_id is not None:
             self.views_by_source_id.pop(str(source_id), None)
 
+class SqlQuickRunCancelRunningQuery(sublime_plugin.WindowCommand):
+    def run(self):
+        active_view = sublime.active_window().active_view()
+        cancel_command_for_view(active_view)
+
 view_manager = SqlQuickRunViewManager()
+
+def cancel_command_for_view(view):
+    command = view_manager.getCommandForView(view)
+    if command is not None:
+        command.cancel()
