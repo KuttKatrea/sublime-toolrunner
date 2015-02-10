@@ -79,8 +79,8 @@ class SqlQuickRunCommand(object):
         self.command_array = [ executable['cmd'] ]
 
         if 'arguments' in executable:
-            for k,v in executable['arguments']:
-                self.command_array.push(v)
+            for v in executable['arguments']:
+                self.command_array.append(v)
 
         option_mapping = executable['options']
         flag_mapping = executable['flags']
