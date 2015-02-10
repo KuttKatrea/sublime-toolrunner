@@ -75,22 +75,26 @@ class SqlQuickRunCommand(object):
     def __init__(self, executable, connection, sqltext, view):
         self.view = view
 
-        self.command_array = [executable, '-u']
+        self.command_array = [ executable['cmd'] ]
 
-        option_mapping = {
-            'server': '-S',
-            'user': '-U',
-            'password': '-P',
-            'codepage': '-f',
-            'database': '-d',
-        }
+        if 'arguments' in executable:
+            for k,v in executable['arguments']:
+                self.command_array.push(v)
 
-        for option_key, option_value in option_mapping.items():
-            if option_key in connection:
-                self.command_array += [option_value, connection[option_key]]
+        option_mapping = executable['options']
+        flag_mapping = executable['flags']
 
-        self.serverdesc = connection.get('server')
+        for param_key, param_value in connection['params'].items():
+            if param_key in option_mapping:
+                self.command_array += [option_mapping[param_key], param_value]
+
+            if param_key in flag_mapping and param_value:
+                self.command_array += [flag_mapping[param_key]]
+
+        self.serverdesc = connection['desc'] if 'desc' in connection else connection['name']
         self.sqltext = sqltext
+        self.input_codec = executable['codecs']['input']
+        self.output_codec = executable['codecs']['output']
 
     def run(self):
         sublime.set_timeout_async(self.execute, 0)
@@ -111,13 +115,10 @@ class SqlQuickRunCommand(object):
             startupinfo=startupinfo
         )
 
-        output, error = process.communicate(input=bytes(self.sqltext, 'UTF-8'))
+        output, error = process.communicate(input=bytes(self.sqltext, self.input_codec))
 
-        outstring = output.decode('cp437', "replace").replace('\r\n', '\n')
-        errorstring = error.decode('cp437', "replace").replace('\r\n', '\n')
-
-        # outstring = output.decode('UTF-8','replace').replace('\r','')
-        # errorstring = error.decode('UTF-8','replace').replace('\r','')
+        outstring = output.decode(self.output_codec, "replace").replace('\r\n', '\n')
+        errorstring = error.decode(self.output_codec, "replace").replace('\r\n', '\n')
 
         endtime = datetime.datetime.now()
         timedelta = endtime - starttime

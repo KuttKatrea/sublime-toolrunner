@@ -1,16 +1,37 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
     "executable": {
-        "mssql": "sqlcmd"
+        "mssql": {
+            "cmd": "sqlcmd",
+            "arguments": [],
+            "options": {
+                "codepage": "-f",
+                "password": "-P",
+                "server": "-S",
+                "user": "-U",
+                "database": "-d",
+                "workstation": "-H"
+            },
+            "flags": { "trusted": "-E" },
+            "codecs": { "input": "utf-8", "output": "cp437" }
+        },
+        "mongodb": {
+            "cmd": "mongo",
+        }
     },
     "connections": [
+    /*
         {
             "name": "<Name>",
+            "desc": "",
             "type":"mssql",
-            "server": "<Hostname or IP>",
-            "user": "<Username>",
-            "password": "<Password>"
+            "params": {
+                "server": "<Hostname or IP>",
+                "user": "<Username>",
+                "password": "<Password>"
+            }
         }
+    */
     ],
     "current_connection": "<Name>"
 }
