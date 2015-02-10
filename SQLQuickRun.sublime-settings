@@ -15,6 +15,19 @@
             "flags": { "trusted": "-E" },
             "codecs": { "input": "utf-8", "output": "cp437" }
         },
+        "mysql": {
+            "cmd": "mysql",
+            "arguments": ["--batch", "--table"],
+            "options": {
+                "server": "-h",
+                "user": "-u",
+                "password": "-p",
+                "port": "-P",
+                "database": "-D"
+            },
+            "flags": {},
+            "codecs": { "input": "utf-8", "output": "cp437" }
+        },
         "mongodb": {
             "cmd": "mongo",
         }
