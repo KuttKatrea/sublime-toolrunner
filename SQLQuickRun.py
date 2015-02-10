@@ -97,8 +97,6 @@ class SqlQuickRunCommand(object):
             if param_key in connection['params']:
                 self.command_array.append(connection['params'][param_key])
 
-        print(self.command_array)
-
         self.serverdesc = connection['desc'] if 'desc' in connection else connection['name']
         self.sqltext = sqltext
         self.input_codec = executable['codecs']['input']
@@ -224,21 +222,41 @@ class SqlQuickRunSwitchConnection(sublime_plugin.WindowCommand):
 
 
 class SqlQuickRun(sublime_plugin.WindowCommand):
-    def run(self):
+    def run(self,source='auto-line'):
+        if source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file']):
+            return
+
         textcommand = ''
+
         active_view = sublime.active_window().active_view()
 
         cancel_command_for_view(active_view)
 
         current_selection = active_view.sel()
 
-        if len(current_selection) > 0:
-            for partial_selection in current_selection:
-                textcommand += active_view.substr(partial_selection)
+        if source in set(['selection', 'auto-file', 'auto-block', 'auto-line']):
+            if len(current_selection) > 0:
+                for partial_selection in current_selection:
+                    textcommand += active_view.substr(partial_selection)
+
+        if source != 'selection' and textcommand == '':
+            region = None
+            if source in set(['line', 'auto-line']):
+                region = active_view.line(current_selection[0])
+
+            if source in set(['block','auto-block']):
+                region = active_view.expand_by_class(
+                    current_selection[0],
+                    sublime.CLASS_EMPTY_LINE
+                )
+
+            if source in set(['file', 'auto-file']):
+                region = sublime.Region(0, active_view.size())
+        
+            textcommand = active_view.substr(region)
 
         if textcommand == '':
-            fullregion = sublime.Region(0, active_view.size())
-            textcommand = active_view.substr(fullregion)
+            return
 
         command = SqlQuickRunHelper.getConnectionCommand(
             textcommand, active_view)
@@ -249,7 +267,6 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
             return
 
         command.run()
-
 
 class SqlQuickRunListener(sublime_plugin.EventListener):
     def on_close(self, view):
