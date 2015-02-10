@@ -100,9 +100,6 @@ class SqlQuickRunCommand(object):
         sublime.set_timeout_async(self.execute, 0)
 
     def execute(self):
-        self.view.set_status("sqlquickrun", "SQLQuickRun: Running query on [%s]" % self.serverdesc)
-        starttime = datetime.datetime.now()
-
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
@@ -110,33 +107,62 @@ class SqlQuickRunCommand(object):
             self.command_array,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             shell=False,
             startupinfo=startupinfo
         )
 
-        output, error = process.communicate(input=bytes(self.sqltext, self.input_codec))
+        #output, error = process.communicate(input=bytes(self.sqltext, self.input_codec))
 
-        outstring = output.decode(self.output_codec, "replace").replace('\r\n', '\n')
-        errorstring = error.decode(self.output_codec, "replace").replace('\r\n', '\n')
-
-        endtime = datetime.datetime.now()
-        timedelta = endtime - starttime
+        #outstring = output.decode(self.output_codec, "replace").replace('\r\n', '\n')
+        #errorstring = error.decode(self.output_codec, "replace").replace('\r\n', '\n')
 
         self.createWindow()
         self.panelview.run_command("move_to", {"to": "eof"})
-
         current_cursor_position = self.panelview.sel()[0]
 
-        self.write(outstring)
-        self.write(errorstring)
+        self.panelview.sel().clear()
+        self.panelview.sel().add(current_cursor_position)
+
+        #print(process.stdout.read())
+        #
+        process.stdin.write(bytes(self.sqltext, self.input_codec))
+        process.stdin.close()
+
+        starttime = datetime.datetime.now()
+        self.view.set_status("sqlquickrun", "SQLQuickRun Source: Running query on [%s]" % self.serverdesc)
+        self.panelview.set_status("sqlquickrun", "SQLQuickRun Target: Running query on [%s]" % self.serverdesc)
+
+        while True:
+            outstring = process.stdout.readline().decode(self.output_codec, "replace").replace('\r\n', '\n')
+            #errorstring = process.stderr.readline().decode(self.output_codec, "replace").replace('\r\n', '\n')
+
+            if (outstring == ""): break
+            
+            self.write(outstring)
+            #self.write(errorstring)
+
+
+        #out = None
+        #k = 0
+        #while (k < 120):
+        #    print(process.stdout.read())
+        #    out = process.poll()
+        #    if out != None: break
+        #    k+=1
+
+
+        endtime = datetime.datetime.now()
+        timedelta = endtime - starttime
+       
         self.write('\n')
 
         self.panelview.sel().clear()
         self.panelview.sel().add(current_cursor_position)
-        self.panelview.show(current_cursor_position)
-        self.panelview.set_status("sqlquickrun", "SQLQuickRun [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
-        self.view.set_status("sqlquickrun", "SQLQuickRun [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+        self.panelview.show_on_center(current_cursor_position)
+
+        self.panelview.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+        self.view.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
 
     def createWindow(self):
         self.window = self.view.window()
