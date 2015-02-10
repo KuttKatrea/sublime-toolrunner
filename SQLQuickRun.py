@@ -78,19 +78,26 @@ class SqlQuickRunCommand(object):
 
         self.command_array = [ executable['cmd'] ]
 
-        if 'arguments' in executable:
-            for v in executable['arguments']:
+        if 'default_arguments' in executable:
+            for v in executable['default_arguments']:
                 self.command_array.append(v)
 
+        argument_mapping = set(executable['arguments'])
         option_mapping = executable['options']
         flag_mapping = executable['flags']
 
         for param_key, param_value in connection['params'].items():
             if param_key in option_mapping:
-                self.command_array += [option_mapping[param_key], param_value]
+                self.command_array += [ option_mapping[param_key], param_value ]
 
             if param_key in flag_mapping and param_value:
-                self.command_array += [flag_mapping[param_key]]
+                self.command_array.append(flag_mapping[param_key])
+
+        for param_key in argument_mapping:
+            if param_key in connection['params']:
+                self.command_array.append(connection['params'][param_key])
+
+        print(self.command_array)
 
         self.serverdesc = connection['desc'] if 'desc' in connection else connection['name']
         self.sqltext = sqltext
@@ -130,7 +137,7 @@ class SqlQuickRunCommand(object):
         self.panelview.sel().clear()
         self.panelview.sel().add(current_cursor_position)
 
-        process.stdin.write(bytes(self.sqltext, self.input_codec))
+        process.stdin.write(bytes(self.sqltext + "\n", self.input_codec))
         process.stdin.close()
 
         starttime = datetime.datetime.now()
