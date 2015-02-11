@@ -4,7 +4,7 @@ import subprocess
 import platform
 import datetime
 
-class SqlQuickRunHelper:
+class ToolRunnerHelper:
     @classmethod
     def getPlatformSettingsFilePath(cls):
         return cls.getSettingsFilePath(sublime.platform().capitalize())
@@ -16,7 +16,7 @@ class SqlQuickRunHelper:
     @classmethod
     def getSettingsFilePath(cls, special=None):
         special = " (" + special + ")" if special else ""
-        return "".join(("SQLQuickRun", special, ".sublime-settings"))
+        return "".join(("ToolRunner", special, ".sublime-settings"))
 
     @classmethod
     def getSetting(cls, settingName, default=None):
@@ -63,14 +63,14 @@ class SqlQuickRunHelper:
 
         executable = executable_list[current_connection['type']]
 
-        return SqlQuickRunCommand(
+        return ToolRunnerCommand(
             executable,
             current_connection,
             sqltext,
             view
         )
 
-class SqlQuickRunCommand(object):
+class ToolRunnerCommand(object):
     def __init__(self, executable, connection, sqltext, view):
         self.cancelled = False
 
@@ -139,8 +139,8 @@ class SqlQuickRunCommand(object):
         process.stdin.close()
 
         starttime = datetime.datetime.now()
-        self.view.set_status("sqlquickrun", "SQLQuickRun Source: Running query on [%s]" % self.serverdesc)
-        self.panelview.set_status("sqlquickrun", "SQLQuickRun Target: Running query on [%s]" % self.serverdesc)
+        self.view.set_status("toolrunner", "ToolRunner Source: Running query on [%s]" % self.serverdesc)
+        self.panelview.set_status("toolrunner", "ToolRunner Target: Running query on [%s]" % self.serverdesc)
 
         while True:
             outstring = process.stdout.readline().decode(self.output_codec, "replace").replace('\r\n', '\n')
@@ -160,11 +160,11 @@ class SqlQuickRunCommand(object):
         self.panelview.show_at_center(current_cursor_position)
 
         if self.cancelled:
-            self.panelview.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
-            self.view.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.panelview.set_status("toolrunner", "ToolRunner Target [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.view.set_status("toolrunner", "ToolRunner Source [%s]: Cancelled at %s seconds" % (self.serverdesc, timedelta.total_seconds()))
         else:
-            self.panelview.set_status("sqlquickrun", "SQLQuickRun Target [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
-            self.view.set_status("sqlquickrun", "SQLQuickRun Source [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.panelview.set_status("toolrunner", "ToolRunner Target [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
+            self.view.set_status("toolrunner", "ToolRunner Source [%s]: Complete on %s seconds" % (self.serverdesc, timedelta.total_seconds()))
 
         view_manager.setCommandForView(self.panelview, None)
 
@@ -172,23 +172,23 @@ class SqlQuickRunCommand(object):
         self.window = self.view.window()
 
         self.panelview = view_manager.getViewForSource(self.view)
-        self.panelname = 'SQLQuickRun Results: %s' % (self.view.buffer_id())
+        self.panelname = 'ToolRunner Results: %s' % (self.view.buffer_id())
         self.panelview.set_name(self.panelname)
 
         #self.panelview = self.window.create_output_panel(self.panelname)
         self.panelview.set_scratch(True)
         self.panelview.set_syntax_file(
-            'Packages/sublime-sqlquickrun/MSSQL Query Results.tmLanguage')
+            'Packages/sublime-toolrunner/languages/MSSQL Query Results.tmLanguage')
         self.panelview.settings().set('line_numbers', False)
 
-        self.view.settings().set('sqlquickrun_panel_name', self.panelname)
+        self.view.settings().set('toolrunner_panel_name', self.panelname)
 
         self.window.focus_view(self.panelview)
 
     def write(self, text):
         self.panelview.run_command("append", {"characters": text})
 
-class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
+class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
     def run(self, scope='default'):
         settingsFilePieces = self.getSettingPieces(scope)
         self.window.run_command("open_file", {
@@ -197,18 +197,18 @@ class SqlQuickRunOpenSettings(sublime_plugin.WindowCommand):
 
     def getSettingPieces(self, scope):
         if scope == 'host':
-            return ('User/', SqlQuickRunHelper.getHostSettingsFilePath())
+            return ('User/', ToolRunnerHelper.getHostSettingsFilePath())
         elif scope == 'user':
-            return ('User/', SqlQuickRunHelper.getSettingsFilePath())
+            return ('User/', ToolRunnerHelper.getSettingsFilePath())
         elif scope == 'os':
-            return ('User/', SqlQuickRunHelper.getPlatformSettingsFilePath())
+            return ('User/', ToolRunnerHelper.getPlatformSettingsFilePath())
         else:  # default
-            return (__package__, SqlQuickRunHelper.getSettingsFilePath())
+            return (__package__, ToolRunnerHelper.getSettingsFilePath())
 
 
-class SqlQuickRunSwitchConnection(sublime_plugin.WindowCommand):
+class ToolRunnerSwitchConnection(sublime_plugin.WindowCommand):
     def run(self):
-        connection_list = SqlQuickRunHelper.getConnectionList()
+        connection_list = ToolRunnerHelper.getConnectionList()
         quick_panel_items = [single_connection['name'] for single_connection in connection_list]  # noqa
 
         self.connection_list = connection_list
@@ -217,11 +217,11 @@ class SqlQuickRunSwitchConnection(sublime_plugin.WindowCommand):
 
     def onDone(self, selected_index):
         selected_connection_name = self.connection_list[selected_index]['name']
-        SqlQuickRunHelper.setSetting(
+        ToolRunnerHelper.setSetting(
             'current_connection', selected_connection_name)
 
 
-class SqlQuickRun(sublime_plugin.WindowCommand):
+class ToolRunner(sublime_plugin.WindowCommand):
     def run(self,source='auto-line'):
         if source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file']):
             return
@@ -258,21 +258,21 @@ class SqlQuickRun(sublime_plugin.WindowCommand):
         if textcommand == '':
             return
 
-        command = SqlQuickRunHelper.getConnectionCommand(
+        command = ToolRunnerHelper.getConnectionCommand(
             textcommand, active_view)
 
         if command is None:
             sublime.status_message(
-                "SQLQuickRun: Invalid connection selected", True)
+                "ToolRunner: Invalid connection selected", True)
             return
 
         command.run()
 
-class SqlQuickRunListener(sublime_plugin.EventListener):
+class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
         view_manager.remove(view)
 
-class SqlQuickRunViewManager(object):
+class ToolRunnerViewManager(object):
     def __init__(self):
         self.views_by_source_id = dict()
         self.sources_by_target_id = dict()
@@ -316,12 +316,12 @@ class SqlQuickRunViewManager(object):
         if source_id is not None:
             self.views_by_source_id.pop(str(source_id), None)
 
-class SqlQuickRunCancelRunningQuery(sublime_plugin.WindowCommand):
+class ToolRunnerCancelRunningQuery(sublime_plugin.WindowCommand):
     def run(self):
         active_view = sublime.active_window().active_view()
         cancel_command_for_view(active_view)
 
-view_manager = SqlQuickRunViewManager()
+view_manager = ToolRunnerViewManager()
 
 def cancel_command_for_view(view):
     command = view_manager.getCommandForView(view)

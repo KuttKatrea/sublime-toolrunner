@@ -3,6 +3,7 @@
     "executable": {
         "mssql": {
             "cmd": "sqlcmd",
+            "default_arguments": [],
             "arguments": [],
             "options": {
                 "codepage": "-f",
@@ -16,10 +17,11 @@
             "codecs": { "input": "utf-8", "output": "cp437" }
         },
         "mysql": {
-            "cmd": "mysql",
-            "arguments": ["--batch", "--table"],
+            "cmd": "T:\\Apps\\script\\mysql.exe",
+            "default_arguments": ["--batch", "--table"],
+            "arguments": [],
             "options": {
-                "server": "-h",
+                "host": "-h",
                 "user": "-u",
                 "password": "-p",
                 "port": "-P",
@@ -29,7 +31,35 @@
             "codecs": { "input": "utf-8", "output": "cp437" }
         },
         "mongodb": {
-            "cmd": "mongo",
+            "cmd": "T:\\Apps\\mongodb-win32-i386-2.6.7\\bin\\mongo.exe",
+            "default_arguments": [],
+            "arguments": ["address"],
+            "options": {
+                "host": "--host",
+                "port": "--port",
+                "username": "-u",
+                "password": "-p"
+            },
+            "flags": {
+                "quiet": "--quiet"
+            },
+            "codecs": { "input": "utf-8", "output": "cp437" }
+        },
+        "cmd": {
+            "cmd": "cmd",
+            "default_arguments": ["/C", "devcmd"],
+            "arguments": [],
+            "options": {},
+            "flags": {},
+            "codecs": { "input": "cp437", "output": "cp437" }
+        },
+        "shell": {
+            "cmd": "cmd",
+            "default_arguments": ["/C", "devshell", "sh"],
+            "arguments": [],
+            "options": {},
+            "flags": {},
+            "codecs": { "input": "utf-8", "output": "utf-8" }
         }
     },
     "connections": [

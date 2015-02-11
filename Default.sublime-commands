@@ -1,30 +1,18 @@
 [
     {
-        "caption": "Preferences: SQLQuickRun Settings - Default",
-        "command": "sql_quick_run_open_settings", "args": { "scope": "default"}
+        "caption": "ToolRunner: Run",
+        "command": "tool_runner"
     },
     {
-        "caption": "Preferences: SQLQuickRun Settings - User",
-        "command": "sql_quick_run_open_settings", "args": { "scope": "user"}
+        "caption": "ToolRunner: Stop running tool",
+        "command": "tool_runner_stop_running"
     },
     {
-        "caption": "Preferences: SQLQuickRun Settings - User (OS-Specific)",
-        "command": "sql_quick_run_open_settings", "args": { "scope": "os"}
+        "caption": "ToolRunner: Switch default profile",
+        "command": "tool_runner_switch_default_profile"
     },
     {
-        "caption": "Preferences: SQLQuickRun Settings - User (Host-Specific)",
-        "command": "sql_quick_run_open_settings", "args": { "scope": "host"}
-    },
-    {
-        "caption": "SQLQuickRun: Switch connection",
-        "command": "sql_quick_run_switch_connection"
-    },
-    {
-        "caption": "SQLQuickRun: Run file/selection",
-        "command": "sql_quick_run"
-    },
-    {
-        "caption": "SQLQuickRun: Cancel running query",
-        "command": "sql_quick_run_cancel_running_query"
+        "caption": "Preferences: ToolRunner Settings",
+        "command": "tool_runner_open_settings"
     }
 ]

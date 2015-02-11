@@ -1,67 +1,142 @@
-Sublime - Quick Runner
+Sublime - ToolRunner
 ---
 
 Primarily designed to quickly execute SQL Statements through the SQLCMD
-tool, it was extended to let use any command-line tool that can receive
-input through pipes.
+tool, it was extended to let use any command-line tool.
 
-Quick Runner takes the chosen source input (none, selection, line, block or
-file) and pipes them into the chosen tool appending the output to a buffer or
+ToolRunner takes the chosen source input (none, selection, line, block or
+file) and pipes it into the chosen tool appending the output to a buffer or
 panel.
 
-Commands
+Base Configuration
 ---
+```json
+{
+  "default_tools": "", // Check Tools Configuration
 
-sql_quick_run
-args: 
-  source, // none, selection, line, **auto-line**, block, auto-block, file, auto-file
-  tool, // group.tool, default.group, choose.group
+  "user_tools": {}, //Check Tools configuration
 
-Tools Configuration
+  "tools_override": {
+    "toolname": "cmdpath"
+  },
+
+  "user_groups": [], // Check groups configuration
+
+  "user_groups_default_profiles": {
+    "Group": "profile"
+  },
+
+  "debug": false
+}
+```
+
+Tool Configuration
 ---
 
 ```json
-tools: {
+{
   "mssql": {
-
-  },
-  "grunt": {
-    "cmd": "node",
-    "default_arguments": [ "grunt" ],
-    "arguments": [ "option", "task" ],
-    "options": {},
-    "flags": {
-      "verbose": "-v"
+    "cmd": "sqlcmd", // Required.
+    "arguments": [ "${flags}", "${named_args}", "${positional_args}" ], // Arguments that must be passed always. Defaults to []
+    "options": {
+      // If manual and not in arguments, there will not be input sent to tool
+      "input": {
+        "mode": "pipe", //pipe, manual. If manual it must be added in arguments as "${input}"
+        "allow-empty": false // Launch command even if input is empty string.
+      },
+      "output": {
+        "type": "panel", //buffer
+        "reuse": "view", //always view never
+        "split": "bottom", //top, right, left, none. Only for type: buffer
+        "focus": {
+          // Focus the output view when focusing the source view from which it spawned
+          // If its a panel, make it visible. If it's a view, make it visible in its group (except if its the same group of the input file)
+          "onsourcefocus": false,
+          "onexecution": true
+        },
+        "syntax_file": null // Defaults to "ToolRunner Output.tmLanguage"
+      },
+      "params": {
+        "server": { "type": "named", "argument": "-S" },
+        "quiet": { "type": "flag", "argument": "-Q" },
+        "address": { "type": "positional", "order": "1", "required": false }
+      }
     }
   }
 }
 ```
 
+Tool Profile Groups Configuration
+---
+
 ``` json
-groups:
-  [
-    {
-      "name": "MSSQL",
-      "type": "mssql",
-      "target": {
-        "type": "panel", //buffer
-        "group": "perview" //new, single
-      },
-      "configurations": [
-        {
-          "name": "Production",
-          "desc": "Production",
-          "params": {
-            "server": "production.server.com"
-          }
+[
+  {
+    "name": "MSSQL",
+    "default_tool": "mssql",
+    "profiles": [
+      {
+        "name": "Production",
+        "desc": "Production",
+        "tool": "", // overrides default-tool
+        ""
+        "params": {
+          "server": "production.server.com"
         }
-      ]
-    }
-  ]
+      }
+    ]
+  }
+]
 ```
 
 
-KeyBindings
+Commands (for use in Palette or Keybindings)
+---
+```json
+[
+  {
+    "command": "tool_runner",
+    "args": {
+      // If none tool or group are passed, there will be a selector for Group/Profile
+      "tool": "sqlcmd", // tool name
+      "profile_group": "[select]", // [select], group name
+      "profile": "[select]", // [default], [select], profile name
+      "input": "auto-line", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
+      // If you use none be sure the command has allow-empty = true
+      "output": {}, // overrides output config
+      // tool params as defined in tool's params config. 
+      // Overrides profile params
+      "params": {}
+    }
+  },
+  {
+    //Cancels the currently running tool for that view.
+    "command": "tool_runner_cancel_running"
+  },
+  {
+    // Changes the default profile for a group.
+    "command": "tool_runner_switch_default_profile",
+    "args": {
+      // If not indicated, will display the palette to select the group 
+      // to change the default for
+      // The selected group will be saved in host-specific settings
+      "profile_group": "MSSQL" 
+    }
+  },
+
+  {
+    // Open settings file for indicated scope
+    "command": "tool_runner_open_settings",
+    "args": {
+      // Scope to open settings for.
+      // If no scope is passed, a panel will ask for it
+      "scope": "default" // default, user, os, host
+    }
+  }
+]
+```
+
+Palette Commands and KeyBindings
 ---
 I don't include default keybindings because they are so intrusive, and as this
 plugin is very generic it would be better for the user to define their own set
