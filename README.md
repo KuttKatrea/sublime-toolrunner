@@ -42,7 +42,8 @@ Tool Configuration
       // If manual and not in arguments, there will not be input sent to tool
       "input": {
         "mode": "pipe", //pipe, manual. If manual it must be added in arguments as "${input}"
-        "allow-empty": false // Launch command even if input is empty string.
+        "allow-empty": false, // Launch command even if input is empty string.
+        "codec": "utf-8"
       },
       "output": {
         "type": "panel", //buffer
@@ -54,7 +55,8 @@ Tool Configuration
           "onsourcefocus": false,
           "onexecution": true
         },
-        "syntax_file": null // Defaults to "ToolRunner Output.tmLanguage"
+        "syntax_file": null, // Defaults to "ToolRunner Output.tmLanguage"
+        "codec": "utf-8"
       },
       "params": {
         "server": { "type": "named", "argument": "-S" },
