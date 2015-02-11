@@ -3,10 +3,11 @@ import sublime_plugin
 from .toolrunner.settings import ToolRunnerSettings
 from .toolrunner.command import ToolRunnerCommandManager
 from .toolrunner.views import ToolRunnerViewManager
+from .toolrunner.debug import log
 
 settings = ToolRunnerSettings(__package__)
-command_manager = ToolRunnerCommandManager(settings)
-view_manager = ToolRunnerViewManager(settings)
+output_view_manager = ToolRunnerViewManager(settings)
+command_manager = ToolRunnerCommandManager(settings, output_view_manager)
 
 class ToolRunner(sublime_plugin.WindowCommand):
     def run(self,source='auto-line'):
@@ -59,22 +60,53 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
 class ToolRunnerCancelRunningQuery(sublime_plugin.WindowCommand):
     def run(self):
-        active_view = sublime.active_window().active_view()
-        cancel_command_for_view(active_view)
+        command_manager.cancel_command_for_source_view(
+            self.window.active_view()
+        )
+
+class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
+    pass
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
-    def run(self):
-        connection_list = ToolRunnerHelper.getConnectionList()
-        quick_panel_items = [single_connection['name'] for single_connection in connection_list]  # noqa
+    def run(self, profile_group=None):
+        log("Switching command for profile group: " + str(profile_group))
+        if profile_group is None:
+            self.ask_group_and_switch_profile()
+        else:
+            self.switch_profile(profile_group)
 
-        self.connection_list = connection_list
-        self.window.show_quick_panel(
-            quick_panel_items, self.onDone, 0, 0, None)
+    def ask_group_and_switch_profile(self):
+        self.groups = [ group['name'] for group in settings.getGroups() ]
+        log(repr(self.groups))
+        self.window.show_quick_panel(self.groups, self.on_ask_group_done, 0, 0, None)
 
-    def onDone(self, selected_index):
-        selected_connection_name = self.connection_list[selected_index]['name']
-        ToolRunnerHelper.setSetting(
-            'current_connection', selected_connection_name)
+    def on_ask_group_done(self, selected_index):
+        group_selected = self.groups[selected_index]
+
+        if selected_index > -1:
+            def on_switch_profile_async():
+                self.switch_profile(group_selected)
+            sublime.set_timeout_async(on_switch_profile_async, 0)
+
+    def switch_profile(self, profile_group):
+        self.profile_group = profile_group
+        self.profile_list = [ profile["name"] for profile in settings.getProfiles(profile_group) ]
+
+        log(self.profile_group, self.profile_list)
+
+        self.window.show_quick_panel(self.profile_list, self.on_ask_profile, 0, 0, None)
+
+    def on_ask_profile(self, selected_index):
+
+        if selected_index > -1:
+            selected_profile_name = self.profile_list[selected_index]
+            current_settings = settings.getSetting('default_profiles', {})
+            current_settings[self.profile_group] = selected_profile_name
+            settings.setSetting('default_profiles', current_settings)
+
+        self.profile_list = None
+        self.groups = None
+
 
 class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
     def __init__(self, *args,**kwargs):
@@ -107,4 +139,11 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
 
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
-        view_manager.remove(view)
+        output_view_manager.remove(view)
+
+    def on_save(self, view):
+        output_settings = output_view_manager.getSettings(view)
+
+        if output_settings.keep_reusing_after_save: return
+
+        output_view_manager.remove(view)

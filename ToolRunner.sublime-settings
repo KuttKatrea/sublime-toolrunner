@@ -1,21 +1,49 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
-    "executable": {
+    "default_tools": {
         "mssql": {
             "cmd": "sqlcmd",
-            "default_arguments": [],
+            "arguments": [ "${flags}", "${named_args}", "${positional_args}" ],
+            "options": {
+                "input": {
+                    "mode": "pipe",
+                    "allow_empty": false,
+                    "codec": "mbcs"
+                },
+                "output": {
+                    "type": "buffer",
+                    "reuse": "view",
+                    "split": "bottom",
+                    "focus": {
+                        "on_source_focus": true,
+                        "on_run": true
+                    },
+                    "read_only": false,
+                    "scratch": false,
+                    "syntax_file": "${package}/lang/MSSQL Query Results.tmLanguage",
+                    "codec": "cp437",
+                    "keep_reusing_after_save": false
+                },
+                "params": {
+                    "codepage": { "type": "named", "argument": "-f"},
+                    "password": { "type": "named", "argument": "-P"},
+                    "server": { "type": "named", "argument": "-S"},
+                    "user": { "type": "named", "argument": "-U"},
+                    "database": { "type": "named", "argument": "-d"},
+                    "workstation": { "type": "named", "argument": "-H"},
+                    "trusted": { "type": "flag", "argument": "-E"}
+                }
+            }
+        },
+        "cmd": {
+            "cmd": "cmd",
             "arguments": [],
             "options": {
-                "codepage": "-f",
-                "password": "-P",
-                "server": "-S",
-                "user": "-U",
-                "database": "-d",
-                "workstation": "-H"
-            },
-            "flags": { "trusted": "-E" },
-            "codecs": { "input": "utf-8", "output": "cp437" }
-        },
+                "input": { "codec": "cp437"},
+                "output": {"codec": "cp437"}
+            }
+        }
+        /*,
         "mysql": {
             "cmd": "T:\\Apps\\script\\mysql.exe",
             "default_arguments": ["--batch", "--table"],
@@ -44,37 +72,28 @@
                 "quiet": "--quiet"
             },
             "codecs": { "input": "utf-8", "output": "cp437" }
-        },
-        "cmd": {
-            "cmd": "cmd",
-            "default_arguments": ["/C", "devcmd"],
-            "arguments": [],
-            "options": {},
-            "flags": {},
-            "codecs": { "input": "cp437", "output": "cp437" }
-        },
-        "shell": {
+        },*/
+        ,
+        /*"shell": {
             "cmd": "cmd",
             "default_arguments": ["/C", "devshell", "sh"],
             "arguments": [],
             "options": {},
             "flags": {},
             "codecs": { "input": "utf-8", "output": "utf-8" }
-        }
+        }*/
+    //},
     },
-    "connections": [
-    /*
-        {
-            "name": "<Name>",
-            "desc": "",
-            "type":"mssql",
-            "params": {
-                "server": "<Hostname or IP>",
-                "user": "<Username>",
-                "password": "<Password>"
-            }
-        }
-    */
-    ],
-    "current_connection": "<Name>"
+    "user_tools": {}, //Check Tools configuration
+    "os_tools": {}, //Check Tools configuration
+    "host_tools": {}, //Check Tools configuration
+    "tools_override": {},
+    
+    "user_groups": [], // Check groups configuration
+    "os_groups": [], // Check groups configuration
+    "host_groups": [], // Check groups configuration
+
+    "default_profiles": {}, // host-specific
+
+    "debug": false
 }

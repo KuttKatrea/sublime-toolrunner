@@ -3,8 +3,9 @@ import subprocess
 import datetime
 
 class ToolRunnerCommandManager(object):
-    def __init__(self, settings):
+    def __init__(self, settings, output_view_manager):
         self.settings = settings
+        self.output_view_manager = output_view_manager
 
     def getConnectionCommand(self, sqltext, view):
         executable_list = self.settings.getSetting('executable')

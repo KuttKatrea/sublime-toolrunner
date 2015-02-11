@@ -1,5 +1,6 @@
 import sublime
 import platform
+from .debug import log
 
 class ToolRunnerSettings:
     def __init__(self, package):
@@ -19,11 +20,16 @@ class ToolRunnerSettings:
         host_settings = sublime.load_settings(
             self.getHostSettingsFileName())
 
+        platform_settings = sublime.load_settings(
+            self.getPlatformSettingsFileName())
+
         user_settings = sublime.load_settings(
             self.getSettingsFileName())
 
-        return host_settings.get(
-            settingName, user_settings.get(settingName, default))
+        return host_settings.get(settingName,
+            platform_settings.get(settingName,
+            user_settings.get(settingName, default)
+            ))
 
     def setSetting(self, settingName, settingValue):
         host_settings = sublime.load_settings(
@@ -51,3 +57,19 @@ class ToolRunnerSettings:
             return ('User/', self.getPlatformSettingsFileName())
         else:  # default
             return (self.package, self.getSettingsFileName())
+
+    def getGroups(self):
+        groups = self.getSetting('user_groups', [])
+        groups += self.getSetting('os_groups', [])
+        groups += self.getSetting('host_groups', [])
+
+        return groups
+
+    def getProfiles(self, profile_group):
+        groups = self.getGroups()
+
+        for group in groups:
+            if group["name"] == profile_group:
+                return group["profiles"]
+
+        return []

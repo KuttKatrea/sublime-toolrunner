@@ -12,7 +12,7 @@ Base Configuration
 ---
 ```json
 {
-  "default_tools": "", // Check Tools Configuration
+  "default_tools": {}, // Check Tools Configuration
 
   "user_tools": {}, //Check Tools configuration
 
@@ -42,7 +42,7 @@ Tool Configuration
       // If manual and not in arguments, there will not be input sent to tool
       "input": {
         "mode": "pipe", //pipe, manual. If manual it must be added in arguments as "${input}"
-        "allow-empty": false, // Launch command even if input is empty string.
+        "allow_empty": false, // Launch command even if input is empty string.
         "codec": "utf-8"
       },
       "output": {
@@ -56,7 +56,8 @@ Tool Configuration
           "onexecution": true
         },
         "syntax_file": null, // Defaults to "ToolRunner Output.tmLanguage"
-        "codec": "utf-8"
+        "codec": "utf-8",
+        "keep_reusing_after_save": false
       },
       "params": {
         "server": { "type": "named", "argument": "-S" },
@@ -81,7 +82,8 @@ Tool Profile Groups Configuration
         "name": "Production",
         "desc": "Production",
         "tool": "", // overrides default-tool
-        ""
+        "input": {},
+        "output": {}, // override options
         "params": {
           "server": "production.server.com"
         }
@@ -104,7 +106,7 @@ Commands (for use in Palette or Keybindings)
       "profile_group": "[select]", // [select], group name
       "profile": "[select]", // [default], [select], profile name
       "input": "auto-line", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
-      // If you use none be sure the command has allow-empty = true
+      // If you use none be sure the command has allow_empty = true
       "output": {}, // overrides output config
       // tool params as defined in tool's params config. 
       // Overrides profile params
@@ -114,6 +116,10 @@ Commands (for use in Palette or Keybindings)
   {
     //Cancels the currently running tool for that view.
     "command": "tool_runner_cancel_running"
+  },
+  {
+    //Changes focus to current output panel/view for that source view.
+    "command": "tool_runner_focus_output"
   },
   {
     // Changes the default profile for a group.
