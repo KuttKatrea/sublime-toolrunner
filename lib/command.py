@@ -262,7 +262,7 @@ class Command(object):
 
         self._source_view.settings().set('toolrunner_panel_name', self.panelname)
 
-        self._source_window.focus_view(self._target_view)
+        self._target_view.window().focus_view(self._target_view)
 
     def write(self, text):
         self._target_view.run_command("append", {"characters": text})
