@@ -3,36 +3,31 @@ import sublime_plugin
 import sys
 from functools import partial
 
-deletekeys = []
-for key in sys.modules:
-    if key.startswith('sublime-toolrunner.'):
-        if not key.startswith('sublime-toolrunner.ToolRunner'):
-            deletekeys.append(key)
-
-for key in deletekeys:
-    del sys.modules[key]
-
 from .lib import settings
 from .lib import manager
 from .lib import debug
 from .lib.command import Command
 
 class ToolRunner(sublime_plugin.WindowCommand):
-    def run(self, tool=None, group=None, profile=None, **kwargs):
+    def run(self, tool=None, group=None, profile=None, default_profile=False, **kwargs):
         command = Command(
             self.window,
             kwargs
         )
 
         if tool is not None:
+            debug.log("Running tool: ", tool)
             command.run_tool(tool)
 
         elif group is not None:
 
+            if default_profile:
+                profile = settings.get_setting('default_profiles').get(group)
+
             if profile is not None:
                 command.run_profile(group, profile)
             else:
-                self._ask_profile_to_run(
+                self._ask_profile_and_run_command(
                     group,
                     partial(self._on_ask_profile_done, command)
                 )
@@ -173,6 +168,8 @@ class ToolRunnerListener(sublime_plugin.EventListener):
 def plugin_loaded():
     settings.on_loaded()
     debug.log("Plugin Loaded")
+    if settings.get_setting('devel'):
+        debug.forget_modules()
 
 def plugin_unloaded():
     debug.log("Plugin Unloaded")

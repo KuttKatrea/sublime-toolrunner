@@ -20,8 +20,24 @@ class Command(object):
 
         self._cancelled = False
 
-    def run_tool(self, tool):
-        pass
+    def run_tool(self, tool_id):
+        debug.log("Running command for tool: ", tool_id)
+
+        tool = self._create_tool(tool_id)
+
+        debug.log("Passing command arguments:", self._command_arguments)
+
+        tool.set_input_source(self._command_arguments.get("input_source"))
+
+        tool.set_output(self._command_arguments.get("output"))
+
+        tool.set_params_values(self._command_arguments.get("params"))
+
+        self._tool = tool
+
+        sublime.set_timeout_async(
+            partial(self._do_run_tool, tool), 0
+        )
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -95,8 +111,11 @@ class Command(object):
 
         debug.log(input_source)
 
-        if input_source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file']):
+        if input_source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file', 'none']):
             raise ValueError("Input source invalid")
+
+        if input_source == 'none':
+            return ''
 
         active_view = self._source_view
 
@@ -138,7 +157,7 @@ class Command(object):
             return
 
         command_array = None
-        if tool.input.mode == "manual":
+        if tool.input.mode in set(("manual", "none")):
             command_array = tool.get_command_array(input_text=input_text)
         else:
             command_array = tool.get_command_array()

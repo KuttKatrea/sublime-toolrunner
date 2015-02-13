@@ -40,6 +40,9 @@ class Tool(object):
 
     def set_input(self, input):
         if input is None: return
+
+        self.input.update_mode(input.get('mode'))
+        self.input.update_allow_empty(input.get('allow_empty'))
         self.input.update_codec(input.get('codec'))
 
     def set_output(self, output):
@@ -108,10 +111,20 @@ class Tool(object):
 
 class Input(object):
     def __init__(self):
-        self.allow_empty = False
         self.mode = 'pipe'
+        self.allow_empty = False
         self.codec = _default_input_codec
-        debug.log(self.codec)
+
+    def update_mode(self, mode):
+        if mode is not None:
+            self.mode = mode
+
+            if mode == 'none':
+                self.allow_empty = True
+
+    def update_allow_empty(self, allow_empty):
+        if allow_empty is not None:
+            self.allow_empty = allow_empty
 
     def update_codec(self, codec):
         if codec is not None:
@@ -120,7 +133,6 @@ class Input(object):
 class Output(object):
     def __init__(self):
         self.codec = _default_output_codec
-        debug.log(self.codec)
 
     def update_codec(self, codec):
         if codec is not None:

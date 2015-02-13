@@ -41,7 +41,7 @@ Tool Configuration
     "options": {
       // If manual and not in arguments, there will not be input sent to tool
       "input": {
-        "mode": "pipe", //pipe, manual. If manual it must be added in arguments as "${input}"
+        "mode": "pipe", //pipe, manual, none. If manual it must be added in arguments as "${input}"
         "allow_empty": false, // Launch command even if input is empty string.
         "codec": "utf-8"
       },
@@ -108,9 +108,10 @@ Commands (for use in Palette or Keybindings)
     "args": {
       // If none tool or group are passed, there will be a selector for Group/Profile
       "tool": "sqlcmd", // tool name
-      "group": "[select]", // [select], group name
-      "profile": "[select]", // [default], [select], profile name
-      "input": "auto-line", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
+      "group": "group", // [select], group name
+      "default_profile": false, //
+      "profile": "profile_name", // [default], [select], profile name
+      "input": "auto-file", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
       // If you use none be sure the command has allow_empty = true
       "output": {}, // overrides output config
       // tool params as defined in tool's params config. 
