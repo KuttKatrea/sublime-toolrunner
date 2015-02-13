@@ -59,21 +59,34 @@ class Tool(object):
             self.params_values = params_values
 
     def get_command_array(self, input_text=None):
+        debug.log("Building command line array")
+
         full_arguments = [ self.cmd ]
+
         positional_arguments = []
         named_arguments = []
         flag_arguments = []
 
-        for param_key, param_value in self.params_values:
+        debug.log("Generating argument list for params", self.params_values)
+        for param_key, param_value in self.params_values.items():
+            debug.log("Matching param: %s = %s" % (param_key, param_value))
+
             param = self.params[param_key]
 
-            if param.type == "positional":
+            if param.get('type') == "positional":
                 positional_arguments[param.order] = param_value
-            elif param.type == "named":
-                named_arguments.append(param.option, param_value)
-            elif param.type == "flag":
+            elif param.get('type') == "named":
+                named_arguments.append(param.get('argument'))
+                named_arguments.append(param_value)
+            elif param.get('type') == "flag":
                 if param_value:
-                    flag_arguments.append(param.option)
+                    flag_arguments.append(param.get('argument'))
+
+        debug.log("Positional args: ", positional_arguments)
+        debug.log("Named args: ", named_arguments)
+        debug.log("Flag args: ", flag_arguments)
+
+        debug.log("Embedding in ", self.arguments)
 
         for argument in self.arguments:
             if argument == "${positional_args}":
@@ -90,7 +103,6 @@ class Tool(object):
 
             else:
                 full_arguments.append(argument)
-
 
         return full_arguments
 

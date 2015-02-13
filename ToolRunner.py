@@ -18,10 +18,10 @@ from .lib import debug
 from .lib.command import Command
 
 class ToolRunner(sublime_plugin.WindowCommand):
-    def run(self, tool=None, group=None, profile=None, input_source=None, output=None, params=None):
+    def run(self, tool=None, group=None, profile=None, **kwargs):
         command = Command(
             self.window,
-            dict(input_source=input_source, output=output, params=params)
+            kwargs
         )
 
         if tool is not None:

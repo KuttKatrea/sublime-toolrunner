@@ -6,7 +6,7 @@ from functools import partial
 
 from . import settings
 from . import manager
-from .debug import log
+from . import debug
 from .tool import Tool
 
 class Command(object):
@@ -38,10 +38,14 @@ class Command(object):
             if single_profile["name"] == selected_profile:
                 profile_descriptor = single_profile
 
+        debug.log("Running command for profile: ", group_descriptor, profile_descriptor)
+
         tool_id =profile_descriptor.get("tool",
             group_descriptor.get("tool"))
 
         tool = self._create_tool(tool_id)
+
+        debug.log("Passing command arguments:", self._command_arguments)
 
         tool.set_input_source(
             self._command_arguments.get("input_source",
@@ -89,7 +93,7 @@ class Command(object):
         if input_source is None:
             input_source = "auto-file"
 
-        log(input_source)
+        debug.log(input_source)
 
         if input_source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file']):
             raise ValueError("Input source invalid")
@@ -139,7 +143,7 @@ class Command(object):
         else:
             command_array = tool.get_command_array()
 
-        log(command_array)
+        debug.log(command_array)
 
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
