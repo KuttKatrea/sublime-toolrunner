@@ -8,6 +8,7 @@ from . import settings
 from . import manager
 from . import debug
 from .tool import Tool
+from os import path
 
 class Command(object):
     def __init__(self, source_window, command_arguments):
@@ -144,6 +145,9 @@ class Command(object):
         
             input_text = active_view.substr(region)
 
+        if input_text[-1] != '\n':
+            input_text.append('\n')
+
         return input_text
 
     def _do_run_tool(self, tool):
@@ -164,6 +168,19 @@ class Command(object):
 
         debug.log(command_array)
 
+
+        working_directory = None
+
+        file_ = self._source_view.file_name()
+        project = self._source_window.project_file_name()
+        
+        if file_ is not None:
+            working_directory = path.dirname(file_)
+        elif project is not None:
+            working_directory = path.dirname(project)
+        else:
+            working_directory = sys.env.get('HOME', sys.env.get('USER_PROFILE'))
+
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
@@ -173,7 +190,8 @@ class Command(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False,
-            startupinfo=startupinfo
+            startupinfo=startupinfo,
+            cwd=working_directory
         )
 
         self.process = process
@@ -189,8 +207,9 @@ class Command(object):
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
 
-        process.stdin.write(bytes(input_text, tool.input.codec))
-        process.stdin.write(bytes("\n", tool.input.codec))
+        if tool.input.mode == 'pipe':
+            process.stdin.write(bytes(input_text, tool.input.codec))
+
         process.stdin.close()
 
         input_text = None
