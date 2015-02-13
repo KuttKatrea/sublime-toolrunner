@@ -76,7 +76,12 @@ Tool Profile Groups Configuration
 [
   {
     "name": "MSSQL",
-    "default_tool": "mssql",
+    
+    "tool": "mssql",
+    "input": "",
+    "output": "",
+    "params": "",
+
     "profiles": [
       {
         "name": "Production",
@@ -103,7 +108,7 @@ Commands (for use in Palette or Keybindings)
     "args": {
       // If none tool or group are passed, there will be a selector for Group/Profile
       "tool": "sqlcmd", // tool name
-      "profile_group": "[select]", // [select], group name
+      "group": "[select]", // [select], group name
       "profile": "[select]", // [default], [select], profile name
       "input": "auto-line", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
       // If you use none be sure the command has allow_empty = true
@@ -130,7 +135,7 @@ Commands (for use in Palette or Keybindings)
       // The selected group will be saved in host-specific settings
       "profile_group": "MSSQL" 
     }
-  },
+  },w
 
   {
     // Open settings file for indicated scope

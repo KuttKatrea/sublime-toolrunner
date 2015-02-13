@@ -1,66 +1,81 @@
 import sublime
 import sublime_plugin
-from .toolrunner.settings import ToolRunnerSettings
-from .toolrunner.command import ToolRunnerCommandManager
-from .toolrunner.views import ToolRunnerViewManager
-from .toolrunner.debug import log
+import sys
+from functools import partial
 
-settings = ToolRunnerSettings(__package__)
-output_view_manager = ToolRunnerViewManager(settings)
-command_manager = ToolRunnerCommandManager(settings, output_view_manager)
+deletekeys = []
+for key in sys.modules:
+    if key.startswith('sublime-toolrunner.'):
+        if not key.startswith('sublime-toolrunner.ToolRunner'):
+            deletekeys.append(key)
+
+for key in deletekeys:
+    del sys.modules[key]
+
+from .lib import settings
+from .lib import manager
+from .lib import debug
+from .lib.command import Command
 
 class ToolRunner(sublime_plugin.WindowCommand):
-    def run(self,source='auto-line'):
-        if source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file']):
-            return
+    def run(self, tool=None, group=None, profile=None, input_source=None, output=None, params=None):
+        command = Command(
+            self.window,
+            dict(input_source=input_source, output=output, params=params)
+        )
 
-        textcommand = ''
+        if tool is not None:
+            command.run_tool(tool)
 
-        active_view = sublime.active_window().active_view()
+        elif group is not None:
 
-        command_manager.cancel_command_for_source_view(view)
-
-        cancel_command_for_view(active_view)
-
-        current_selection = active_view.sel()
-
-        if source in set(['selection', 'auto-file', 'auto-block', 'auto-line']):
-            if len(current_selection) > 0:
-                for partial_selection in current_selection:
-                    textcommand += active_view.substr(partial_selection)
-
-        if source != 'selection' and textcommand == '':
-            region = None
-            if source in set(['line', 'auto-line']):
-                region = active_view.line(current_selection[0])
-
-            if source in set(['block','auto-block']):
-                region = active_view.expand_by_class(
-                    current_selection[0],
-                    sublime.CLASS_EMPTY_LINE
+            if profile is not None:
+                command.run_profile(group, profile)
+            else:
+                self._ask_profile_to_run(
+                    group,
+                    partial(self._on_ask_profile_done, command)
                 )
 
-            if source in set(['file', 'auto-file']):
-                region = sublime.Region(0, active_view.size())
-        
-            textcommand = active_view.substr(region)
+        else:
+            self._ask_group_and_profile_to_run(
+                partial(self._on_ask_group_done, command)
+            )
 
-        if textcommand == '':
-            return
+    def _ask_group_and_profile_to_run(self, callback):
+        group_list = [
+            single_group['name'] for single_group in settings.get_groups()
+        ]
+        callback = partial(callback, group_list)
 
-        command = ToolRunnerHelper.getConnectionCommand(
-            textcommand, active_view)
+        self.window.show_quick_panel(group_list, callback, 0, 0, None)
 
-        if command is None:
-            sublime.status_message(
-                "ToolRunner: Invalid connection selected", True)
-            return
+    def _on_ask_group_done(self, command, group_list, selected_index):
+        group_selected = group_list[selected_index]
 
-        command.run()
+        if selected_index > -1:
+            callback = partial(self._on_ask_profile_done, command)
+            sublime.set_timeout(
+                partial(self._ask_profile_and_run_command, group_selected, callback),
+                0
+            )
 
-class ToolRunnerCancelRunningQuery(sublime_plugin.WindowCommand):
+    def _ask_profile_and_run_command(self, group_selected, callback):
+        profile_list = [ profile["name"] for profile in settings.get_profiles(group_selected) ]
+        self.window.show_quick_panel(
+            profile_list,
+            partial(callback, group_selected, profile_list),
+            0, 0, None
+        )
+
+    def _on_ask_profile_done(self, command, group_selected, profile_list, selected_index):
+        if selected_index > -1:
+            selected_profile = profile_list[selected_index]
+            command.run_profile(group_selected, selected_profile)
+
+class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
     def run(self):
-        command_manager.cancel_command_for_source_view(
+        manager.cancel_current_command_for_source_view(
             self.window.active_view()
         )
 
@@ -69,15 +84,15 @@ class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def run(self, profile_group=None):
-        log("Switching command for profile group: " + str(profile_group))
+        debug.log("Switching command for profile group: " + str(profile_group))
         if profile_group is None:
             self.ask_group_and_switch_profile()
         else:
             self.switch_profile(profile_group)
 
     def ask_group_and_switch_profile(self):
-        self.groups = [ group['name'] for group in settings.getGroups() ]
-        log(repr(self.groups))
+        self.groups = [ group['name'] for group in settings.get_groups() ]
+        debug.log(repr(self.groups))
         self.window.show_quick_panel(self.groups, self.on_ask_group_done, 0, 0, None)
 
     def on_ask_group_done(self, selected_index):
@@ -90,9 +105,9 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
     def switch_profile(self, profile_group):
         self.profile_group = profile_group
-        self.profile_list = [ profile["name"] for profile in settings.getProfiles(profile_group) ]
+        self.profile_list = [ profile["name"] for profile in settings.get_profiles(profile_group) ]
 
-        log(self.profile_group, self.profile_list)
+        debug.log(self.profile_group, self.profile_list)
 
         self.window.show_quick_panel(self.profile_list, self.on_ask_profile, 0, 0, None)
 
@@ -100,9 +115,9 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
         if selected_index > -1:
             selected_profile_name = self.profile_list[selected_index]
-            current_settings = settings.getSetting('default_profiles', {})
+            current_settings = settings.get_setting('default_profiles', {})
             current_settings[self.profile_group] = selected_profile_name
-            settings.setSetting('default_profiles', current_settings)
+            settings.set_setting('default_profiles', current_settings)
 
         self.profile_list = None
         self.groups = None
@@ -110,7 +125,7 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
 class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
     def __init__(self, *args,**kwargs):
-        
+
         sublime_plugin.WindowCommand.__init__(self, *args, **kwargs)
 
         self.ask_scope_items = [
@@ -125,7 +140,7 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
             self.ask_scope_and_open_settings()
         else:
             self.do_open_settings(scope)
-        
+
     def ask_scope_and_open_settings(self):
         self.window.show_quick_panel(self.ask_scope_items,self.on_ask_scope_done, 0, 0, None)
 
@@ -135,15 +150,31 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
         self.do_open_settings(scope)
 
     def do_open_settings(self, scope):
-        self.window.run_command("open_file", {"file": settings.getSettingsFilePath(scope)})
+        self.window.run_command("open_file", {"file": settings.get_settingsFilePath(scope)})
 
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
-        output_view_manager.remove(view)
+        manager.remove_target_view(view)
 
-    def on_save(self, view):
-        output_settings = output_view_manager.getSettings(view)
+        view = manager.get_target_view_for_source_view(view)
+        if view is None:
+            return
 
-        if output_settings.keep_reusing_after_save: return
+        manager.remove_target_view(view)
 
-        output_view_manager.remove(view)
+    def on_post_save(self, view):
+        source_view = manager.get_source_view_for_target_view(view)
+        if source_view is None:
+            debug.log("The view %s is not an output view" % view.id())
+            return
+
+        manager.remove_target_view(view)
+
+def plugin_loaded():
+    settings.on_loaded()
+    debug.log("Plugin Loaded")
+
+def plugin_unloaded():
+    debug.log("Plugin Unloaded")
+    settings.on_unloaded()
+

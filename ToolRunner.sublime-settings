@@ -1,7 +1,8 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
     "default_tools": {
-        "mssql": {
+        "sqlcmd": {
+            "name": "SQL Server",
             "cmd": "sqlcmd",
             "arguments": [ "${flags}", "${named_args}", "${positional_args}" ],
             "options": {
@@ -36,11 +37,12 @@
             }
         },
         "cmd": {
+            "name": "CMD",
             "cmd": "cmd",
             "arguments": [],
             "options": {
-                "input": { "codec": "cp437"},
-                "output": {"codec": "cp437"}
+                "input": {},
+                "output": {}
             }
         }
         /*,

@@ -5,7 +5,7 @@
     },
     {
         "caption": "ToolRunner: Stop running tool",
-        "command": "tool_runner_stop_running"
+        "command": "tool_runner_cancel_current"
     },
     {
         "caption": "ToolRunner: Switch default profile",
