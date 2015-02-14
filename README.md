@@ -1,20 +1,40 @@
-Sublime - ToolRunner
+ToolRunner for Sublime Text
 ---
-
-Primarily designed to quickly execute SQL Statements through the SQLCMD
-tool, it was extended to let use any command-line tool.
+Primarily designed to quickly execute SQL Statements through the **SQLCMD**
+command-line tool, it was extended to allow execution of any command line tool.
 
 ToolRunner takes the chosen source input (none, selection, line, block or
 file) and pipes it into the chosen tool appending the output to a buffer or
 panel.
 
+
+Tools
+---
+A tool is an external application that is going to be run by Tool Runner.
+The tools must be defined in the settings file.
+
+ToolRuner comes with some preinstalled tools:
+ - sqlcmd
+ - mysql
+ - mongo
+ - cmd
+ - bash
+ - python
+ - ruby
+ - nodejs
+
+But you can add your own.
+
 Base Configuration
 ---
-```json
+```javascript
 {
-  "default_tools": {}, // Check Tools Configuration
+  // Preconfigured tool
+  "default_tools": {},
 
-  "user_tools": {}, //Check Tools configuration
+  //User-defined tools.
+  //Tools added in Host, Platform and User settings will be merged.
+  "user_tools": {},
 
   "tools_override": {
     "toolname": "cmdpath"
@@ -22,8 +42,8 @@ Base Configuration
 
   "user_groups": [], // Check groups configuration
 
-  "user_groups_default_profiles": {
-    "Group": "profile"
+  "default_profiles": {
+    "group": "profile"
   },
 
   "debug": false
@@ -33,7 +53,7 @@ Base Configuration
 Tool Configuration
 ---
 
-```json
+```javascript
 {
   "mssql": {
     "cmd": "sqlcmd", // Required.
@@ -76,8 +96,9 @@ Tool Profile Groups Configuration
 [
   {
     "name": "MSSQL",
-    
+
     "tool": "mssql",
+
     "input": "",
     "output": "",
     "params": "",
@@ -136,7 +157,7 @@ Commands (for use in Palette or Keybindings)
       // The selected group will be saved in host-specific settings
       "profile_group": "MSSQL" 
     }
-  },w
+  },
 
   {
     // Open settings file for indicated scope

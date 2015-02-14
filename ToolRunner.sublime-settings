@@ -97,5 +97,6 @@
 
     "default_profiles": {}, // host-specific
 
-    "debug": false
+    "debug": false,
+    "devel": false
 }

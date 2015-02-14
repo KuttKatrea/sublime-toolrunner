@@ -146,7 +146,7 @@ class Command(object):
             input_text = active_view.substr(region)
 
         if input_text[-1] != '\n':
-            input_text.append('\n')
+            input_text += '\n'
 
         return input_text
 
@@ -203,6 +203,7 @@ class Command(object):
         self._target_view.run_command("move_to", {"to": "eof"})
 
         current_cursor_position = self._target_view.sel()[0]
+        current_line = self._target_view.line(current_cursor_position)
 
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
@@ -221,6 +222,19 @@ class Command(object):
         self._source_view.set_status("toolrunner", "ToolRunner Source: Running query on [%s]" % tool_desc)
         self._target_view.set_status("toolrunner", "ToolRunner Target: Running query on [%s]" % tool_desc)
 
+        debug.log(current_cursor_position)
+        debug.log(current_line)
+
+        if current_cursor_position.a > current_line.a:
+            self.write('\n')
+
+        if current_cursor_position.a != 0:
+            self.write('\n')
+            current_cursor_position = sublime.Region(current_cursor_position.a+1, current_cursor_position.a+1)
+
+        self.write(':: ToolRunner :: Start at %s ::\n' % starttime)
+        self._target_view.run_command("move_to", {"to": "eof"})
+
         while True:
             outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r\n', '\n')
             if outstring == "": break
@@ -230,9 +244,9 @@ class Command(object):
         timedelta = endtime - starttime
 
         if self._cancelled:
-            self.write("\nQuery execution cancelled")
+            self.write("\nQuery execution cancelled\n")
 
-        self.write('\n')
+        self.write('\n:: ToolRunner :: End at %s ::\n' % endtime)
 
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
@@ -251,7 +265,8 @@ class Command(object):
         self._source_window = self._source_view.window()
 
         self._target_view = manager.create_target_view_for_source_view(self._source_view)
-        self.panelname = 'ToolRunner Results: %s' % (self._source_view.buffer_id())
+
+        self.panelname = ':: ToolRunner Results: %s ::' % (self._source_view.buffer_id())
         self._target_view.set_name(self.panelname)
 
         #self._target_view = self._source_window.create_output_panel(self.panelname)

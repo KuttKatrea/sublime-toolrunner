@@ -70,7 +70,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
 class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
     def run(self):
-        manager.cancel_current_command_for_source_view(
+        manager.cancel_command_for_source_view(
             self.window.active_view()
         )
 
