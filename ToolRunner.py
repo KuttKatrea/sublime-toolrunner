@@ -33,9 +33,45 @@ class ToolRunner(sublime_plugin.WindowCommand):
                 )
 
         else:
-            self._ask_group_and_profile_to_run(
-                partial(self._on_ask_group_done, command)
+            self._ask_type_to_run(
+                partial(self._on_ask_type_done, command)
             )
+
+    def _ask_type_to_run(self, callback):
+        self.window.show_quick_panel(["Tool", "Group"], callback, 0, 0, None)
+
+
+    def _on_ask_type_done(self, command, selected_index):
+        if selected_index == 0:
+            sublime.set_timeout(partial(
+                self._ask_tool_to_run, 
+                partial(self._on_ask_tool_done, command)
+            ), 0)
+
+        elif selected_index == 1:
+            sublime.set_timeout(partial(
+                self._ask_group_and_profile_to_run, 
+                    partial(self._on_ask_group_done, command)
+                ), 0)
+
+    def _ask_tool_to_run(self, callback):
+        tool_list = []
+        tool_selection_list = []
+
+        for tool_key, single_tool in settings.get_tools().items():
+            tool_list.append(tool_key)
+            tool_selection_list.append(single_tool["name"])
+
+        callback = partial(callback, tool_list)
+
+        self.window.show_quick_panel(tool_selection_list, callback, 0, 0, None)
+
+    def _on_ask_tool_done(self, command, tool_list, selected_index):
+        tool_selected = tool_list[selected_index]
+
+        if selected_index > -1:
+            command.run_tool(tool_selected)
+
 
     def _ask_group_and_profile_to_run(self, callback):
         group_list = [

@@ -44,6 +44,15 @@
                 "input": {},
                 "output": {}
             }
+        },
+        "bash": {
+            "name": "Bash",
+            "cmd": "bash",
+            "arguments": [],
+            "options": {
+                "input": {},
+                "output": {}
+            }
         }
         /*,
         "mysql": {

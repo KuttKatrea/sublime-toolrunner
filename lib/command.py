@@ -181,8 +181,10 @@ class Command(object):
         else:
             working_directory = sys.env.get('HOME', sys.env.get('USER_PROFILE'))
 
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo = None
+        if sublime.platform() == "windows":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         process = subprocess.Popen(
             command_array,
