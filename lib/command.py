@@ -168,7 +168,6 @@ class Command(object):
 
         debug.log(command_array)
 
-
         working_directory = None
 
         file_ = self._source_view.file_name()
@@ -184,19 +183,23 @@ class Command(object):
         startupinfo = None
         if sublime.platform() == "windows":
             startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW |  subprocess.CREATE_NEW_CONSOLE)
 
-        process = subprocess.Popen(
-            command_array,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=False,
-            startupinfo=startupinfo,
-            cwd=working_directory
-        )
+        try:
+            process = subprocess.Popen(
+                command_array,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=False,
+                startupinfo=startupinfo,
+                cwd=working_directory
+            )
+            self.process = process
 
-        self.process = process
+        except FileNotFoundError as e:
+            debug.log("Error: ", e)
+            return
 
         self.create_window()
 
