@@ -58,9 +58,12 @@ class ToolRunner(sublime_plugin.WindowCommand):
         tool_list = []
         tool_selection_list = []
 
+        debug.log("Creating Tools item list for Quick Panel")
+
         for tool_key, single_tool in settings.get_tools().items():
+            debug.log("Appending ", single_tool)
             tool_list.append(tool_key)
-            tool_selection_list.append(single_tool["name"])
+            tool_selection_list.append(single_tool.get("name", single_tool.get("cmd")))
 
         callback = partial(callback, tool_list)
 
