@@ -89,9 +89,14 @@ def on_loaded():
     host_settings.add_on_change('debug', on_debug_change)
 
 def on_unloaded():
-    host_settings.clear_on_change('debug')
-    platform_settings.clear_on_change('debug')
-    user_settings.clear_on_change('debug')
+    if host_settings is not None:
+        host_settings.clear_on_change('debug')
+    
+    if platform_settings is not None:
+        platform_settings.clear_on_change('debug')
+
+    if user_settings is not None:
+        user_settings.clear_on_change('debug')
 
 def on_debug_change():
     debug.enabled = get_setting('debug')
