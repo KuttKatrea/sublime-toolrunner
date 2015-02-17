@@ -5,7 +5,7 @@ import datetime
 import os
 from functools import partial
 from os import path
-
+from threading import Thread
 
 from . import settings
 from . import manager
@@ -38,9 +38,17 @@ class Command(object):
 
         self._tool = tool
 
+        manager.cancel_command_for_source_view(self._source_view)
+
+        debug.log("Launching thread")
+        self._thread = Thread(target=partial(self._do_run_tool, tool))
+        self._thread.start()
+
+        '''
         sublime.set_timeout_async(
             partial(self._do_run_tool, tool), 0
         )
+        '''
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -83,9 +91,15 @@ class Command(object):
         
         self._tool = tool
 
+        manager.cancel_command_for_source_view(self._source_view)
+
+        '''
         sublime.set_timeout_async(
             partial(self._do_run_tool, tool), 0
         )
+        '''
+        self._thread = Thread(target=partial(self._do_run_tool, tool))
+        self._thread.start()
 
     def cancel(self):
         self._cancelled = True
@@ -148,7 +162,7 @@ class Command(object):
         
             input_text = active_view.substr(region)
 
-        if input_text[-1] != '\n':
+        if input_text != "" and input_text[-1] != '\n':
             input_text += '\n'
 
         return input_text
@@ -156,11 +170,10 @@ class Command(object):
     def _do_run_tool(self, tool):
         self._execution_cancelled = False
 
-        manager.cancel_command_for_source_view(self._source_view)
-
         input_text = self._get_input(tool.input_source)
 
         if input_text == "" and not tool.input.allow_empty:
+            debug.log("This tool does not allow empty input")
             return
 
         command_array = None
@@ -243,7 +256,7 @@ class Command(object):
         self.write(':: ToolRunner :: Start at %s ::\n' % starttime)
         self._target_view.run_command("move_to", {"to": "eof"})
 
-        while True:
+        while True: #self._cancelled is False:
             outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r\n', '\n')
             if outstring == "": break
             self.write(outstring)
