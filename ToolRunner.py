@@ -137,15 +137,16 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def ask_group_and_switch_profile(self):
         self.groups = [ group['name'] for group in settings.get_groups() ]
         debug.log(repr(self.groups))
-        self.window.show_quick_panel(self.groups, self.on_ask_group_done, 0, 0, None)
+        self.window.show_quick_panel(
+            self.groups,
+            partial(self.on_ask_group_done, self.switch_profile),
+            0, 0, None)
 
-    def on_ask_group_done(self, selected_index):
+    def on_ask_group_done(self, callback, selected_index):
         group_selected = self.groups[selected_index]
 
         if selected_index > -1:
-            def on_switch_profile_async():
-                self.switch_profile(group_selected)
-            sublime.set_timeout_async(on_switch_profile_async, 0)
+            sublime.set_timeout(partial(callback, group_selected), 0)
 
     def switch_profile(self, profile_group):
         self.profile_group = profile_group
