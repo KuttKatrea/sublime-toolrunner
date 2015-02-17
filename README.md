@@ -13,15 +13,15 @@ Tools
 A tool is an external application that is going to be run by Tool Runner.
 The tools must be defined in the settings file.
 
-ToolRuner comes with some preinstalled tools:
- - sqlcmd
- - mysql
- - mongo
+ToolRuner comes with some preconfigured tools:
  - cmd
  - bash
+ - sqlcmd (SQL Server command-line client)
+ - mysql
+ - mongo
  - python
  - ruby
- - nodejs
+ - nodej
 
 But you can add your own.
 
@@ -36,7 +36,7 @@ Base Configuration
   //Tools added in Host, Platform and User settings will be merged.
   "user_tools": {},
 
-  "tools_override": {
+  "user_tool_overrides": {
     "toolname": "cmdpath"
   },
 

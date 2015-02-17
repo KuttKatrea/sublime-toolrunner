@@ -1,24 +1,23 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
-    "default_tools": {
-        "sqlcmd": {
-            "name": "SQL Server",
+    "default_tools": [
+        {
+            "name": "SQLCMD",
+            "desc": "SQL Server command-line client",
             "cmd": "sqlcmd",
-            "arguments": [ "${flags}", "${named_args}", "${positional_args}" ],
+            "arguments": [ "-s", "\t", "${flags}", "${named_args}", "${positional_args}" ],
             "options": {
                 "input": {
                     "mode": "pipe",
                     "allow_empty": false,
-                    "codec": "mbcs"
+                    "codec": "cp437"
                 },
                 "output": {
                     "type": "buffer",
                     "reuse": "view",
                     "split": "bottom",
-                    "focus": {
-                        "on_source_focus": true,
-                        "on_run": true
-                    },
+                    "focus_on_source_focus": true,
+                    "focus_on_run": true,
                     "read_only": false,
                     "scratch": false,
                     "syntax_file": "${package}/lang/MSSQL Query Results.tmLanguage",
@@ -36,24 +35,9 @@
                 }
             }
         },
-        "cmd": {
-            "name": "CMD",
-            "cmd": "cmd",
-            "arguments": [],
-            "options": {
-                "input": {},
-                "output": {}
-            }
-        },
-        "bash": {
-            "name": "Bash",
-            "cmd": "bash",
-            "arguments": [],
-            "options": {
-                "input": {},
-                "output": {}
-            }
-        }
+        { "cmd": "cmd" },
+        { "cmd": "bash" },
+        { "cmd": "python" }
         /*,
         "mysql": {
             "cmd": "T:\\Apps\\script\\mysql.exe",
@@ -94,18 +78,14 @@
             "codecs": { "input": "utf-8", "output": "utf-8" }
         }*/
     //},
-    },
-    "user_tools": {}, //Check Tools configuration
-    "os_tools": {}, //Check Tools configuration
-    "host_tools": {}, //Check Tools configuration
-    "tools_override": {},
-    
-    "user_groups": [], // Check groups configuration
-    "os_groups": [], // Check groups configuration
-    "host_groups": [], // Check groups configuration
-
+    ],
+    // User-defined tools. Tools are appended Host + Platform + User + Default
+    "user_tools": [],
+    // User-defined groups. Groups are appended Host + Platform + User + Default
+    "user_groups": [], 
+    // User-tools 
+    "user_tool_overrides": {},
     "default_profiles": {}, // host-specific
-
     "debug": false,
     "devel": false
 }

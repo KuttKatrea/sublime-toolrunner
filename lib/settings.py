@@ -11,6 +11,9 @@ host_settings = None
 platform_settings = None
 user_settings = None
 
+_tool_list = None
+_tool_map = None
+
 def get_platform_settings_filename():
     return get_settings_filename(sublime.platform().capitalize())
 
@@ -26,6 +29,15 @@ def get_setting(setting_name, default=None):
         platform_settings.get(setting_name,
         user_settings.get(setting_name, default)
         ))
+
+def get_host_setting(setting_name, default=None):
+    return host_settings.get(setting_name, default)
+
+def get_platform_setting(setting_name, default=None):
+    return platform_settings.get(setting_name, default)
+
+def get_user_setting(setting_name, default=None):
+    return user_settings.get(setting_name, default)
 
 def set_setting(setting_name, settingValue):
     host_settings.set(setting_name, settingValue)
@@ -61,12 +73,42 @@ def get_profiles(profile_group):
     return []
 
 def get_tools():
-    tools = {}
-    tools.update(get_setting('default_tools'))
-    tools.update(get_setting('user_tools'))
-    tools.update(get_setting('os_tools'))
-    tools.update(get_setting('host_tools'))
-    return tools
+    _build_tool_list()
+    return _tool_list
+
+def get_tool(tool_id):
+    _build_tool_list()
+    return _tool_map.get(tool_id, None)
+
+def get_override(tool_id):
+    return get_setting('user_tool_overrides',{}).get(tool_id)
+
+def _build_tool_list():
+    global _tool_map, _tool_list
+
+    _tool_map = {}
+    _tool_list = []
+
+    for settings_set in (
+          get_host_setting('user_tools', []), get_platform_setting('user_tools', []),
+          get_user_setting('user_tools', []), get_user_setting('default_tools', []) ):
+        for tool_item in settings_set:
+            debug.log("Checking: ", tool_item)
+            key = tool_item.get('name', tool_item.get('cmd'))
+            
+            if key is None:
+                debug.log("Tool has no cmd: ", tool_item)
+                continue
+
+            tool_item["name"] = key
+
+            if key not in _tool_map:
+                override_cmd = get_override(key)
+                if override_cmd is not None:
+                    tool_item['cmd'] = override_cmd
+
+                _tool_map[key] = tool_item
+                _tool_list.append(tool_item)
 
 def on_loaded():
     global host_settings, platform_settings, user_settings

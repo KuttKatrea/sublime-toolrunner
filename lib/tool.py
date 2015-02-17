@@ -133,8 +133,12 @@ class Input(object):
 class Output(object):
     def __init__(self):
         self.codec = _default_output_codec
+        self.split = 'bottom'
 
     def update_codec(self, codec):
         if codec is not None:
             self.codec = codec
 
+    def update_split(self, split):
+        if split is not None:
+            self.split = split

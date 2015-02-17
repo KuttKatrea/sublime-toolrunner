@@ -1,6 +1,5 @@
 import sublime
 import sublime_plugin
-import sys
 from functools import partial
 
 from .lib import settings
@@ -58,14 +57,25 @@ class ToolRunner(sublime_plugin.WindowCommand):
         tool_list = []
         tool_selection_list = []
 
-        debug.log("Creating Tools item list for Quick Panel")
+        def_tool_list = settings.get_tools()
 
-        for tool_key, single_tool in settings.get_tools().items():
+        debug.log("Creating Tools item list for Quick Panel", def_tool_list)
+
+        for single_tool in def_tool_list:
             debug.log("Appending ", single_tool)
-            tool_list.append(tool_key)
-            tool_selection_list.append(single_tool.get("name", single_tool.get("cmd")))
+            tool_name = single_tool.get("name", single_tool.get("cmd"))
+            tool_list.append(tool_name)
+
+            desc = single_tool.get('desc')
+            
+            if desc is not None:
+                tool_selection_list.append(tool_name + "(" + desc + ")")
+            else:
+                tool_selection_list.append(tool_name)
 
         callback = partial(callback, tool_list)
+
+        debug.log(tool_selection_list)
 
         self.window.show_quick_panel(tool_selection_list, callback, 0, 0, None)
 

@@ -2,13 +2,15 @@ import sublime
 
 import subprocess
 import datetime
+import os
 from functools import partial
+from os import path
+
 
 from . import settings
 from . import manager
 from . import debug
 from .tool import Tool
-from os import path
 
 class Command(object):
     def __init__(self, source_window, command_arguments):
@@ -90,9 +92,10 @@ class Command(object):
         self.process.terminate()
 
     def _create_tool(self, tool_id):
-        tool_dict = settings.get_tools()
+        tool_config = settings.get_tool(tool_id)
 
-        tool_config = tool_dict[tool_id]
+        if tool_config is None:
+            return None
 
         tool = Tool()
 
@@ -178,12 +181,12 @@ class Command(object):
         elif project is not None:
             working_directory = path.dirname(project)
         else:
-            working_directory = sys.env.get('HOME', sys.env.get('USER_PROFILE'))
+            working_directory = os.environ.get('HOME', os.environ.get('USER_PROFILE'))
 
         startupinfo = None
         if sublime.platform() == "windows":
             startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW |  subprocess.CREATE_NEW_CONSOLE)
+            startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE)
 
         try:
             process = subprocess.Popen(
@@ -201,7 +204,7 @@ class Command(object):
             debug.log("Error: ", e)
             return
 
-        self.create_window()
+        self.create_window(tool.output)
 
         manager.set_current_command_for_source_view(self._target_view, self)
 
@@ -266,7 +269,7 @@ class Command(object):
 
         manager.set_current_command_for_source_view(self._target_view, None)
 
-    def create_window(self):
+    def create_window(self, output):
         self._source_window = self._source_view.window()
 
         self._target_view = manager.create_target_view_for_source_view(self._source_view)
@@ -279,9 +282,8 @@ class Command(object):
         self._target_view.set_syntax_file(
             'Packages/sublime-toolrunner/lang/MSSQL Query Results.tmLanguage')
         self._target_view.settings().set('line_numbers', False)
-
-        self._source_view.settings().set('toolrunner_panel_name', self.panelname)
-
+        self._target_view.settings().set('translate_tabs_to_spaces', False)
+        self._target_view.settings().set('tab_size', 8)
         self._target_view.window().focus_view(self._target_view)
 
     def write(self, text):
