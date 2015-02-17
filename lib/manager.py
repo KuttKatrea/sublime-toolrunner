@@ -10,7 +10,10 @@ _command_for_source_view = dict()
 def cancel_command_for_source_view(view):
     command = get_current_command_for_source_view(view)
     if command is not None:
+        debug.log("Cancelling command")
         command.cancel()
+    else:
+        debug.log("No command to cancel")
 
 def create_target_view_for_source_view(view):
     source_id = str(view.id())
