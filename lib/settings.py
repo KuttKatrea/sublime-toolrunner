@@ -48,10 +48,11 @@ def expand(value):
     if value is None:
         return None
 
-    return expand_variables(
-        value,
-        extract_variables().update({"package": basepackage})
-    )
+    variables = {}
+    variables.update(extract_variables())
+    variables.update({"package": basepackage})
+
+    return expand_variables(value, variables)
 
 def expand_variables(str, vars):
     debug.log("Expanding %s with %s" % (str, vars))
