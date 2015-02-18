@@ -1,6 +1,7 @@
 import sublime
 import sys
 from . import debug
+from . import settings
 
 _default_input_codec = None
 _default_output_codec = None
@@ -41,13 +42,14 @@ class Tool(object):
     def set_input(self, input):
         if input is None: return
 
-        self.input.update_mode(input.get('mode'))
-        self.input.update_allow_empty(input.get('allow_empty'))
-        self.input.update_codec(input.get('codec'))
+        self.input.mode = input.get('mode')
+        self.input.allow_empty = input.get('allow_empty')
+        self.input.codec = input.get('codec')
 
     def set_output(self, output):
         if output is None: return
-        self.output.update_codec(output.get('codec'))
+        self.output.codec = output.get('codec')
+        self.output.syntax_file = output.get('syntax_file')
     
     def set_params(self, params):
         if params is not None:
@@ -111,34 +113,67 @@ class Tool(object):
 
 class Input(object):
     def __init__(self):
-        self.mode = 'pipe'
-        self.allow_empty = False
-        self.codec = _default_input_codec
+        self._mode = 'pipe'
+        self._allow_empty = False
+        self._codec = _default_input_codec
 
-    def update_mode(self, mode):
-        if mode is not None:
-            self.mode = mode
+    @property
+    def mode(self):
+        return self._mode
 
-            if mode == 'none':
+    @mode.setter
+    def mode(self, new_mode):
+        if new_mode is not None:
+            self._mode = new_mode
+
+            if new_mode == 'none':
                 self.allow_empty = True
+    
+    @property
+    def allow_empty(self):
+        return self._allow_empty
 
-    def update_allow_empty(self, allow_empty):
-        if allow_empty is not None:
-            self.allow_empty = allow_empty
+    @allow_empty.setter
+    def allow_empty(self, new_allow_empty):
+        if new_allow_empty is not None:
+            self._allow_empty = new_allow_empty
 
-    def update_codec(self, codec):
-        if codec is not None:
-            self.codec = codec
+    @property
+    def codec(self):
+        return self._codec
+
+    @codec.setter
+    def codec(self, new_codec):
+        if new_codec is not None:
+            self._codec = new_codec
 
 class Output(object):
     def __init__(self):
-        self.codec = _default_output_codec
-        self.split = 'bottom'
+        self._codec = _default_output_codec
+        self._split = 'bottom'
+        self._syntax_file = settings.expand(settings.get_setting('default_syntax_file'))
 
-    def update_codec(self, codec):
-        if codec is not None:
-            self.codec = codec
+    @property
+    def codec(self):
+        return self._codec
 
-    def update_split(self, split):
-        if split is not None:
-            self.split = split
+    def codec(self, new_codec):
+        if new_codec is not None:
+            self._codec = new_codec
+
+    @property
+    def split(self):
+        return self._split
+
+    def split(self, new_split):
+        if new_split is not None:
+            self._split = new_split
+
+    @property
+    def syntax_file(self):
+        return self._syntax_file
+
+    @syntax_file.setter
+    def syntax_file(self, new_syntax_file):
+        if new_syntax_file is not None:
+            self._syntax_file = settings.expand(settings.get_setting('default_syntax_file'))

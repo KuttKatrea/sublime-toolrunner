@@ -87,5 +87,7 @@
     "user_tool_overrides": {},
     "default_profiles": {}, // host-specific
     "debug": false,
-    "devel": false
+    "devel": false,
+    "default_syntax_file": "${packages}/${package}/lang/ToolRunner Output.tmLanguage"
 }
+    

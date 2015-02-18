@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array/>
+	<key>name</key>
+	<string>ToolRunner Output</string>
+	<key>patterns</key>
+	<array/>
+	<key>scopeName</key>
+	<string>source.tool_runner_output</string>
+	<key>uuid</key>
+	<string>417e7aab-61ba-4587-96d4-0572fed4bf75</string>
+</dict>
+</plist>
