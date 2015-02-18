@@ -291,8 +291,8 @@ class Command(object):
         self._target_view.set_name(self.panelname)
 
         #self._target_view = self._source_window.create_output_panel(self.panelname)
-        self._target_view.set_scratch(True)
-
+        self._target_view.set_read_only(output.read_only)
+        self._target_view.set_scratch(output.scratch)
         self._target_view.set_syntax_file(settings.expand(output.syntax_file))
 
         self._target_view.settings().set('line_numbers', False)
@@ -301,5 +301,13 @@ class Command(object):
         manager.focus_view(self._target_view)
 
     def write(self, text):
+        read_only = self._target_view.is_read_only()
+
+        if read_only:
+            self._target_view.set_read_only(False)
+
         self._target_view.run_command("append", {"characters": text})
+
+        if read_only:
+            self._target_view.set_read_only(True)
 
