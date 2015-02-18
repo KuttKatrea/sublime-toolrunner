@@ -157,7 +157,7 @@ class Output(object):
         self.focus_on_run = True
         self.read_only = True
         self.scratch = True
-        self.syntax_file = settings.expand(settings.get_setting('default_syntax_file'))
+        self.syntax_file = settings.get_setting('default_syntax_file')
         self.codec = _default_output_codec
         self.keep_reusing_after_save = False
 
