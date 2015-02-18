@@ -2,6 +2,7 @@ import sublime
 
 import platform
 import re
+from os import path
 
 from . import debug
 
@@ -42,6 +43,56 @@ def get_user_setting(setting_name, default=None):
 def set_setting(setting_name, settingValue):
     host_settings.set(setting_name, settingValue)
     sublime.save_settings(get_host_settings_filename())
+
+def expand(value):
+    if value is None:
+        return None
+
+    return expand_variables(
+        value,
+        extract_variables().update({"package": basepackage})
+    )
+
+def expand_variables(str, vars):
+    try:
+        return sublime.expand_variables(str, vars)
+    except AttributeError as e:
+        def repl(match):
+            debug.log("Replacing: ", match)
+            return vars.get(match.group(1), match.group(0))
+
+        return re.sub(r'\${(/w+)}', repl, str)
+
+def extract_variables():
+    try:
+        return sublime.extract_variables()
+    except AttributeError as e:
+        win = sublime.active_window()
+        view = win.active_view()
+
+        filename = view.file_name()
+        folder, basename = path.split(filename) if filename is not None else (None, None)
+        base, ext = path.splitext(basename) if filename is not None else (None, None)
+
+        project = win.project_file_name()
+        pfolder, pbasename = path.split(project) if project is not None else (None, None)
+        basep, baseext = path.splitext(path.basename(project)) if project is not None else (None, None)
+
+        return {
+            'packages': sublime.packages_path(),
+            'platform': sublime.platform(),
+            'file': filename,
+            'file_path': folder,
+            'file_name': basename,
+            'file_base_name': base,
+            'file_extension': ext,
+            'folder': folder,
+            'project': project,
+            'project_path': pfolder,
+            'project_name': pbasename,
+            'project_base_name': basep,
+            'project_extension': baseext
+        }
 
 def get_settingsFilePath(scope):
     return "${packages}/%0s/%1s" % get_settingsPieces(scope)
@@ -129,6 +180,8 @@ def on_loaded():
     user_settings.add_on_change('debug', on_debug_change)
     platform_settings.add_on_change('debug', on_debug_change)
     host_settings.add_on_change('debug', on_debug_change)
+
+    debug.log(extract_variables())
 
 def on_unloaded():
     if host_settings is not None:
