@@ -7,7 +7,7 @@ _default_input_codec = None
 _default_output_codec = None
 
 def _set_default_codecs():
-    global _default_input_codec 
+    global _default_input_codec
     global _default_output_codec
 
     _default_input_codec = 'cp850'
@@ -50,6 +50,7 @@ class Tool(object):
         if output is None: return
         self.output.codec = output.get('codec')
         self.output.syntax_file = output.get('syntax_file')
+        self.output.type = output.get('type')
     
     def set_params(self, params):
         if params is not None:
@@ -149,9 +150,16 @@ class Input(object):
 
 class Output(object):
     def __init__(self):
-        self._codec = _default_output_codec
-        self._split = 'bottom'
-        self._syntax_file = settings.expand(settings.get_setting('default_syntax_file'))
+        self.type = 'buffer'
+        self.reuse = 'view'
+        self.split = 'bottom'
+        self.focus_on_source_focus = True
+        self.focus_on_run = True
+        self.read_only = True
+        self.scratch = True
+        self.syntax_file = settings.expand(settings.get_setting('default_syntax_file'))
+        self.codec = _default_output_codec
+        self.keep_reusing_after_save = False
 
     @property
     def codec(self):
@@ -176,4 +184,11 @@ class Output(object):
     @syntax_file.setter
     def syntax_file(self, new_syntax_file):
         if new_syntax_file is not None:
-            self._syntax_file = settings.expand(settings.get_setting('default_syntax_file'))
+            self._syntax_file = settings.get_setting('default_syntax_file')
+
+    @property
+    def type(self):
+        return self._type
+    @type.setter
+    def type(self, value):
+        self._type = value

@@ -54,6 +54,7 @@ def expand(value):
     )
 
 def expand_variables(str, vars):
+    debug.log("Expanding %s with %s" % (str, vars))
     try:
         return sublime.expand_variables(str, vars)
     except AttributeError as e:

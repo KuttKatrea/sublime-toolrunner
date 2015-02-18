@@ -15,11 +15,16 @@ def cancel_command_for_source_view(view):
     else:
         debug.log("No command to cancel")
 
-def create_target_view_for_source_view(view):
+def create_target_view_for_source_view(view, type):
     source_id = str(view.id())
 
     if source_id not in _target_views_by_source_id:
-        new_view = view.window().new_file()
+        if type == 'buffer':
+            new_view = view.window().new_file()
+        else:
+            vid = 'toolrunner-output:' + source_id
+            new_view = view.window().create_output_panel(vid)
+            new_view.settings().set('toolrunner-output-id', vid)
 
         _target_views_by_source_id[source_id] = new_view
         _sources_by_target_id[str(new_view.id())] = source_id
@@ -29,18 +34,12 @@ def create_target_view_for_source_view(view):
 def get_source_view_for_target_view(view):
     target_id = view.id()
 
-    if target_id in _sources_by_target_id:
-        return _sources_by_target_id[target_id]
-
-    return None
+    return _sources_by_target_id.get(target_id)
 
 def get_target_view_for_source_view(view):
     source_id = view.id()
 
-    if source_id in _target_views_by_source_id:
-        return _target_views_by_source_id[source_id]
-
-    return None
+    return _target_views_by_source_id.get(source_id)
 
 def get_current_command_for_source_view(view):
     view_id = str(view.id())
@@ -72,3 +71,21 @@ def remove_target_view(view):
         debug.log("Forgetting view %s" % str(source_id))
         _target_views_by_source_id.pop(str(source_id), None)
 
+def focus_view(target_view):
+    active_window = sublime.active_window()
+    active_view = active_window.active_view()
+    active_group = active_window.active_group()
+
+    panel_id = target_view.settings().get('toolrunner-output-id')
+
+    if panel_id is None:
+        target_window = target_view.window()
+        
+        target_window.focus_view(target_view)
+        target_group = target_window.active_group()
+
+        if active_window != target_window or active_group != target_group:
+            active_window.focus_view(active_view)
+
+    else:
+        active_window.run_command('show_panel', {'panel': 'output.' + panel_id})

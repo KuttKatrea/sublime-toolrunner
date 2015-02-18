@@ -285,7 +285,7 @@ class Command(object):
     def create_window(self, output):
         self._source_window = self._source_view.window()
 
-        self._target_view = manager.create_target_view_for_source_view(self._source_view)
+        self._target_view = manager.create_target_view_for_source_view(self._source_view, output.type)
 
         self.panelname = ':: ToolRunner Results: %s ::' % (self._source_view.buffer_id())
         self._target_view.set_name(self.panelname)
@@ -293,12 +293,12 @@ class Command(object):
         #self._target_view = self._source_window.create_output_panel(self.panelname)
         self._target_view.set_scratch(True)
 
-        self._target_view.set_syntax_file(output.syntax_file)
+        self._target_view.set_syntax_file(settings.expand(output.syntax_file))
 
         self._target_view.settings().set('line_numbers', False)
         self._target_view.settings().set('translate_tabs_to_spaces', False)
         #self._target_view.settings().set('tab_size', 8)
-        self._target_view.window().focus_view(self._target_view)
+        manager.focus_view(self._target_view)
 
     def write(self, text):
         self._target_view.run_command("append", {"characters": text})
