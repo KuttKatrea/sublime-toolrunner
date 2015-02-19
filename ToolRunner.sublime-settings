@@ -58,24 +58,43 @@
             "cmd": "bash"
         }, {
             "cmd": "python"
-        }
-        /*,
-        "mysql": {
-            "cmd": "T:\\Apps\\script\\mysql.exe",
-            "default_arguments": ["--batch", "--table"],
-            "arguments": [],
-            "options": {
-                "host": "-h",
-                "user": "-u",
-                "password": "-p",
-                "port": "-P",
-                "database": "-D"
+        }, {
+            "cmd": "mysql",
+            "arguments": ["--batch", "--table", "${flags}", "${named_args}", "${positional_args}"],
+            "params": {
+                "host": {
+                    "type": "named",
+                    "argument": "-h"
+                },
+                "user": {
+                    "type": "named",
+                    "argument": "-u"
+                },
+                "password": {
+                    "type": "named",
+                    "argument": "-p"
+                },
+                "port": {
+                    "type": "named",
+                    "argument": "-P"
+                },
+                "database": {
+                    "type": "named",
+                    "argument": "-D"
+                }
             },
-            "flags": {},
-            "codecs": { "input": "utf-8", "output": "cp437" }
-        },
+            "input": {
+                "codec": "utf-8"
+            },
+            "output": {
+                "codec": "cp437"
+            }
+        }
+
+        /*,
+
         "mongodb": {
-            "cmd": "T:\\Apps\\mongodb-win32-i386-2.6.7\\bin\\mongo.exe",
+            "cmd": "mongo",
             "default_arguments": [],
             "arguments": ["address"],
             "options": {
@@ -89,16 +108,6 @@
             },
             "codecs": { "input": "utf-8", "output": "cp437" }
         },*/
-        ,
-        /*"shell": {
-            "cmd": "cmd",
-            "default_arguments": ["/C", "devshell", "sh"],
-            "arguments": [],
-            "options": {},
-            "flags": {},
-            "codecs": { "input": "utf-8", "output": "utf-8" }
-        }*/
-        //},
     ],
     // User-defined tools. Tools are appended Host + Platform + User + Default
     "user_tools": [],
