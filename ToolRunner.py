@@ -208,6 +208,10 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         manager.remove_target_view(view)
 
     def on_post_save(self, view):
+        debug.log("Saving view: %s" % view.id())
+
+    def on_post_save(self, view):
+        debug.log("Saved view: %s" % view.id())
         source_view = manager.get_source_view_for_target_view(view)
         if source_view is None:
             debug.log("The view %s is not an output view" % view.id())

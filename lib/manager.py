@@ -26,19 +26,22 @@ def create_target_view_for_source_view(view, type):
             new_view = view.window().create_output_panel(vid)
             new_view.settings().set('toolrunner-output-id', vid)
 
+        target_id = str(new_view.id())
+        debug.log("Created view with id %s" % target_id)
+
         _target_views_by_source_id[source_id] = new_view
-        _sources_by_target_id[str(new_view.id())] = source_id
+        _sources_by_target_id[target_id] = source_id
+        debug.log(_target_views_by_source_id, _sources_by_target_id)
 
     return _target_views_by_source_id[source_id]
 
 def get_source_view_for_target_view(view):
-    target_id = view.id()
+    target_id = str(view.id())
 
     return _sources_by_target_id.get(target_id)
 
 def get_target_view_for_source_view(view):
-    source_id = view.id()
-
+    source_id = str(view.id())
     return _target_views_by_source_id.get(source_id)
 
 def get_current_command_for_source_view(view):
@@ -70,6 +73,8 @@ def remove_target_view(view):
     if source_id is not None:
         debug.log("Forgetting view %s" % str(source_id))
         _target_views_by_source_id.pop(str(source_id), None)
+        view.set_read_only(False)
+        view.set_scratch(False)
 
 def focus_view(target_view):
     active_window = sublime.active_window()
