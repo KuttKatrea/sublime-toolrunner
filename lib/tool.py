@@ -54,7 +54,7 @@ class Tool(ConfigContainer):
     command_arguments = dict(
         input_source="input_source",
         output="output",
-        params="param_values",
+        params="params_values",
     )
 
     def _get_defaults(self):
@@ -64,6 +64,7 @@ class Tool(ConfigContainer):
             arguments = list(),
             input = Input(),
             output = Output(),
+            params = dict(),
             input_source = None,
             params_values = dict(),
         )
@@ -76,6 +77,8 @@ class Tool(ConfigContainer):
             return None
 
         conf = {value: get_value(key) for (key, value) in Tool.command_arguments.items()}
+
+        debug.log("Setting command arguments: %s" % conf)
 
         self.update(conf)
 
