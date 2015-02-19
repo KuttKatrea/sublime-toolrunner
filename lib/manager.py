@@ -66,15 +66,17 @@ def set_current_command_for_source_view(target_view, command):
     else:
         _command_for_source_view[view_id] = command
 
-def remove_target_view(view):
-    target_id = str(view.id())
-    source_id = _sources_by_target_id.pop(target_id, None)
+def remove_source_view(view):
+    vid = str(view.id())
+    targetid = _target_views_by_source_id.pop(vid, None)
+    debug.log("Forgetting %s => %s" % (vid, targetid))
+    _sources_by_target_id.pop(targetid, None)
 
-    if source_id is not None:
-        debug.log("Forgetting view %s" % str(source_id))
-        _target_views_by_source_id.pop(str(source_id), None)
-        view.set_read_only(False)
-        view.set_scratch(False)
+def remove_target_view(view):
+    vid = str(view.id())
+    sourceid = _sources_by_target_id.pop(vid, None)
+    debug.log("Forgetting %s => %s" % (sourceid, vid))
+    _target_views_by_source_id.pop(sourceid, None)
 
 def focus_view(target_view):
     active_window = sublime.active_window()

@@ -85,7 +85,6 @@ class ToolRunner(sublime_plugin.WindowCommand):
         if selected_index > -1:
             command.run_tool(tool_selected)
 
-
     def _ask_group_and_profile_to_run(self, callback):
         group_list = [
             single_group['name'] for single_group in settings.get_groups()
@@ -200,13 +199,8 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
         manager.remove_target_view(view)
-
-        view = manager.get_target_view_for_source_view(view)
-        if view is None:
-            return
-
-        manager.remove_target_view(view)
-
+        manager.remove_source_view(view)
+        
     def on_post_save(self, view):
         debug.log("Saving view: %s" % view.id())
 
@@ -220,12 +214,13 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         manager.remove_target_view(view)
 
 def plugin_loaded():
+    debug.log("Plugin Loading")
     settings.on_loaded()
     debug.log("Plugin Loaded")
     if settings.get_setting('devel'):
         debug.forget_modules()
 
 def plugin_unloaded():
-    debug.log("Plugin Unloaded")
     settings.on_unloaded()
+    debug.log("Plugin Unloaded")
 
