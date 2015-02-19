@@ -5,7 +5,7 @@ import datetime
 import os
 from functools import partial
 from os import path
-from threading import Thread
+from threading import Thread, Event
 
 from . import settings
 from . import manager
@@ -17,38 +17,24 @@ class Command(object):
         self._source_window = source_window
         self._source_view = source_window.active_view()
         self._command_arguments = command_arguments
-        self._tool = None
-
         self._target_view = None
-
         self._cancelled = False
 
     def run_tool(self, tool_id):
-        debug.log("Running command for tool: ", tool_id)
+        debug.log("Running command for tool: ", tool_id, self._command_arguments)
 
         tool = self._create_tool(tool_id)
 
-        debug.log("Passing command arguments:", self._command_arguments)
+        if tool is None:
+            debug.log("There is no tool named %s" % tool_id)
+            return
 
         tool.set_input_source(self._command_arguments.get("input_source"))
-
         tool.set_output(self._command_arguments.get("output"))
-
         tool.set_params_values(self._command_arguments.get("params"))
 
-        self._tool = tool
-
-        manager.cancel_command_for_source_view(self._source_view)
-
-        debug.log("Launching thread")
         self._thread = Thread(target=partial(self._do_run_tool, tool))
         self._thread.start()
-
-        '''
-        sublime.set_timeout_async(
-            partial(self._do_run_tool, tool), 0
-        )
-        '''
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -88,16 +74,7 @@ class Command(object):
             self._command_arguments.get("params",
                profile_descriptor.get("params",
                     group_descriptor.get("params"))))
-        
-        self._tool = tool
 
-        manager.cancel_command_for_source_view(self._source_view)
-
-        '''
-        sublime.set_timeout_async(
-            partial(self._do_run_tool, tool), 0
-        )
-        '''
         self._thread = Thread(target=partial(self._do_run_tool, tool))
         self._thread.start()
 
@@ -168,6 +145,8 @@ class Command(object):
         return input_text
 
     def _do_run_tool(self, tool):
+        manager.cancel_command_for_source_view(self._source_view)
+
         self._execution_cancelled = False
 
         input_text = self._get_input(tool.input_source)
