@@ -91,20 +91,23 @@ class Tool(ConfigContainer):
         named_arguments = []
         flag_arguments = []
 
-        debug.log("Generating argument list for params", self.params_values)
-        for param_key, param_value in self.params_values.items():
-            debug.log("Matching param: %s = %s" % (param_key, param_value))
+        debug.log("Acceptable params %s" % self.params)
 
-            param = self.params[param_key]
+        if self.params_values is not None:
+            debug.log("Generating argument list for params", self.params_values)
+            for param_key, param_value in self.params_values.items():
+                debug.log("Matching param: %s = %s" % (param_key, param_value))
 
-            if param.get('type') == "positional":
-                positional_arguments[param.order] = param_value
-            elif param.get('type') == "named":
-                named_arguments.append(param.get('argument'))
-                named_arguments.append(param_value)
-            elif param.get('type') == "flag":
-                if param_value:
-                    flag_arguments.append(param.get('argument'))
+                param = self.params[param_key]
+
+                if param.get('type') == "positional":
+                    positional_arguments.append(param_value)
+                elif param.get('type') == "named":
+                    named_arguments.append(param.get('argument'))
+                    named_arguments.append(param_value)
+                elif param.get('type') == "flag":
+                    if param_value:
+                        flag_arguments.append(param.get('argument'))
 
         debug.log("Positional args: ", positional_arguments)
         debug.log("Named args: ", named_arguments)
