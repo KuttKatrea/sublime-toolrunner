@@ -1,43 +1,64 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
-    "default_tools": [
-        {
+    "default_tools": [{
             "name": "SQLCMD",
             "desc": "SQL Server command-line client",
             "cmd": "sqlcmd",
-            "arguments": [ "-s", "\t", "${flags}", "${named_args}", "${positional_args}" ],
-            "options": {
-                "input": {
-                    "mode": "pipe",
-                    "allow_empty": false,
-                    "codec": "cp437"
+            "arguments": ["-s", "\t", "${flags}", "${named_args}", "${positional_args}"],
+            "input": {
+                "mode": "pipe",
+                "allow_empty": false,
+                "codec": "cp437"
+            },
+            "output": {
+                "type": "buffer",
+                "reuse": "view",
+                "split": "bottom",
+                "focus_on_source_focus": true,
+                "focus_on_run": true,
+                "read_only": false,
+                "scratch": false,
+                "syntax_file": "${package}/lang/MSSQL Query Results.tmLanguage",
+                "codec": "cp437",
+                "keep_reusing_after_save": false
+            },
+            "params": {
+                "codepage": {
+                    "type": "named",
+                    "argument": "-f"
                 },
-                "output": {
-                    "type": "buffer",
-                    "reuse": "view",
-                    "split": "bottom",
-                    "focus_on_source_focus": true,
-                    "focus_on_run": true,
-                    "read_only": false,
-                    "scratch": false,
-                    "syntax_file": "${package}/lang/MSSQL Query Results.tmLanguage",
-                    "codec": "cp437",
-                    "keep_reusing_after_save": false
+                "password": {
+                    "type": "named",
+                    "argument": "-P"
                 },
-                "params": {
-                    "codepage": { "type": "named", "argument": "-f"},
-                    "password": { "type": "named", "argument": "-P"},
-                    "server": { "type": "named", "argument": "-S"},
-                    "user": { "type": "named", "argument": "-U"},
-                    "database": { "type": "named", "argument": "-d"},
-                    "workstation": { "type": "named", "argument": "-H"},
-                    "trusted": { "type": "flag", "argument": "-E"}
+                "server": {
+                    "type": "named",
+                    "argument": "-S"
+                },
+                "user": {
+                    "type": "named",
+                    "argument": "-U"
+                },
+                "database": {
+                    "type": "named",
+                    "argument": "-d"
+                },
+                "workstation": {
+                    "type": "named",
+                    "argument": "-H"
+                },
+                "trusted": {
+                    "type": "flag",
+                    "argument": "-E"
                 }
             }
-        },
-        { "cmd": "cmd" },
-        { "cmd": "bash" },
-        { "cmd": "python" }
+        }, {
+            "cmd": "cmd"
+        }, {
+            "cmd": "bash"
+        }, {
+            "cmd": "python"
+        }
         /*,
         "mysql": {
             "cmd": "T:\\Apps\\script\\mysql.exe",
@@ -77,12 +98,12 @@
             "flags": {},
             "codecs": { "input": "utf-8", "output": "utf-8" }
         }*/
-    //},
+        //},
     ],
     // User-defined tools. Tools are appended Host + Platform + User + Default
     "user_tools": [],
     // User-defined groups. Groups are appended Host + Platform + User + Default
-    "user_groups": [], 
+    "user_groups": [],
     // User-tools 
     "user_tool_overrides": {},
     "default_profiles": {}, // host-specific
@@ -90,4 +111,3 @@
     "devel": false,
     "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage"
 }
-    
