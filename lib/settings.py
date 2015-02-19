@@ -52,10 +52,14 @@ def expand(value):
     variables.update(extract_variables())
     variables.update({"package": basepackage})
 
-    return expand_variables(value, variables)
+    debug.log("Expanding: %s with %s" % (value, variables))
+    expanded = expand_variables(value, variables)
+
+    debug.log("Expanded: %s" % expanded)
+
+    return expanded
 
 def expand_variables(str, vars):
-    debug.log("Expanding %s with %s" % (str, vars))
     try:
         return sublime.expand_variables(str, vars)
     except AttributeError as e:
@@ -63,7 +67,7 @@ def expand_variables(str, vars):
             debug.log("Replacing: ", match)
             return vars.get(match.group(1), match.group(0))
 
-        return re.sub(r'\${(/w+)}', repl, str)
+        return re.sub(r'\${(\w+)}', repl, str)
 
 def extract_variables():
     try:
