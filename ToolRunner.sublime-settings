@@ -88,6 +88,6 @@
     "default_profiles": {}, // host-specific
     "debug": false,
     "devel": false,
-    "default_syntax_file": "${packages}/${package}/lang/ToolRunner Output.tmLanguage"
+    "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage"
 }
     
