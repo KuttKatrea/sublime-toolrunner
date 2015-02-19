@@ -15,6 +15,9 @@ user_settings = None
 _tool_list = None
 _tool_map = None
 
+_plugin_loaded = False
+_on_plugin_loaded_callbacks = list()
+
 def get_platform_settings_filename():
     return get_settings_filename(sublime.platform().capitalize())
 
@@ -169,6 +172,10 @@ def _build_tool_list():
 
 def on_loaded():
     global host_settings, platform_settings, user_settings
+    global _plugin_loaded, _on_plugin_loaded_callbacks
+
+    if _plugin_loaded:
+        return
 
     host_settings = sublime.load_settings(
         get_host_settings_filename())
@@ -187,7 +194,11 @@ def on_loaded():
     platform_settings.add_on_change('debug', on_debug_change)
     host_settings.add_on_change('debug', on_debug_change)
 
-    debug.log(extract_variables())
+    for callback in _on_plugin_loaded_callbacks:
+        callback()
+
+    _on_plugin_loaded_callbacks = None
+    _plugin_loaded = True
 
 def on_unloaded():
     if host_settings is not None:
@@ -199,5 +210,15 @@ def on_unloaded():
     if user_settings is not None:
         user_settings.clear_on_change('debug')
 
+    _on_plugin_loaded_callbacks = None
+
 def on_debug_change():
     debug.enabled = get_setting('debug')
+
+def register_on_plugin_loaded(callback):
+    if _plugin_loaded:
+        callback()
+    else:
+        _on_plugin_loaded_callbacks.append(callback)
+
+

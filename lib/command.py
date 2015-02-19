@@ -29,12 +29,9 @@ class Command(object):
             debug.log("There is no tool named %s" % tool_id)
             return
 
-        tool.set_input_source(self._command_arguments.get("input_source"))
-        tool.set_output(self._command_arguments.get("output"))
-        tool.set_params_values(self._command_arguments.get("params"))
+        tool.set_command_arguments(self._command_arguments)
 
-        self._thread = Thread(target=partial(self._do_run_tool, tool))
-        self._thread.start()
+        self._launch(tool)
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -53,34 +50,23 @@ class Command(object):
 
         debug.log("Running command for profile: ", group_descriptor, profile_descriptor)
 
-        tool_id =profile_descriptor.get("tool",
-            group_descriptor.get("tool"))
+        tool_id =profile_descriptor.get("tool", group_descriptor.get("tool"))
 
         tool = self._create_tool(tool_id)
 
         debug.log("Passing command arguments:", self._command_arguments)
 
-        tool.set_input_source(
-            self._command_arguments.get("input_source",
-               profile_descriptor.get("input_source",
-                    group_descriptor.get("input_source"))))
+        tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
 
-        tool.set_output(
-            self._command_arguments.get("output",
-               profile_descriptor.get("output",
-                    group_descriptor.get("output"))))
-
-        tool.set_params_values(
-            self._command_arguments.get("params",
-               profile_descriptor.get("params",
-                    group_descriptor.get("params"))))
-
-        self._thread = Thread(target=partial(self._do_run_tool, tool))
-        self._thread.start()
+        self._launch(tool)
 
     def cancel(self):
         self._cancelled = True
         self.process.terminate()
+
+    def _launch(self, tool):
+        self._thread = Thread(target=partial(self._do_run_tool, tool))
+        self._thread.start()
 
     def _create_tool(self, tool_id):
         tool_config = settings.get_tool(tool_id)
@@ -88,15 +74,7 @@ class Command(object):
         if tool_config is None:
             return None
 
-        tool = Tool()
-
-        tool.set_name(tool_config.get("name"))
-        tool.set_cmd(tool_config.get("cmd"))
-        tool.set_arguments(tool_config.get("arguments"))
-        tool.set_input(tool_config.get("options", {}).get("input"))
-        tool.set_output(tool_config.get("options", {}).get("output"))
-        tool.set_params(tool_config.get("options", {}).get("params"))
-        tool.set_input_source(tool_config.get("options", {}).get("input_source"))
+        tool = Tool(**tool_config)
 
         return tool
 
@@ -195,6 +173,8 @@ class Command(object):
         except FileNotFoundError as e:
             debug.log("Error: ", e)
             return
+
+        debug.log(tool)
 
         self.create_window(tool.output)
 

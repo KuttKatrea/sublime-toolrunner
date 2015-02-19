@@ -13,56 +13,71 @@ def _set_default_codecs():
     _default_input_codec = 'cp850'
     _default_output_codec = 'cp850'
 
-_set_default_codecs()
+class ConfigContainer(object):
+    def _get_defaults(self):
+        return dict()
 
-class Tool(object):
-    def __init__(self):
-        self.name = ""
-        self.cmd = ""
-        self.arguments = []
-        self.input = Input()
-        self.output = Output()
-        self.input_source = None
-        self.params_values = {}
+    def __init__(self, **kwargs):
+        defaults = self._get_defaults()
 
-    def set_name(self, name):
-        if name is not None:
-            self.name = name
+        self._props = set(defaults.keys())
 
-    def set_cmd(self, cmd):
-        debug.log(cmd)
-        if cmd is not None:
-            self.cmd = cmd
+        debug.log("%s", self._props)
 
-    def set_arguments(self, arguments):
-        debug.log(arguments)
-        if arguments is not None:
-            self.arguments = arguments
+        self.update(defaults)
+        self.update(kwargs)
 
-    def set_input(self, input):
-        if input is None: return
+        debug.log(self)
 
-        self.input.mode = input.get('mode')
-        self.input.allow_empty = input.get('allow_empty')
-        self.input.codec = input.get('codec')
+    def update(self, config):
+        if config is None:
+            return
 
-    def set_output(self, output):
-        if output is None: return
-        self.output.codec = output.get('codec')
-        self.output.syntax_file = output.get('syntax_file')
-        self.output.type = output.get('type')
-    
-    def set_params(self, params):
-        if params is not None:
-            self.params = params
+        for k in config:
+            if k in self._props:
+                attr_value = config.get(k)
 
-    def set_input_source(self, input_source):
-        if input_source is not None:
-            self.input_source = input_source 
+                debug.log("Updating %s with %s" % (k, attr_value))
 
-    def set_params_values(self, params_values):
-        if params_values is not None:
-            self.params_values = params_values
+                current_attr = getattr(self, k, None)
+
+                if isinstance(current_attr, ConfigContainer):
+                    current_attr.update(attr_value)
+                else:
+                    debug.log("Setting")
+                    setattr(self, k, attr_value)
+
+    def __repr__(self):
+        return self.__class__.__name__ + ':' + self.__dict__.__repr__();
+
+class Tool(ConfigContainer):
+    command_arguments = dict(
+        input_source="input_source",
+        output="output",
+        params="param_values",
+    )
+
+    def _get_defaults(self):
+        return dict(
+            name = "",
+            cmd = "",
+            arguments = list(),
+            input = Input(),
+            output = Output(),
+            input_source = None,
+            params_values = dict(),
+        )
+
+    def set_command_arguments(self, *args):
+        def get_value(argName):
+            for conf in args:
+                if argName in conf:
+                    return conf[argName]
+            return None
+
+        conf = {value: get_value(key) for (key, value) in Tool.command_arguments.items()}
+
+        self.update(conf)
 
     def get_command_array(self, input_text=None):
         debug.log("Building command line array")
@@ -112,83 +127,38 @@ class Tool(object):
 
         return full_arguments
 
-class Input(object):
-    def __init__(self):
-        self._mode = 'pipe'
-        self._allow_empty = False
-        self._codec = _default_input_codec
+class Input(ConfigContainer):
+    def _get_defaults(self):
+        return dict(
+            mode = 'pipe',
+            allow_empty = False,
+            codec = _default_input_codec,
+        )
 
-    @property
-    def mode(self):
-        return self._mode
+    def update(self, config):
+        ConfigContainer.update(self, config)
 
-    @mode.setter
-    def mode(self, new_mode):
-        if new_mode is not None:
-            self._mode = new_mode
+        if self.mode == 'none':
+            self.allow_empty = True
 
-            if new_mode == 'none':
-                self.allow_empty = True
-    
-    @property
-    def allow_empty(self):
-        return self._allow_empty
 
-    @allow_empty.setter
-    def allow_empty(self, new_allow_empty):
-        if new_allow_empty is not None:
-            self._allow_empty = new_allow_empty
+class Output(ConfigContainer):
+    def _get_defaults(self):
+        return dict(
+            type = 'buffer',
+            reuse = 'view',
+            split = 'bottom',
+            focus_on_source_focus = True,
+            focus_on_run = True,
+            read_only = True,
+            scratch = True,
+            syntax_file = settings.get_setting('default_syntax_file'),
+            codec = _default_output_codec,
+            keep_reusing_after_save = False,
+        )
 
-    @property
-    def codec(self):
-        return self._codec
+def _on_plugin_loaded():
+    debug.log("Setting defaults for tools")
+    _set_default_codecs()
 
-    @codec.setter
-    def codec(self, new_codec):
-        if new_codec is not None:
-            self._codec = new_codec
-
-class Output(object):
-    def __init__(self):
-        self.type = 'buffer'
-        self.reuse = 'view'
-        self.split = 'bottom'
-        self.focus_on_source_focus = True
-        self.focus_on_run = True
-        self.read_only = True
-        self.scratch = True
-        self.syntax_file = settings.get_setting('default_syntax_file')
-        self.codec = _default_output_codec
-        self.keep_reusing_after_save = False
-
-    @property
-    def codec(self):
-        return self._codec
-
-    def codec(self, new_codec):
-        if new_codec is not None:
-            self._codec = new_codec
-
-    @property
-    def split(self):
-        return self._split
-
-    def split(self, new_split):
-        if new_split is not None:
-            self._split = new_split
-
-    @property
-    def syntax_file(self):
-        return self._syntax_file
-
-    @syntax_file.setter
-    def syntax_file(self, new_syntax_file):
-        if new_syntax_file is not None:
-            self._syntax_file = settings.get_setting('default_syntax_file')
-
-    @property
-    def type(self):
-        return self._type
-    @type.setter
-    def type(self, value):
-        self._type = value
+settings.register_on_plugin_loaded(_on_plugin_loaded)
