@@ -200,9 +200,6 @@ class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
         manager.remove_source_view(view)
         manager.remove_target_view(view)
-        
-    def on_post_save(self, view):
-        debug.log("Saving view: %s" % view.id())
 
     def on_post_save(self, view):
         debug.log("Saved view: %s" % view.id())
@@ -212,6 +209,8 @@ class ToolRunnerListener(sublime_plugin.EventListener):
             return
 
         manager.remove_target_view(view)
+        view.set_scratch(False)
+        view.set_read_only(False)
 
 def plugin_loaded():
     debug.log("Plugin Loading")
