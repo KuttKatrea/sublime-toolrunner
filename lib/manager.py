@@ -69,13 +69,15 @@ def set_current_command_for_source_view(target_view, command):
 def remove_source_view(view):
     vid = str(view.id())
     targetid = _target_views_by_source_id.pop(vid, None)
-    debug.log("Forgetting %s => %s" % (vid, targetid))
+    if targetid != None:
+        targetid = targetid.id()
+    debug.log("Forgetting as source %s => %s" % (vid, targetid))
     _sources_by_target_id.pop(targetid, None)
 
 def remove_target_view(view):
     vid = str(view.id())
     sourceid = _sources_by_target_id.pop(vid, None)
-    debug.log("Forgetting %s => %s" % (sourceid, vid))
+    debug.log("Forgetting as target %s => %s" % (sourceid, vid))
     _target_views_by_source_id.pop(sourceid, None)
 
 def focus_view(target_view):

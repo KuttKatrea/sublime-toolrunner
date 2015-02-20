@@ -198,8 +198,8 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
 
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
-        manager.remove_target_view(view)
         manager.remove_source_view(view)
+        manager.remove_target_view(view)
         
     def on_post_save(self, view):
         debug.log("Saving view: %s" % view.id())
