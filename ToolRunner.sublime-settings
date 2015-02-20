@@ -16,9 +16,9 @@
             "split": "bottom",
             "focus_on_source_focus": true,
             "focus_on_run": true,
-            "read_only": false,
-            "scratch": false,
-            "syntax_file": "${package}/lang/MSSQL Query Results.tmLanguage",
+            "read_only": true,
+            "scratch": true,
+            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage",
             "codec": "cp437",
             "keep_reusing_after_save": false
         },
@@ -58,6 +58,10 @@
         "cmd": "bash"
     }, {
         "cmd": "python"
+    }, {
+        "cmd": "ruby"
+    }, {
+        "cmd": "nodejs"
     }, {
         "cmd": "mysql",
         "arguments": ["--batch", "--table", "${flags}", "${named_args}", "${positional_args}"],
