@@ -8,7 +8,7 @@
         "input": {
             "mode": "pipe",
             "allow_empty": false,
-            "codec": "cp437"
+            "codec": "mbcs"
         },
         "output": {
             "type": "buffer",
@@ -19,7 +19,7 @@
             "read_only": true,
             "scratch": true,
             "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage",
-            "codec": "cp437",
+            "codec": "mbcs",
             "keep_reusing_after_save": false
         },
         "params": {
@@ -128,7 +128,7 @@
         "output": {
             "codec": "utf-8"
         }
-    }, ],
+    }],
     // User-defined tools. Tools are appended Host + Platform + User + Default
     "user_tools": [],
     // User-defined groups. Groups are appended Host + Platform + User + Default
