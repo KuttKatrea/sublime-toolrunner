@@ -7,80 +7,117 @@ ToolRunner takes the chosen source input (none, selection, line, block or
 file) and pipes it into the chosen tool appending the output to a buffer or
 panel.
 
-
 Tools
 ---
 A tool is an external application that is going to be run by Tool Runner.
 The tools must be defined in the settings file.
 
 ToolRuner comes with some preconfigured tools:
+
+**Shells**
+
  - cmd
  - bash
+
+**Database Clients**
+
  - sqlcmd (SQL Server command-line client)
  - mysql
  - mongo
+
+**Interpreters**
+
  - python
  - ruby
- - nodej
+ - nodejs
+ - JScript (Cscript host)
+ - VBScript (Cscript host)
 
 But you can add your own.
 
 Base Configuration
 ---
+This is the general view of configuration options
+
 ```javascript
 {
-  // Preconfigured tool
-  "default_tools": {},
+  // Preconfigured tools
+  "default_tools": [],
 
   //User-defined tools.
   //Tools added in Host, Platform and User settings will be merged.
-  "user_tools": {},
+  "user_tools": [],
 
+  // Executable overrides for specific tool.
   "user_tool_overrides": {
     "toolname": "cmdpath"
   },
 
-  "user_groups": [], // Check groups configuration
+  // User groups and profiles configuration.
+  // Groups added in Host, Platform and User settings will be merged.
+  // Check "Groups Configuration"
+  "user_groups": [],
 
+  // Default profile for the given groups.
   "default_profiles": {
     "group": "profile"
   },
 
+  // Whether to dump debug messages to console
   "debug": false
 }
 ```
 
 Tool Configuration
 ---
+This is the model for tool configuration options (default_tools, user_tools)
 
 ```javascript
-{
-  "mssql": {
-    "cmd": "sqlcmd", // Required.
-    "arguments": [ "${flags}", "${named_args}", "${positional_args}" ], // Arguments that must be passed always. Defaults to []
+[
+  {
+    // Friendly name to reference this tool
+    // Optional. Defaults to cmd configuration value
+    "name": "CMD",
+    // Executable to call when this tool is run. Must be on PATH or must
+    // be an absolute path
+    // Required.
+    "cmd": "sqlcmd",
+    // Arguments that the command receives.
+    // "${flags}", "${named_args}", "${positional_args}" are replaced as individual elements by its corresponding params.
+    // Any other values are passed as-is.
+    "arguments": [ "${flags}", "${named_args}", "${positional_args}" ],
     "options": {
-      // If manual and not in arguments, there will not be input sent to tool
+      // Configuration of the input string passed to the tool
       "input": {
-        "mode": "pipe", //pipe, manual, none. If manual it must be added in arguments as "${input}"
-        "allow_empty": false, // Launch command even if input is empty string.
-        "codec": "utf-8"
+        //"pipe" pipes the input to the tool.
+        //"manual" requires an argument "${input}" to be filled with the full input
+        //"none" prevents to pass any input to the tool.
+        "mode": "pipe",
+        // Launch command even if input is empty. Forced to true when mode=none
+        "allow_empty": false,
+        // Python codec to encode the input for the tool.
+        "codec": "utf_8"
       },
+      // Configuration for the execution results view
       "output": {
-        "type": "panel", //buffer
-        "reuse": "view", //always view never
-        "split": "bottom", //top, right, left, none. Only for type: buffer
-        "focus": {
-          // Focus the output view when focusing the source view from which it spawned
-          // If its a panel, make it visible. If it's a view, make it visible in its group (except if its the same group of the input file)
-          "onsourcefocus": false,
-          "onexecution": true
-        },
-        "syntax_file": null, // Defaults to "ToolRunner Output.tmLanguage"
-        "codec": "utf-8",
-        "keep_reusing_after_save": false
+        // "buffer" creates a normal view next to the current view
+        // "panel" creates an output panel (like a build command)
+        "type": "buffer",
+        // Syntax file to apply to output
+        "syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
+        // Python codec to decode the output of the tool.
+        "codec": "utf_8"
       },
+      // Parameters this tool receives.
+      // Key is the friendly name that will be used to pass this parameter
       "params": {
-        "server": { "type": "named", "argument": "-S" },
+        "server": {
+          // Indicates the type of parameter.
+          // Defaults to "named"
+          "type": "named",
+          // Argument that will be prepended to this param value
+          "argument": "-S"
+        },
         "quiet": { "type": "flag", "argument": "-Q" },
         "address": { "type": "positional", "order": "1", "required": false }
       }
@@ -129,13 +166,13 @@ Commands (for use in Palette or Keybindings)
     "args": {
       // If none tool or group are passed, there will be a selector for Group/Profile
       "tool": "sqlcmd", // tool name
-      "group": "group", // [select], group name
+      "group": "group", // group name
       "default_profile": false, //
-      "profile": "profile_name", // [default], [select], profile name
+      "profile": "profile_name", // profile name
       "input": "auto-file", // [Required] none, selection, line, **auto-line**, block, auto-block, file, auto-file
       // If you use none be sure the command has allow_empty = true
       "output": {}, // overrides output config
-      // tool params as defined in tool's params config. 
+      // tool params as defined in tool's params config.
       // Overrides profile params
       "params": {}
     }
@@ -152,10 +189,10 @@ Commands (for use in Palette or Keybindings)
     // Changes the default profile for a group.
     "command": "tool_runner_switch_default_profile",
     "args": {
-      // If not indicated, will display the palette to select the group 
+      // If not indicated, will display the palette to select the group
       // to change the default for
       // The selected group will be saved in host-specific settings
-      "profile_group": "MSSQL" 
+      "profile_group": "MSSQL"
     }
   },
 
@@ -165,7 +202,7 @@ Commands (for use in Palette or Keybindings)
     "args": {
       // Scope to open settings for.
       // If no scope is passed, a panel will ask for it
-      "scope": "default" // default, user, os, host
+      "scope": "default" // default, user, platform, host
     }
   }
 ]
@@ -173,9 +210,32 @@ Commands (for use in Palette or Keybindings)
 
 Palette Commands and KeyBindings
 ---
-I don't include default keybindings because they are so intrusive, and as this
-plugin is very generic it would be better for the user to define their own set
-of bindings depending on the file types and tools used.
+I don't include default keybindings because they are so intrusive, and as this plugin is very generic it would be better for the user to define their own set of bindings depending on the file types and tools used.
 
-View Example.sublime-keymap to view how to configure keybindings to launch
-the execution of statements (selected text or full file)
+View Example.sublime-keymap to view how to configure keybindings to launch the execution of statements (selected text or full file)
+
+But you can create your own keybindings and commands, for example:
+
+```javascript
+{
+  "keys": ["f5"],
+  "command": "tool_runner"
+},
+{
+  "keys": ["ctrl+f5"],
+  "command": "tool_runner_cancel_current"
+}
+```
+
+will allow you to execute ToolRunner with F5 (asking you which Tool/Profile to use), and CTRL+F5 to cancel the current running command for that view
+
+Future
+---
+  - Better support for CMD
+    The current way of piping the commands generates strange unwanted output (mainly the display of the command prompt).
+    Better support may be given creating a temporary BAT file and executing it instead of piping, but you will have to use bat semantics too (eg. %%A instead of %A in for loops)
+
+  - Support for Windows CScript (JScript, VBScript).
+    CScript requires always a file, so we must generate a temporary file to execute, just like in the previous point.
+
+  - Testing on MacOS
