@@ -189,7 +189,7 @@ class Command(object):
         self._target_view.sel().add(current_cursor_position)
 
         if tool.input.mode == 'pipe':
-            process.stdin.write(bytes(input_text, tool.input.codec))
+            process.stdin.write(input_text.encode(tool.input.codec, "replace"))
 
         process.stdin.close()
 
