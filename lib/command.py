@@ -3,6 +3,8 @@ import sublime
 import subprocess
 import datetime
 import os
+import re
+import tempfile
 from functools import partial
 from os import path
 from threading import Thread, Event
@@ -122,24 +124,50 @@ class Command(object):
 
         return input_text
 
+    def create_temp_input_file(self, input):
+        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            tmpfile.write(bytes(self.input_text, input.codec))
+            self.input_file = tmpfile.name
+
+        debug.log(self.input_file)
+        return self.input_file
+
+    def create_temp_output_file(self, output):
+        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            self.output_file = tmpfile.name
+        debug.log(self.output_file)
+        return self.output_file
+
     def _do_run_tool(self, tool):
         manager.cancel_command_for_source_view(self._source_view)
 
         self._execution_cancelled = False
 
         input_text = self._get_input(tool.input_source)
+        self.input_text = input_text
+
+        debug.log("Using input text: \n---%s\n---" % input_text)
 
         if input_text == "" and not tool.input.allow_empty:
             debug.log("This tool does not allow empty input")
             return
 
-        command_array = None
-        if tool.input.mode in set(("manual", "none")):
-            command_array = tool.get_command_array(input_text=input_text)
-        else:
-            command_array = tool.get_command_array()
+        command_array = tool.get_command_array()
 
-        debug.log(command_array)
+        if tool.input.mode in set(("manual", "none")):
+            def repfunc(match):
+                varname = match.group(1)
+                debug.log(varname)
+                if varname == 'input-file':
+                    return self.create_temp_input_file(tool.input)
+
+                if varname == 'output-file':
+                    return self.create_temp_output_file(tool.output)
+
+                return match.group(0)
+
+            for i in range(len(command_array)):
+                command_array[i] = re.sub(r'\${([\w-]+)}', repfunc, command_array[i]);
 
         working_directory = None
 
@@ -219,6 +247,13 @@ class Command(object):
             outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r\n', '\n')
             if outstring == "": break
             self.write(outstring)
+
+        if self.output_file:
+            with open(self.output_file, mode='r', encoding=tool.output.codec) as tmpfile:
+                for line in tmpfile:
+                    outstring = line.replace('\r\n', '\n')
+                    debug.log(outstring)
+                    self.write(outstring)
 
         endtime = datetime.datetime.now()
         timedelta = endtime - starttime

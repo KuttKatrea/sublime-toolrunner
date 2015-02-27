@@ -70,7 +70,7 @@ def expand_variables(str, vars):
             debug.log("Replacing: ", match)
             return vars.get(match.group(1), match.group(0))
 
-        return re.sub(r'\${(\w+)}', repl, str)
+        return re.sub(r'\${([\w-]+)}', repl, str)
 
 def extract_variables():
     try:
