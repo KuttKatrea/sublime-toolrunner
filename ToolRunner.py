@@ -15,7 +15,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
         )
 
         if tool is not None:
-            debug.log("Running tool: ", tool)
+            #debug.log("Running tool: ", tool)
             command.run_tool(tool)
 
         elif group is not None:
@@ -202,10 +202,10 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         manager.remove_target_view(view)
 
     def on_post_save(self, view):
-        debug.log("Saved view: %s" % view.id())
+        #debug.log("Saved view: %s" % view.id())
         source_view = manager.get_source_view_for_target_view(view)
         if source_view is None:
-            debug.log("The view %s is not an output view" % view.id())
+            #debug.log("The view %s is not an output view" % view.id())
             return
 
         manager.remove_target_view(view)

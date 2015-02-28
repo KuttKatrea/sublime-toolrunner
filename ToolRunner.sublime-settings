@@ -4,44 +4,42 @@
         "name": "SQLCMD",
         "desc": "SQL Server command-line client",
         "cmd": "sqlcmd",
-        "arguments": ["-s", "\t", "${flags}", "${named_args}", "${positional_args}"],
+        "arguments": [
+            "-u",
+            "-b",
+            "-s", "\t",
+            "$[toolrunner_flag_arguments]",
+            "$[toolrunner_named_arguments]",
+            "-i", "$[toolrunner_input_file]",
+            "-o", "$[toolrunner_output_file]"
+        ],
         "input": {
-            "mode": "pipe",
-            "allow_empty": false,
-            "codec": "mbcs"
+            "mode": "tmpfile-name",
+            "codec": "utf_8_sig"
         },
         "output": {
-            "type": "buffer",
-            "reuse": "view",
-            "split": "bottom",
-            "focus_on_source_focus": true,
-            "focus_on_run": true,
-            "read_only": true,
-            "scratch": true,
-            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage",
-            "codec": "mbcs",
-            "keep_reusing_after_save": false
+            "mode": "tmpfile-name",
+            "codec": "utf_16"
+        },
+        "result": {
+            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
         },
         "params": {
-            "codepage": {
-                "type": "named",
-                "argument": "-f"
-            },
-            "password": {
-                "type": "named",
-                "argument": "-P"
-            },
             "server": {
                 "type": "named",
                 "argument": "-S"
+            },
+            "database": {
+                "type": "named",
+                "argument": "-d"
             },
             "user": {
                 "type": "named",
                 "argument": "-U"
             },
-            "database": {
+            "password": {
                 "type": "named",
-                "argument": "-d"
+                "argument": "-P"
             },
             "workstation": {
                 "type": "named",
@@ -53,14 +51,32 @@
             }
         }
     }, {
-        "cmd": "cmd"
+        "name": "CMD",
+        "desc": "CMD Batch File",
+        "cmd": "cmd",
+        "arguments": [
+            "/C",
+            "$[toolrunner_input_file]"
+        ],
+        "input": {
+            "mode": "tmpfile-name", // content-argument, direct-pipe
+            "file_suffix": ".bat",
+            "codec": "mbcs"
+        },
+        "output": {
+            "mode": "direct-pipe", // tmpfile-pipe, tmpfile-name
+            "codec": "mbcs"
+        }
     }, {
+        "name": "Bash",
         "cmd": "bash"
     }, {
+        "name": "Python",
         "cmd": "python"
     }, {
         "cmd": "ruby"
     }, {
+        "name": "NodeJS",
         "cmd": "nodejs"
     }, {
         "cmd": "mysql",
@@ -133,7 +149,7 @@
     "user_tools": [],
     // User-defined groups. Groups are appended Host + Platform + User + Default
     "user_groups": [],
-    // User-tools 
+    // User-tools
     "user_tool_overrides": {},
     "default_profiles": {}, // host-specific
     "debug": false,

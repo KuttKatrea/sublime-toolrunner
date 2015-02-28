@@ -7,11 +7,11 @@ _target_views_by_source_id = dict()
 _sources_by_target_id = dict()
 _command_for_source_view = dict()
 
-def cancel_command_for_source_view(view):
-    command = get_current_command_for_source_view(view)
+def cancel_command_for_source_view(source_view, wait=False):
+    command = get_current_command_for_source_view(source_view)
     if command is not None:
         debug.log("Cancelling command")
-        command.cancel()
+        command.cancel(wait)
     else:
         debug.log("No command to cancel")
 
@@ -47,19 +47,13 @@ def get_target_view_for_source_view(view):
 def get_current_command_for_source_view(view):
     view_id = str(view.id())
 
-    if view_id not in _command_for_source_view:
-        if view_id in _target_views_by_source_id:
-            view_id = str(_target_views_by_source_id[view_id].id())
-        else:
-            return None
-
     if view_id in _command_for_source_view:
-        return _command_for_source_view[view_id]
+        return _command_for_source_view.get(view_id)
 
     return None
 
-def set_current_command_for_source_view(target_view, command):
-    view_id = str(target_view.id())
+def set_current_command_for_source_view(source_view, command):
+    view_id = str(source_view.id())
 
     if command is None:
         _command_for_source_view.pop(view_id,None)

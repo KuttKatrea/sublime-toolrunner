@@ -22,12 +22,8 @@ class ConfigContainer(object):
 
         self._props = set(defaults.keys())
 
-        debug.log("%s", self._props)
-
         self.update(defaults)
         self.update(kwargs)
-
-        debug.log(self)
 
     def update(self, config):
         if config is None:
@@ -44,7 +40,6 @@ class ConfigContainer(object):
                 if isinstance(current_attr, ConfigContainer):
                     current_attr.update(attr_value)
                 else:
-                    debug.log("Setting")
                     setattr(self, k, attr_value)
 
     def __repr__(self):
@@ -53,7 +48,7 @@ class ConfigContainer(object):
 class Tool(ConfigContainer):
     command_arguments = dict(
         input_source="input_source",
-        output="output",
+        results="results",
         params="params_values",
     )
 
@@ -64,6 +59,7 @@ class Tool(ConfigContainer):
             arguments = list(),
             input = Input(),
             output = Output(),
+            results = Results(),
             params = dict(),
             input_source = None,
             params_values = dict(),
@@ -78,26 +74,17 @@ class Tool(ConfigContainer):
 
         conf = {value: get_value(key) for (key, value) in Tool.command_arguments.items()}
 
-        debug.log("Setting command arguments: %s" % conf)
-
         self.update(conf)
 
     def get_command_array(self, input_text=None):
-        debug.log("Building command line array")
-
         full_arguments = [ self.cmd ]
 
         positional_arguments = []
         named_arguments = []
         flag_arguments = []
 
-        debug.log("Acceptable params %s" % self.params)
-
         if self.params_values is not None:
-            debug.log("Generating argument list for params", self.params_values)
             for param_key, param_value in self.params_values.items():
-                debug.log("Matching param: %s = %s" % (param_key, param_value))
-
                 param = self.params[param_key]
 
                 if param.get('type') == "positional":
@@ -109,24 +96,15 @@ class Tool(ConfigContainer):
                     if param_value:
                         flag_arguments.append(param.get('argument'))
 
-        debug.log("Positional args: ", positional_arguments)
-        debug.log("Named args: ", named_arguments)
-        debug.log("Flag args: ", flag_arguments)
-
-        debug.log("Embedding in ", self.arguments)
-
         for argument in self.arguments:
-            if argument == "${positional_args}":
+            if argument == "$[toolrunner_positional_arguments]":
                 full_arguments += positional_arguments
 
-            elif argument == "${named_args}":
+            elif argument == "$[toolrunner_named_arguments]":
                 full_arguments += named_arguments
 
-            elif argument == "${flags}":
+            elif argument == "$[toolrunner_flag_arguments]":
                 full_arguments += flag_arguments
-
-            elif argument == "${input}":
-                full_arguments += input_text
 
             else:
                 full_arguments.append(argument)
@@ -136,8 +114,9 @@ class Tool(ConfigContainer):
 class Input(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = 'pipe',
+            mode = 'direct-pipe',
             allow_empty = False,
+            file_suffix = None,
             codec = _default_input_codec,
         )
 
@@ -151,16 +130,18 @@ class Input(ConfigContainer):
 class Output(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            type = 'buffer',
-            reuse = 'view',
-            split = 'bottom',
-            focus_on_source_focus = True,
-            focus_on_run = True,
+            mode = "direct-pipe",
+            codec = _default_output_codec,
+        )
+
+class Results(ConfigContainer):
+    def _get_defaults(self):
+        return dict(
+            mode = 'buffer',
             read_only = True,
             scratch = True,
+            line_numbers = False,
             syntax_file = settings.get_setting('default_syntax_file'),
-            codec = _default_output_codec,
-            keep_reusing_after_save = False,
         )
 
 def _on_plugin_loaded():

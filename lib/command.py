@@ -1,5 +1,6 @@
 import sublime
 
+import signal
 import subprocess
 import datetime
 import os
@@ -12,28 +13,38 @@ from threading import Thread, Event
 from . import settings
 from . import manager
 from . import debug
+from . import util
 from .tool import Tool
 
 class Command(object):
     def __init__(self, source_window, command_arguments):
         self._source_window = source_window
         self._source_view = source_window.active_view()
-        self._command_arguments = command_arguments
         self._target_view = None
+
+        self._command_arguments = command_arguments
+
+        self._running = False
         self._cancelled = False
+
+        self._tool = None
+
+        self._desc = None
+
+        self._input_text = None
+        self._input_file = None
+        self._output_file = None
 
     def run_tool(self, tool_id):
         debug.log("Running command for tool: ", tool_id, self._command_arguments)
 
-        tool = self._create_tool(tool_id)
-
-        if tool is None:
-            debug.log("There is no tool named %s" % tool_id)
+        if self._create_tool(tool_id) is None:
+            self._notify("There is no tool named %s" % tool_id)
             return
 
-        tool.set_command_arguments(self._command_arguments)
+        self._tool.set_command_arguments(self._command_arguments)
 
-        self._launch(tool)
+        self._run_thread()
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -54,21 +65,19 @@ class Command(object):
 
         tool_id =profile_descriptor.get("tool", group_descriptor.get("tool"))
 
-        tool = self._create_tool(tool_id)
+        if self._create_tool(tool_id) is None:
+            self._notify("Passing command arguments:", self._command_arguments)
+            return
 
-        debug.log("Passing command arguments:", self._command_arguments)
+        self._tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
 
-        tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
+        self._run_thread()
 
-        self._launch(tool)
-
-    def cancel(self):
+    def cancel(self, wait=False):
         self._cancelled = True
-        self.process.terminate()
-
-    def _launch(self, tool):
-        self._thread = Thread(target=partial(self._do_run_tool, tool))
-        self._thread.start()
+        self._process.terminate()
+        if wait:
+            self._main_thread.join()
 
     def _create_tool(self, tool_id):
         tool_config = settings.get_tool(tool_id)
@@ -76,20 +85,21 @@ class Command(object):
         if tool_config is None:
             return None
 
-        tool = Tool(**tool_config)
+        self._tool = Tool(**tool_config)
 
-        return tool
+        return self._tool
 
-    def _get_input(self, input_source):
+    def _extract_input(self):
+        input_source = self._tool.input_source
+
         if input_source is None:
             input_source = "auto-file"
-
-        debug.log(input_source)
 
         if input_source not in set(['selection', 'auto-line', 'line','auto-block','block', 'auto-file','file', 'none']):
             raise ValueError("Input source invalid")
 
         if input_source == 'none':
+            self._input_text = ''
             return ''
 
         active_view = self._source_view
@@ -122,146 +132,125 @@ class Command(object):
         if input_text != "" and input_text[-1] != '\n':
             input_text += '\n'
 
+        self._input_text = input_text
         return input_text
+        
+    def _create_temp_input_file(self):
+        input = self._tool.input
+        input_text = self._input_text
 
-    def create_temp_input_file(self, input):
+        opts = dict(delete=False)
+
+        if input.file_suffix is not None:
+            opts["suffix"] = input.file_suffix
+
+        with tempfile.NamedTemporaryFile(**opts) as tmpfile:
+            tmpfile.write(bytes(input_text, input.codec))
+            input_file = tmpfile.name
+
+        self._input_file = input_file
+        debug.log("Created input file: %s" % input_file)
+
+        return input_file
+
+    def _create_temp_output_file(self):
+        output = self._tool.output
+
         with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-            tmpfile.write(bytes(self.input_text, input.codec))
-            self.input_file = tmpfile.name
+            self._output_file = tmpfile.name
 
-        debug.log(self.input_file)
-        return self.input_file
+        debug.log("Created output file: %s" % self._output_file)
 
-    def create_temp_output_file(self, output):
-        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-            self.output_file = tmpfile.name
-        debug.log(self.output_file)
-        return self.output_file
+        return self._output_file
 
-    def _do_run_tool(self, tool):
-        manager.cancel_command_for_source_view(self._source_view)
+    def _run_thread(self):
+        self._main_thread = Thread(target=self._begin_run)
+        self._main_thread.start()
+
+    def _begin_run(self):
+        tool = self._tool
+
+        self._extract_input()
+
+        input_text = self._input_text
+
+        if input_text == "" and not tool.input.allow_empty:
+            self._notify("This tool does not allow empty input")
+            return
+
+        self._create_command_line()
+        debug.log("Using Command Line: %s" % self._command_array)
+
+        self._create_working_directory()
+        debug.log("Using Working Directory: %s" % self._working_directory)
+
+        manager.cancel_command_for_source_view(self._source_view, True)
+
+        manager.set_current_command_for_source_view(self._source_view, self)
 
         self._execution_cancelled = False
 
-        input_text = self._get_input(tool.input_source)
-        self.input_text = input_text
+        self.starttime = datetime.datetime.now()
 
-        debug.log("Using input text: \n---%s\n---" % input_text)
+        self._run_process()
 
-        if input_text == "" and not tool.input.allow_empty:
-            debug.log("This tool does not allow empty input")
-            return
+        self._begin_write()
+        self._running = True
 
-        command_array = tool.get_command_array()
+        self._thread = Thread(target=self._command_monitor_worker)
+        self._thread.start()
 
-        if tool.input.mode in set(("manual", "none")):
-            def repfunc(match):
-                varname = match.group(1)
-                debug.log(varname)
-                if varname == 'input-file':
-                    return self.create_temp_input_file(tool.input)
-
-                if varname == 'output-file':
-                    return self.create_temp_output_file(tool.output)
-
-                return match.group(0)
-
-            for i in range(len(command_array)):
-                command_array[i] = re.sub(r'\${([\w-]+)}', repfunc, command_array[i]);
-
-        working_directory = None
-
-        file_ = self._source_view.file_name()
-        project = self._source_window.project_file_name()
-        
-        if file_ is not None:
-            working_directory = path.dirname(file_)
-        elif project is not None:
-            working_directory = path.dirname(project)
-        else:
-            working_directory = os.environ.get('HOME', os.environ.get('USER_PROFILE'))
-
-        startupinfo = None
-        if sublime.platform() == "windows":
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE)
-
-        try:
-            process = subprocess.Popen(
-                command_array,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                shell=False,
-                startupinfo=startupinfo,
-                cwd=working_directory
-            )
-            self.process = process
-
-        except FileNotFoundError as e:
-            debug.log("Error: ", e)
-            return
-
-        debug.log(tool)
-
-        self.create_window(tool.output)
-
-        manager.set_current_command_for_source_view(self._target_view, self)
-
-        self._target_view.run_command("move_to", {"to": "eof"})
-
-        current_cursor_position = self._target_view.sel()[0]
-        current_line = self._target_view.line(current_cursor_position)
-
-        self._target_view.sel().clear()
-        self._target_view.sel().add(current_cursor_position)
-
-        if tool.input.mode == 'pipe':
-            process.stdin.write(input_text.encode(tool.input.codec, "replace"))
-
-        process.stdin.close()
+    def _command_monitor_worker(self):
+        tool = self._tool
+        process = self._process
 
         input_text = None
 
-        starttime = datetime.datetime.now()
-
         tool_desc = tool.name
 
-        self._source_view.set_status("toolrunner", "ToolRunner Source: Running query on [%s]" % tool_desc)
-        self._target_view.set_status("toolrunner", "ToolRunner Target: Running query on [%s]" % tool_desc)
+        self._read_thread = None
 
-        debug.log(current_cursor_position)
-        debug.log(current_line)
-
-        if current_cursor_position.a > current_line.a:
-            self.write('\n')
-
-        if current_cursor_position.a != 0:
-            self.write('\n')
-            current_cursor_position = sublime.Region(current_cursor_position.a+1, current_cursor_position.a+1)
-
-        self.write(':: ToolRunner :: Start at %s ::\n' % starttime)
-        self._target_view.run_command("move_to", {"to": "eof"})
-
-        while True: #self._cancelled is False:
-            outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r\n', '\n')
-            if outstring == "": break
-            self.write(outstring)
-
-        if self.output_file:
-            with open(self.output_file, mode='r', encoding=tool.output.codec) as tmpfile:
-                for line in tmpfile:
-                    outstring = line.replace('\r\n', '\n')
-                    debug.log(outstring)
+        if tool.output.mode == 'direct-pipe':
+            debug.log("Direct pipe~~")
+            def outputreader():
+                debug.log("Reading~~")
+                while True: #self._cancelled is False:
+                    outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r', '')
+                    if outstring == "": break
                     self.write(outstring)
 
-        endtime = datetime.datetime.now()
-        timedelta = endtime - starttime
+            self._read_thread = Thread(target=outputreader)
+            self._read_thread.start()
+
+        if tool.output.mode == 'tmpfile-name':
+            def outputreader():
+                debug.log("TMPFile Output Reader")
+                with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
+                    for line in tmpfile:
+                        outstring = line.replace('\r\n', '\n')
+                        debug.log(outstring)
+                        self.write(outstring)
+
+            self._read_thread = Thread(target=outputreader)
+            self._read_thread.start()
+
+        self._process.wait()
+
+        if self._read_thread is not None:
+            self._read_thread.join()
+
+        self._end_run()
+
+    def _end_run(self):
+        self.endtime = datetime.datetime.now()
+        timedelta = self.endtime - self.starttime
+
+        self._write_output()
 
         if self._cancelled:
             self.write("\nQuery execution cancelled\n")
 
-        self.write('\n:: ToolRunner :: End at %s ::\n' % endtime)
+        self.write('\n:: ToolRunner :: End at %s ::\n' % self.endtime)
 
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
@@ -274,27 +263,33 @@ class Command(object):
             self._target_view.set_status("toolrunner", "ToolRunner Target [%s]: Complete on %s seconds" % (tool_desc, timedelta.total_seconds()))
             self._source_view.set_status("toolrunner", "ToolRunner Source [%s]: Complete on %s seconds" % (tool_desc, timedelta.total_seconds()))
 
-        manager.set_current_command_for_source_view(self._target_view, None)
+        manager.set_current_command_for_source_view(self._source_view, None)
 
-    def create_window(self, output):
+    def _create_window(self):
+        tool = self._tool
+
         self._source_window = self._source_view.window()
 
-        self._target_view = manager.create_target_view_for_source_view(self._source_view, output.type)
+        self._target_view = manager.create_target_view_for_source_view(self._source_view, self._tool.results.mode)
 
-        self.panelname = ':: ToolRunner Results: %s ::' % (self._source_view.buffer_id())
-        self._target_view.set_name(self.panelname)
+        panelname = ':: ToolRunner Results: %s ::' % (self._source_view.buffer_id())
+        self._target_view.set_name(panelname)
 
-        #self._target_view = self._source_window.create_output_panel(self.panelname)
-        self._target_view.set_read_only(output.read_only)
-        self._target_view.set_scratch(output.scratch)
-        self._target_view.set_syntax_file(settings.expand(output.syntax_file))
+        self._target_view.set_read_only(tool.results.read_only)
+        self._target_view.set_scratch(tool.results.scratch)
+        self._target_view.set_syntax_file(
+            util.expand(tool.results.syntax_file, self._source_view)
+        )
 
         self._target_view.settings().set('line_numbers', False)
         self._target_view.settings().set('translate_tabs_to_spaces', False)
-        #self._target_view.settings().set('tab_size', 8)
+
         manager.focus_view(self._target_view)
 
     def write(self, text):
+        if self._target_view is None or self._target_view.window() is None:
+            self._create_window()
+
         read_only = self._target_view.is_read_only()
 
         if read_only:
@@ -305,3 +300,107 @@ class Command(object):
         if read_only:
             self._target_view.set_read_only(True)
 
+    def _notify(self, msg):
+        debug.log(msg)
+        self._source_view.set_status("toolrunner", "[ToolRunner] %s" % msg)
+        if self._target_view is not None:
+            self._target_view.set_status("toolrunner", "[ToolRunner] %s" % msg)
+
+    def _create_command_line(self):
+        tool = self._tool
+
+        command_array = tool.get_command_array()
+
+        for i in range(len(command_array)):
+            if command_array[i] == '$[toolrunner_input_file]':
+                if tool.input.mode == "tmpfile-name":
+                    command_array[i] = self._create_temp_input_file()
+
+            if command_array[i] == '$[toolrunner_input_text]':
+                if tool.input.mode == "content-argument":
+                    command_array[i] = self._input_text
+
+            if command_array[i] == '$[toolrunner_output_file]':
+                if tool.output.mode in set(["tmpfile-name","tmpfile-pipe"]):
+                    command_array[i] = self._create_temp_output_file()
+
+        self._command_array = command_array
+
+    # Create partial data
+    def _create_working_directory(self):
+        working_directory = None
+
+        filename = self._source_view.file_name()
+        project = self._source_window.project_file_name()
+
+        if filename is not None:
+            working_directory = path.dirname(filename)
+        elif project is not None:
+            working_directory = path.dirname(project)
+        else:
+            working_directory = os.environ.get('HOME', os.environ.get('USER_PROFILE'))
+
+        self._working_directory = working_directory
+
+    def _run_process(self):
+        tool = self._tool
+
+        startupinfo = None
+        process = None
+        if sublime.platform() == "windows":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE)
+
+        try:
+            process = subprocess.Popen(
+                self._command_array,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=False,
+                startupinfo=startupinfo,
+                cwd=self._working_directory
+            )
+
+        except FileNotFoundError as e:
+            debug.log("Error: ", e)
+            return
+
+        if tool.input.mode == 'pipe':
+            process.stdin.write(input_text.encode(tool.input.codec, "replace"))
+
+        process.stdin.close()
+
+        self._process = process
+
+    def _begin_write(self):
+        self._create_window()
+
+        self._target_view.run_command("move_to", {"to": "eof"})
+
+        current_cursor_position = self._target_view.sel()[0]
+        current_line = self._target_view.line(current_cursor_position)
+
+        if current_cursor_position.a > current_line.a:
+            self.write('\n')
+
+        if current_cursor_position.a != 0:
+            self.write('\n')
+            current_cursor_position = sublime.Region(current_cursor_position.a+1, current_cursor_position.a+1)
+
+        self._current_cursor_position = current_cursor_position
+
+        self._target_view.sel().clear()
+        self._target_view.sel().add(current_cursor_position)
+
+        self.write(':: ToolRunner :: Start at %s ::\n' % self.starttime)
+        self._target_view.run_command("move_to", {"to": "eof"})
+
+    def _write_output(self):
+        if self._output_file:
+            debug.log(self._output_file)
+            with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
+                for line in tmpfile:
+                    outstring = line.replace('\r\n', '\n')
+                    debug.log(outstring)
+                    self.write(outstring)
