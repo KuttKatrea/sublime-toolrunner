@@ -194,7 +194,7 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
         self.do_open_settings(scope)
 
     def do_open_settings(self, scope):
-        self.window.run_command("open_file", {"file": settings.get_settingsFilePath(scope)})
+        self.window.run_command("open_file", {"file": settings.get_settings_file_path(scope)})
 
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):

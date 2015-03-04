@@ -207,6 +207,7 @@ class Command(object):
         input_text = None
 
         tool_desc = tool.name
+        self._tool_desc = tool_desc
 
         self._read_thread = None
 
@@ -253,8 +254,10 @@ class Command(object):
         self.write('\n:: ToolRunner :: End at %s ::\n' % self.endtime)
 
         self._target_view.sel().clear()
-        self._target_view.sel().add(current_cursor_position)
-        self._target_view.show_at_center(current_cursor_position)
+        self._target_view.sel().add(self._current_cursor_position)
+        self._target_view.show_at_center(self._current_cursor_position)
+
+        tool_desc= self._tool_desc
 
         if self._cancelled:
             self._target_view.set_status("toolrunner", "ToolRunner Target [%s]: Cancelled at %s seconds" % (tool_desc, timedelta.total_seconds()))
@@ -366,8 +369,9 @@ class Command(object):
             debug.log("Error: ", e)
             return
 
-        if tool.input.mode == 'pipe':
-            process.stdin.write(input_text.encode(tool.input.codec, "replace"))
+        if tool.input.mode == 'direct-pipe':
+            debug.log("Piping Input")
+            process.stdin.write(self._input_text.encode(tool.input.codec, "replace"))
 
         process.stdin.close()
 
