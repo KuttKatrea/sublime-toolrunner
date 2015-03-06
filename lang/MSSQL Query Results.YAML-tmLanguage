@@ -4,5 +4,8 @@ name: MSSQL Query results
 scopeName: source.mssql_query_results
 fileTypes: []
 uuid: 417e7aab-61ba-4587-96d4-0572fed4bf75
-patterns: []
+patterns:
+  - name: comment
+    begin: (\:\:)
+    end: \n
 ...

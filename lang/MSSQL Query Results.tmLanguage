@@ -7,7 +7,16 @@
 	<key>name</key>
 	<string>MSSQL Query results</string>
 	<key>patterns</key>
-	<array/>
+	<array>
+		<dict>
+			<key>begin</key>
+			<string>(\:\:)</string>
+			<key>end</key>
+			<string>\n</string>
+			<key>name</key>
+			<string>comment</string>
+		</dict>
+	</array>
 	<key>scopeName</key>
 	<string>source.mssql_query_results</string>
 	<key>uuid</key>

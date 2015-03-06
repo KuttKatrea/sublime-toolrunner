@@ -7,7 +7,16 @@
 	<key>name</key>
 	<string>ToolRunner Output</string>
 	<key>patterns</key>
-	<array/>
+	<array>
+		<dict>
+			<key>begin</key>
+			<string>(\:\:)</string>
+			<key>end</key>
+			<string>\n</string>
+			<key>name</key>
+			<string>comment</string>
+		</dict>
+	</array>
 	<key>scopeName</key>
 	<string>source.tool_runner_output</string>
 	<key>uuid</key>
