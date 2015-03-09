@@ -10,6 +10,54 @@
             "-s", "\t",
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
+            "-i", "$[toolrunner_input_file]"
+        ],
+        "input": {
+            "mode": "tmpfile-name",
+            "codec": "utf_8_sig"
+        },
+        "output": {
+            "mode": "direct-pipe"
+        },
+        "result": {
+            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
+        },
+        "params": {
+            "server": {
+                "type": "named",
+                "argument": "-S"
+            },
+            "database": {
+                "type": "named",
+                "argument": "-d"
+            },
+            "user": {
+                "type": "named",
+                "argument": "-U"
+            },
+            "password": {
+                "type": "named",
+                "argument": "-P"
+            },
+            "workstation": {
+                "type": "named",
+                "argument": "-H"
+            },
+            "trusted": {
+                "type": "flag",
+                "argument": "-E"
+            }
+        }
+    }, {
+        "name": "SQLCMD2",
+        "desc": "SQL Server command-line client",
+        "cmd": "sqlcmd",
+        "arguments": [
+            "-u",
+            "-b",
+            "-s", "\t",
+            "$[toolrunner_flag_arguments]",
+            "$[toolrunner_named_arguments]",
             "-i", "$[toolrunner_input_file]",
             "-o", "$[toolrunner_output_file]"
         ],
