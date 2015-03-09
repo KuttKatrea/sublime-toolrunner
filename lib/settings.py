@@ -82,7 +82,7 @@ def get_tools():
 
 def get_tool(tool_id):
     _build_tool_list()
-    return _tool_map.get(tool_id, None)
+    return _tool_map.get(tool_id.lower(), None)
 
 def get_override(tool_id):
     return get_setting('user_tool_overrides',{}).get(tool_id)
@@ -105,6 +105,8 @@ def _build_tool_list():
                 continue
 
             tool_item["name"] = key
+
+            key = key.lower()
 
             if key not in _tool_map:
                 override_cmd = get_override(key)
