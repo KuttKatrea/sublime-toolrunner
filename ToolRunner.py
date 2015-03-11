@@ -75,8 +75,6 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
         callback = partial(callback, tool_list)
 
-        debug.log(tool_selection_list)
-
         self.window.show_quick_panel(tool_selection_list, callback, 0, 0, None)
 
     def _on_ask_tool_done(self, command, tool_list, selected_index):
@@ -135,7 +133,6 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
     def ask_group_and_switch_profile(self):
         self.groups = [ group['name'] for group in settings.get_groups() ]
-        debug.log(repr(self.groups))
         self.window.show_quick_panel(
             self.groups,
             partial(self.on_ask_group_done, self.switch_profile),
@@ -150,9 +147,6 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def switch_profile(self, profile_group):
         self.profile_group = profile_group
         self.profile_list = [ profile["name"] for profile in settings.get_profiles(profile_group) ]
-
-        debug.log(self.profile_group, self.profile_list)
-
         self.window.show_quick_panel(self.profile_list, self.on_ask_profile, 0, 0, None)
 
     def on_ask_profile(self, selected_index):

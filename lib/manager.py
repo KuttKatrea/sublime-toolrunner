@@ -31,7 +31,6 @@ def create_target_view_for_source_view(view, type):
 
         _target_views_by_source_id[source_id] = new_view
         _sources_by_target_id[target_id] = source_id
-        debug.log(_target_views_by_source_id, _sources_by_target_id)
 
     return _target_views_by_source_id[source_id]
 

@@ -13,10 +13,7 @@ def expand(value, view):
     variables = {}
     variables.update(extract_variables(view))
     variables.update({"package": settings.basepackage})
-
-    #debug.log("[util.expand] Expanding: %s with %s" % (value, variables))
     expanded = expand_variables(value, variables)
-    #debug.log("[util.expand] Expanded: %s" % expanded)
 
     return expanded
 
@@ -25,7 +22,6 @@ def expand_variables(str, vars):
         return sublime.expand_variables(str, vars)
     except AttributeError as e:
         def repl(match):
-            #debug.log("[util.expand_variables:repl] Replacing: ", match.group(0))
             replacement = vars.get(match.group(1), None)
 
             if replacement is None:

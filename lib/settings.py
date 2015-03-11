@@ -97,9 +97,8 @@ def _build_tool_list():
           get_host_setting('user_tools', []), get_platform_setting('user_tools', []),
           get_user_setting('user_tools', []), get_user_setting('default_tools', []) ):
         for tool_item in settings_set:
-            debug.log("Checking: ", tool_item)
             key = tool_item.get('name', tool_item.get('cmd'))
-            
+
             if key is None:
                 debug.log("Tool has no cmd: ", tool_item)
                 continue
