@@ -138,7 +138,7 @@ class Results(ConfigContainer):
     def _get_defaults(self):
         return dict(
             mode = 'buffer',
-            read_only = True,
+            read_only = False,
             scratch = True,
             line_numbers = False,
             syntax_file = settings.get_setting('default_syntax_file'),
