@@ -129,7 +129,7 @@
     }, {
         "name": "MySQL",
         "cmd": "mysql",
-        "arguments": ["--batch", "--table", "${flags}", "${named_args}", "${positional_args}"],
+        "arguments": ["--batch", "--table", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
         "params": {
             "host": {
                 "type": "named",
@@ -194,7 +194,24 @@
         "output": {
             "codec": "utf-8"
         }
-    }],
+    }, {
+        "name": "JScript",
+        "cmd": "cscript",
+        "arguments": ["/E:JScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
+        "input": {
+            "mode": "tmpfile-path",
+            "codec": "mbcs"
+        }
+    }, {
+        "name": "VBScript",
+        "cmd": "cscript",
+        "arguments": ["/E:VBScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
+        "input": {
+            "mode": "tmpfile-path",
+            "codec": "mbcs"
+        }
+    }
+    ],
     // User-defined tools. Tools are appended Host + Platform + User + Default
     "user_tools": [],
     // User-defined groups. Groups are appended Host + Platform + User + Default
