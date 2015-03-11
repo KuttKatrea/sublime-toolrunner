@@ -42,6 +42,9 @@ class Command(object):
             self._notify("There is no tool named %s" % tool_id)
             return
 
+        self._desc = self._tool.name
+
+        self._notify("Passing command arguments: %s" % self._command_arguments)
         self._tool.set_command_arguments(self._command_arguments)
 
         self._run_thread()
@@ -66,9 +69,12 @@ class Command(object):
         tool_id =profile_descriptor.get("tool", group_descriptor.get("tool"))
 
         if self._create_tool(tool_id) is None:
-            self._notify("Passing command arguments:", self._command_arguments)
+            self._notify("There is no tool named:", tool_id)
             return
 
+        self._desc = "%s/%s (%s)" % (selected_group, selected_profile, self._tool.name)
+
+        self._notify("Passing command arguments: %s" % self._command_arguments)
         self._tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
 
         self._run_thread()
@@ -201,13 +207,15 @@ class Command(object):
         self._thread.start()
 
     def _command_monitor_worker(self):
+        '''
+        This must be called in it's own thread as it will block while 
+        the process is running, and while the process is reading the 
+        output
+        '''
         tool = self._tool
         process = self._process
 
         input_text = None
-
-        tool_desc = tool.name
-        self._tool_desc = tool_desc
 
         self._read_thread = None
 
@@ -216,6 +224,7 @@ class Command(object):
             def outputreader():
                 debug.log("Reading~~")
                 while True: #self._cancelled is False:
+                    if self._cancelled: break
                     outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r', '')
                     if outstring == "": break
                     self.write(outstring)
@@ -228,8 +237,9 @@ class Command(object):
                 debug.log("TMPFile Output Reader")
                 with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
                     for line in tmpfile:
+                        if self._cancelled: break
                         outstring = line.replace('\r\n', '\n')
-                        debug.log(outstring)
+                        #debug.log(outstring)
                         self.write(outstring)
 
             self._read_thread = Thread(target=outputreader)
@@ -237,6 +247,8 @@ class Command(object):
 
         self._process.wait()
 
+        self._notify("Receiving output")
+        
         if self._read_thread is not None:
             self._read_thread.join()
 
@@ -257,14 +269,10 @@ class Command(object):
         self._target_view.sel().add(self._current_cursor_position)
         self._target_view.show_at_center(self._current_cursor_position)
 
-        tool_desc= self._tool_desc
-
         if self._cancelled:
-            self._target_view.set_status("toolrunner", "ToolRunner Target [%s]: Cancelled at %s seconds" % (tool_desc, timedelta.total_seconds()))
-            self._source_view.set_status("toolrunner", "ToolRunner Source [%s]: Cancelled at %s seconds" % (tool_desc, timedelta.total_seconds()))
+            self._notify("Cancelled at %s seconds" % timedelta.total_seconds())
         else:
-            self._target_view.set_status("toolrunner", "ToolRunner Target [%s]: Complete on %s seconds" % (tool_desc, timedelta.total_seconds()))
-            self._source_view.set_status("toolrunner", "ToolRunner Source [%s]: Complete on %s seconds" % (tool_desc, timedelta.total_seconds()))
+            self._notify("Complete on %s seconds" % timedelta.total_seconds())
 
         manager.set_current_command_for_source_view(self._source_view, None)
 
@@ -305,9 +313,12 @@ class Command(object):
 
     def _notify(self, msg):
         debug.log(msg)
-        self._source_view.set_status("toolrunner", "[ToolRunner] %s" % msg)
+        header = "[ToolRunner%s]" % (":" + self._desc if self._desc is not None else None,)
+
+        self._source_view.set_status("toolrunner", "%s %s" % (header, msg))
+
         if self._target_view is not None:
-            self._target_view.set_status("toolrunner", "[ToolRunner] %s" % msg)
+            self._target_view.set_status("toolrunner", "%s %s" % (header, msg))
 
     def _create_command_line(self):
         tool = self._tool
@@ -398,6 +409,7 @@ class Command(object):
         self._target_view.sel().add(current_cursor_position)
 
         self.write(':: ToolRunner :: Start at %s ::\n' % self.starttime)
+        self._notify("Running")
         self._target_view.run_command("move_to", {"to": "eof"})
 
     def _write_output(self):
@@ -406,5 +418,5 @@ class Command(object):
             with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
                 for line in tmpfile:
                     outstring = line.replace('\r\n', '\n')
-                    debug.log(outstring)
+                    #debug.log(outstring)
                     self.write(outstring)
