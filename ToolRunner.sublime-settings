@@ -122,11 +122,13 @@
         "name": "Python",
         "cmd": "python"
     }, {
+        "name": "Ruby",
         "cmd": "ruby"
     }, {
         "name": "NodeJS",
         "cmd": "nodejs"
     }, {
+        "name": "MySQL",
         "cmd": "mysql",
         "arguments": ["--batch", "--table", "${flags}", "${named_args}", "${positional_args}"],
         "params": {
@@ -158,6 +160,7 @@
             "codec": "utf-8"
         }
     }, {
+        "name": "Mongo",
         "cmd": "mongo",
         "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
         "params": {
