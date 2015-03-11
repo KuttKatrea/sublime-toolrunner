@@ -197,6 +197,8 @@ class Command(object):
 
         self.starttime = datetime.datetime.now()
 
+        self._notify("Running...")
+
         self._run_process()
 
         self._begin_write()
