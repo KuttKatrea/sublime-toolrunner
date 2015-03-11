@@ -33,7 +33,7 @@ class ConfigContainer(object):
             if k in self._props:
                 attr_value = config.get(k)
 
-                debug.log("Updating %s with %s" % (k, attr_value))
+                #debug.log("Updating %s with %s" % (k, attr_value))
 
                 current_attr = getattr(self, k, None)
 
@@ -114,7 +114,7 @@ class Tool(ConfigContainer):
 class Input(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = 'direct-pipe',
+            mode = 'pipe', # tmpfile-path, cmdline
             allow_empty = False,
             file_suffix = None,
             codec = _default_input_codec,
@@ -130,7 +130,7 @@ class Input(ConfigContainer):
 class Output(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = "direct-pipe",
+            mode = "pipe", # tmpfile-path, tmpfile-pipe
             codec = _default_output_codec,
         )
 

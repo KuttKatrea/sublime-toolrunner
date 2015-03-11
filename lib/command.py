@@ -54,7 +54,7 @@ class Command(object):
         profile_descriptor = None
 
         group_list = settings.get_groups()
-        
+
         for single_group in group_list:
             if single_group["name"] == selected_group:
                 group_descriptor = single_group
@@ -75,6 +75,7 @@ class Command(object):
         self._desc = "%s/%s (%s)" % (selected_group, selected_profile, self._tool.name)
 
         self._notify("Passing command arguments: %s" % self._command_arguments)
+
         self._tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
 
         self._run_thread()
@@ -132,7 +133,7 @@ class Command(object):
 
             if input_source in set(['file', 'auto-file']):
                 region = sublime.Region(0, active_view.size())
-        
+
             input_text = active_view.substr(region)
 
         if input_text != "" and input_text[-1] != '\n':
@@ -140,7 +141,7 @@ class Command(object):
 
         self._input_text = input_text
         return input_text
-        
+
     def _create_temp_input_file(self):
         input = self._tool.input
         input_text = self._input_text
@@ -155,6 +156,7 @@ class Command(object):
             input_file = tmpfile.name
 
         self._input_file = input_file
+
         debug.log("Created input file: %s" % input_file)
 
         return input_file
@@ -208,8 +210,8 @@ class Command(object):
 
     def _command_monitor_worker(self):
         '''
-        This must be called in it's own thread as it will block while 
-        the process is running, and while the process is reading the 
+        This must be called in it's own thread as it will block while
+        the process is running, and while the process is reading the
         output
         '''
         tool = self._tool
@@ -219,11 +221,9 @@ class Command(object):
 
         self._read_thread = None
 
-        if tool.output.mode == 'direct-pipe':
-            debug.log("Direct pipe~~")
+        if tool.output.mode == 'pipe':
             def outputreader():
-                debug.log("Reading~~")
-                while True: #self._cancelled is False:
+                while True:
                     if self._cancelled: break
                     outstring = process.stdout.readline().decode(tool.output.codec, "replace").replace('\r', '')
                     if outstring == "": break
@@ -232,23 +232,9 @@ class Command(object):
             self._read_thread = Thread(target=outputreader)
             self._read_thread.start()
 
-        if tool.output.mode == 'tmpfile-name':
-            def outputreader():
-                debug.log("TMPFile Output Reader")
-                with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
-                    for line in tmpfile:
-                        if self._cancelled: break
-                        outstring = line.replace('\r\n', '\n')
-                        #debug.log(outstring)
-                        self.write(outstring)
-
-            self._read_thread = Thread(target=outputreader)
-            self._read_thread.start()
-
         self._process.wait()
+        self._lock = True
 
-        self._notify("Receiving output")
-        
         if self._read_thread is not None:
             self._read_thread.join()
 
@@ -261,9 +247,9 @@ class Command(object):
         self._write_output()
 
         if self._cancelled:
-            self.write("\nQuery execution cancelled\n")
+            self.write("\n:: Execution cancelled ::\n")
 
-        self.write('\n:: ToolRunner :: End at %s ::\n' % self.endtime)
+        self.write('\n:: End at %s ::\n' % self.endtime)
 
         self._target_view.sel().clear()
         self._target_view.sel().add(self._current_cursor_position)
@@ -283,7 +269,7 @@ class Command(object):
 
         self._target_view = manager.create_target_view_for_source_view(self._source_view, self._tool.results.mode)
 
-        panelname = ':: ToolRunner Results: %s ::' % (self._source_view.buffer_id())
+        panelname = ':: Results: %s ::' % (self._source_view.buffer_id())
         self._target_view.set_name(panelname)
 
         self._target_view.set_read_only(tool.results.read_only)
@@ -313,12 +299,11 @@ class Command(object):
 
     def _notify(self, msg):
         debug.log(msg)
-        header = "[ToolRunner%s]" % (":" + self._desc if self._desc is not None else None,)
 
-        self._source_view.set_status("toolrunner", "%s %s" % (header, msg))
+        self._source_view.set_status("toolrunner", "%s: %s" % (self._desc, msg))
 
         if self._target_view is not None:
-            self._target_view.set_status("toolrunner", "%s %s" % (header, msg))
+            self._target_view.set_status("toolrunner", "%s: %s" % (self._desc, msg))
 
     def _create_command_line(self):
         tool = self._tool
@@ -327,15 +312,15 @@ class Command(object):
 
         for i in range(len(command_array)):
             if command_array[i] == '$[toolrunner_input_file]':
-                if tool.input.mode == "tmpfile-name":
+                if tool.input.mode == "tmpfile-path":
                     command_array[i] = self._create_temp_input_file()
 
             if command_array[i] == '$[toolrunner_input_text]':
-                if tool.input.mode == "content-argument":
+                if tool.input.mode == "cmdline":
                     command_array[i] = self._input_text
 
             if command_array[i] == '$[toolrunner_output_file]':
-                if tool.output.mode in set(["tmpfile-name","tmpfile-pipe"]):
+                if tool.output.mode == "tmpfile-path":
                     command_array[i] = self._create_temp_output_file()
 
         self._command_array = command_array
@@ -365,11 +350,19 @@ class Command(object):
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= (subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE)
 
+        stdout = None
+
+        if tool.output.mode == "tmpfile-pipe":
+            self._create_temp_output_file()
+            stdout = open(self._output_file, 'wb+')
+        else:
+            stdout = subprocess.PIPE
+
         try:
             process = subprocess.Popen(
                 self._command_array,
                 stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
+                stdout=stdout,
                 stderr=subprocess.STDOUT,
                 shell=False,
                 startupinfo=startupinfo,
@@ -380,8 +373,9 @@ class Command(object):
             debug.log("Error: ", e)
             return
 
-        if tool.input.mode == 'direct-pipe':
-            debug.log("Piping Input")
+        self._stdout = stdout if process.stdout is None else process.stdout
+
+        if tool.input.mode == 'pipe':
             process.stdin.write(self._input_text.encode(tool.input.codec, "replace"))
 
         process.stdin.close()
@@ -408,15 +402,15 @@ class Command(object):
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
 
-        self.write(':: ToolRunner :: Start at %s ::\n' % self.starttime)
-        self._notify("Running")
+        self.write(':: Start at %s ::\n' % self.starttime)
+
         self._target_view.run_command("move_to", {"to": "eof"})
 
     def _write_output(self):
         if self._output_file:
-            debug.log(self._output_file)
             with open(self._output_file, mode='r', encoding=self._tool.output.codec) as tmpfile:
                 for line in tmpfile:
+                    if self._cancelled: break
                     outstring = line.replace('\r\n', '\n')
                     #debug.log(outstring)
                     self.write(outstring)

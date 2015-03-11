@@ -13,11 +13,11 @@
             "-i", "$[toolrunner_input_file]"
         ],
         "input": {
-            "mode": "tmpfile-name",
+            "mode": "tmpfile-path",
             "codec": "utf_8_sig"
         },
         "output": {
-            "mode": "direct-pipe"
+            "mode": "pipe"
         },
         "result": {
             "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
@@ -62,11 +62,11 @@
             "-o", "$[toolrunner_output_file]"
         ],
         "input": {
-            "mode": "tmpfile-name",
+            "mode": "tmpfile-path",
             "codec": "utf_8_sig"
         },
         "output": {
-            "mode": "tmpfile-name",
+            "mode": "tmpfile-path",
             "codec": "utf_16"
         },
         "result": {
@@ -107,13 +107,12 @@
             "$[toolrunner_input_file]"
         ],
         "input": {
-            "mode": "tmpfile-name", // content-argument, direct-pipe
+            "mode": "tmpfile-path", // cmdline, pipe
             "file_suffix": ".bat",
             "codec": "mbcs"
         },
         "output": {
-            "mode": "direct-pipe", // tmpfile-pipe, tmpfile-name
-            "codec": "mbcs"
+            "mode": "pipe", // tmpfile-pipe, tmpfile-path
         }
     }, {
         "name": "Bash",
