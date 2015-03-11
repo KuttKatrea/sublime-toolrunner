@@ -21,17 +21,15 @@ ToolRuner comes with some preconfigured tools:
 
 **Database Clients**
 
- - sqlcmd (SQL Server command-line client)
- - mysql
- - mongo
+ - SQLCMD (SQL Server command-line client)
+ - MySql
+ - MongoDB
 
 **Interpreters**
 
- - python
- - ruby
- - nodejs
- - JScript (Cscript host)
- - VBScript (Cscript host)
+ - Python
+ - Ruby
+ - NodeJS
 
 But you can add your own.
 
@@ -102,7 +100,7 @@ This is the model for tool configuration options (default_tools, user_tools)
       "output": {
         // "buffer" creates a normal view next to the current view
         // "panel" creates an output panel (like a build command)
-        "type": "buffer",
+        "mode": "buffer",
         // Syntax file to apply to output
         "syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
         // Python codec to decode the output of the tool.
@@ -231,11 +229,4 @@ will allow you to execute ToolRunner with F5 (asking you which Tool/Profile to u
 
 Future
 ---
-  - Better support for CMD
-    The current way of piping the commands generates strange unwanted output (mainly the display of the command prompt).
-    Better support may be given creating a temporary BAT file and executing it instead of piping, but you will have to use bat semantics too (eg. %%A instead of %A in for loops)
-
-  - Support for Windows CScript (JScript, VBScript).
-    CScript requires always a file, so we must generate a temporary file to execute, just like in the previous point.
-
   - Testing on MacOS
