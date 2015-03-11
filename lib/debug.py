@@ -1,10 +1,11 @@
 import sys
+import datetime
 
 enabled = True
 
-def log(*args, **kwargs):
+def log(*args):
     if enabled:
-        print(*(["[ToolRunner]"] + list(args)))
+        print(*([ "[ToolRunner][%s]" % datetime.datetime.now().strftime('%H:%M:%S.%f') ] + list(args)))
 
 def forget_modules():
     log("Deleting submodules")
