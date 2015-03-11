@@ -30,6 +30,8 @@ ToolRuner comes with some preconfigured tools:
  - Python
  - Ruby
  - NodeJS
+ - JScript
+ - VBScript
 
 But you can add your own.
 
