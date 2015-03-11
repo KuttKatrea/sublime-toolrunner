@@ -44,7 +44,6 @@ class Command(object):
 
         self._desc = self._tool.name
 
-        self._notify("Passing command arguments: %s" % self._command_arguments)
         self._tool.set_command_arguments(self._command_arguments)
 
         self._run_thread()
@@ -73,8 +72,6 @@ class Command(object):
             return
 
         self._desc = "%s/%s (%s)" % (selected_group, selected_profile, self._tool.name)
-
-        self._notify("Passing command arguments: %s" % self._command_arguments)
 
         self._tool.set_command_arguments(group_descriptor, profile_descriptor, self._command_arguments)
 
