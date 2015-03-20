@@ -145,6 +145,8 @@ class Command(object):
 
         opts = dict(delete=False)
 
+        opts["prefix"] = 'toolrunner-'
+
         if input.file_suffix is not None:
             opts["suffix"] = input.file_suffix
 
@@ -161,7 +163,7 @@ class Command(object):
     def _create_temp_output_file(self):
         output = self._tool.output
 
-        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+        with tempfile.NamedTemporaryFile(delete=False, prefix='toolrunner-') as tmpfile:
             self._output_file = tmpfile.name
 
         debug.log("Created output file: %s" % self._output_file)
@@ -260,6 +262,8 @@ class Command(object):
             self._notify("Complete on %s seconds" % timedelta.total_seconds())
 
         manager.set_current_command_for_source_view(self._source_view, None)
+
+        self._clean()
 
     def _create_window(self):
         tool = self._tool
@@ -413,3 +417,13 @@ class Command(object):
                     outstring = line.replace('\r\n', '\n')
                     #debug.log(outstring)
                     self.write(outstring)
+
+    def _clean(self):
+        if self._input_file:
+            debug.log("Eliminando: %s" % self._input_file)
+            os.unlink(self._input_file)
+
+        if self._output_file:
+            debug.log("Eliminando: %s" % self._output_file)
+            os.unlink(self._output_file)
+
