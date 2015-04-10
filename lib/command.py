@@ -31,6 +31,8 @@ class Command(object):
 
         self._desc = None
 
+        self._process = None
+
         self._input_text = None
         self._input_file = None
         self._output_file = None
@@ -193,8 +195,6 @@ class Command(object):
 
         manager.cancel_command_for_source_view(self._source_view, True)
 
-        manager.set_current_command_for_source_view(self._source_view, self)
-
         self._execution_cancelled = False
 
         self.starttime = datetime.datetime.now()
@@ -202,6 +202,12 @@ class Command(object):
         self._notify("Running...")
 
         self._run_process()
+
+        if self._process is None:
+            self._notify("Executable not found")
+            return
+
+        manager.set_current_command_for_source_view(self._source_view, self)
 
         self._begin_write()
         self._running = True
