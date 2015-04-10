@@ -116,8 +116,8 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
 class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
     def run(self):
-        manager.cancel_command_for_source_view(
-            self.window.active_view()
+        manager.cancel_command_for_view_id(
+            self.window.active_view().id()
         )
 
 class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
