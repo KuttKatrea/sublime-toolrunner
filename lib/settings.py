@@ -2,7 +2,6 @@ import sublime
 
 import platform
 import re
-from os import path
 
 from . import debug
 
@@ -18,27 +17,37 @@ _tool_map = None
 _plugin_loaded = False
 _on_plugin_loaded_callbacks = list()
 
+
 def get_platform_settings_filename():
     return get_settings_filename(sublime.platform().capitalize())
 
+
 def get_host_settings_filename():
     return get_settings_filename(platform.uname()[1])
+
 
 def get_settings_filename(special=None):
     special = " (" + special + ")" if special else ""
     return "".join(("ToolRunner", special, ".sublime-settings"))
 
+
 def get_setting(setting_name, default=None):
-    return host_settings.get(setting_name,
-        platform_settings.get(setting_name,
-        user_settings.get(setting_name, default)
-        ))
+    return host_settings.get(
+        setting_name,
+        platform_settings.get(
+            setting_name,
+            user_settings.get(setting_name, default)
+        )
+    )
+
 
 def get_host_setting(setting_name, default=None):
     return host_settings.get(setting_name, default)
 
+
 def get_platform_setting(setting_name, default=None):
     return platform_settings.get(setting_name, default)
+
 
 def get_user_setting(setting_name, default=None):
     return user_settings.get(setting_name, default)
@@ -76,16 +85,20 @@ def get_profiles(profile_group):
 
     return []
 
+
 def get_tools():
     _build_tool_list()
     return _tool_list
+
 
 def get_tool(tool_id):
     _build_tool_list()
     return _tool_map.get(tool_id.lower(), None)
 
+
 def get_override(tool_id):
-    return get_setting('user_tool_overrides',{}).get(tool_id)
+    return get_setting('user_tool_overrides', {}).get(tool_id)
+
 
 def _build_tool_list():
     global _tool_map, _tool_list
@@ -94,8 +107,11 @@ def _build_tool_list():
     _tool_list = []
 
     for settings_set in (
-          get_host_setting('user_tools', []), get_platform_setting('user_tools', []),
-          get_user_setting('user_tools', []), get_user_setting('default_tools', []) ):
+        get_host_setting('user_tools', []),
+        get_platform_setting('user_tools', []),
+        get_user_setting('user_tools', []),
+        get_user_setting('default_tools', [])
+    ):
         for tool_item in settings_set:
             key = tool_item.get('name', tool_item.get('cmd'))
 
@@ -115,9 +131,10 @@ def _build_tool_list():
                 _tool_map[key] = tool_item
                 _tool_list.append(tool_item)
 
+
 def on_loaded():
     global host_settings, platform_settings, user_settings
-    global _plugin_loaded, _on_plugin_loaded_callbacks
+    global _plugin_loaded
 
     if _plugin_loaded:
         return
@@ -139,31 +156,33 @@ def on_loaded():
     platform_settings.add_on_change('debug', on_debug_change)
     host_settings.add_on_change('debug', on_debug_change)
 
-    for callback in _on_plugin_loaded_callbacks:
-        callback()
+    if _on_plugin_loaded_callbacks is not None:
+        for callback in _on_plugin_loaded_callbacks:
+            callback()
 
-    _on_plugin_loaded_callbacks = None
     _plugin_loaded = True
+    del _on_plugin_loaded_callbacks[:]
+
 
 def on_unloaded():
     if host_settings is not None:
         host_settings.clear_on_change('debug')
-    
+
     if platform_settings is not None:
         platform_settings.clear_on_change('debug')
 
     if user_settings is not None:
         user_settings.clear_on_change('debug')
 
-    _on_plugin_loaded_callbacks = None
+    del _on_plugin_loaded_callbacks[:]
+
 
 def on_debug_change():
     debug.enabled = get_setting('debug')
+
 
 def register_on_plugin_loaded(callback):
     if _plugin_loaded:
         callback()
     else:
         _on_plugin_loaded_callbacks.append(callback)
-
-
