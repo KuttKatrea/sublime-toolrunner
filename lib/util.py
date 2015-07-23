@@ -61,3 +61,22 @@ def extract_variables(view):
             'project_base_name': basep,
             'project_extension': baseext
         }
+
+
+def notify(msg, desc=None, source=None, target=None):
+    if desc is None:
+        desc = 'ToolRunner'
+    else:
+        desc = 'ToolRunner[%s]' % desc
+
+    debug.log(msg)
+
+    if source is None:
+        source = sublime.active_window().active_view()
+
+    source.set_status(
+        "toolrunner", "%s: %s" % (desc, msg))
+
+    if target is not None:
+        target.set_status(
+            "toolrunner", "%s: %s" % (desc, msg))

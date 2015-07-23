@@ -317,14 +317,8 @@ class Command(object):
             self._target_view.set_read_only(True)
 
     def _notify(self, msg):
-        debug.log(msg)
-
-        self._source_view.set_status(
-            "toolrunner", "%s: %s" % (self._desc, msg))
-
-        if self._target_view is not None:
-            self._target_view.set_status(
-                "toolrunner", "%s: %s" % (self._desc, msg))
+        util.notify(msg, desc=self._desc, source=self._source_view,
+                    target=self._target_view)
 
     def _create_command_line(self):
         tool = self._tool

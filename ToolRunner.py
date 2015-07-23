@@ -6,6 +6,7 @@ from .lib import settings
 from .lib import manager
 from .lib import debug
 from .lib.command import Command
+from .lib import util
 
 
 class ToolRunner(sublime_plugin.WindowCommand):
@@ -132,8 +133,13 @@ class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
 
 
 class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
-    pass
-
+    def run(self):
+        source_view = self.window.active_view()
+        target_view = manager.get_target_view_for_source_view(source_view)
+        if target_view is not None:
+            manager.focus_view(target_view)
+        else:
+            util.notify("This view don't have an output")
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def run(self, profile_group=None):
