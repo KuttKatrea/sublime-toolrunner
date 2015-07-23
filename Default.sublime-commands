@@ -14,5 +14,9 @@
     {
         "caption": "Preferences: ToolRunner Settings",
         "command": "tool_runner_open_settings"
+    },
+    {
+        "caption": "ToolRunner: Focus output view",
+        "command": "tool_runner_focus_output"
     }
 ]
