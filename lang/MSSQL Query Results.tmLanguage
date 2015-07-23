@@ -5,7 +5,7 @@
 	<key>fileTypes</key>
 	<array/>
 	<key>name</key>
-	<string>MSSQL Query results</string>
+	<string>MSSQL Query Results</string>
 	<key>patterns</key>
 	<array>
 		<dict>

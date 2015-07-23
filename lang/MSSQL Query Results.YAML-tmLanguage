@@ -1,6 +1,6 @@
 # [PackageDev] target_format: plist, ext: tmLanguage
 ---
-name: MSSQL Query results
+name: MSSQL Query Results
 scopeName: source.mssql_query_results
 fileTypes: []
 uuid: 417e7aab-61ba-4587-96d4-0572fed4bf75
