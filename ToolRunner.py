@@ -7,15 +7,17 @@ from .lib import manager
 from .lib import debug
 from .lib.command import Command
 
+
 class ToolRunner(sublime_plugin.WindowCommand):
-    def run(self, tool=None, group=None, profile=None, default_profile=False, **kwargs):
+    def run(self, tool=None, group=None, profile=None, default_profile=False,
+            **kwargs):
         command = Command(
             self.window,
             kwargs
         )
 
         if tool is not None:
-            #debug.log("Running tool: ", tool)
+            # debug.log("Running tool: ", tool)
             command.run_tool(tool)
 
         elif group is not None:
@@ -39,19 +41,20 @@ class ToolRunner(sublime_plugin.WindowCommand):
     def _ask_type_to_run(self, callback):
         self.window.show_quick_panel(["Tool", "Group"], callback, 0, 0, None)
 
-
     def _on_ask_type_done(self, command, selected_index):
         if selected_index == 0:
             sublime.set_timeout(partial(
-                self._ask_tool_to_run, 
+                self._ask_tool_to_run,
                 partial(self._on_ask_tool_done, command)
             ), 0)
 
         elif selected_index == 1:
-            sublime.set_timeout(partial(
-                self._ask_group_and_profile_to_run, 
+            sublime.set_timeout(
+                partial(
+                    self._ask_group_and_profile_to_run,
                     partial(self._on_ask_group_done, command)
-                ), 0)
+                ), 0
+            )
 
     def _ask_tool_to_run(self, callback):
         tool_list = []
@@ -67,7 +70,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
             tool_list.append(tool_name)
 
             desc = single_tool.get('desc')
-            
+
             if desc is not None:
                 tool_selection_list.append(tool_name + "(" + desc + ")")
             else:
@@ -97,22 +100,29 @@ class ToolRunner(sublime_plugin.WindowCommand):
         if selected_index > -1:
             callback = partial(self._on_ask_profile_done, command)
             sublime.set_timeout(
-                partial(self._ask_profile_and_run_command, group_selected, callback),
-                0
+                partial(
+                    self._ask_profile_and_run_command,
+                    group_selected, callback
+                ), 0
             )
 
     def _ask_profile_and_run_command(self, group_selected, callback):
-        profile_list = [ profile["name"] for profile in settings.get_profiles(group_selected) ]
+        profiles = settings.get_profiles(group_selected)
+        profile_list = [
+            profile["name"] for profile in profiles
+        ]
         self.window.show_quick_panel(
             profile_list,
             partial(callback, group_selected, profile_list),
             0, 0, None
         )
 
-    def _on_ask_profile_done(self, command, group_selected, profile_list, selected_index):
+    def _on_ask_profile_done(self, command, group_selected, profile_list,
+                             selected_index):
         if selected_index > -1:
             selected_profile = profile_list[selected_index]
             command.run_profile(group_selected, selected_profile)
+
 
 class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
     def run(self):
@@ -120,8 +130,10 @@ class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
             self.window.active_view().id()
         )
 
+
 class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
     pass
+
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def run(self, profile_group=None):
@@ -132,7 +144,7 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
             self.switch_profile(profile_group)
 
     def ask_group_and_switch_profile(self):
-        self.groups = [ group['name'] for group in settings.get_groups() ]
+        self.groups = [group['name'] for group in settings.get_groups()]
         self.window.show_quick_panel(
             self.groups,
             partial(self.on_ask_group_done, self.switch_profile),
@@ -145,9 +157,12 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
             sublime.set_timeout(partial(callback, group_selected), 0)
 
     def switch_profile(self, profile_group):
+        profiles = settings.get_profiles(profile_group)
+
         self.profile_group = profile_group
-        self.profile_list = [ profile["name"] for profile in settings.get_profiles(profile_group) ]
-        self.window.show_quick_panel(self.profile_list, self.on_ask_profile, 0, 0, None)
+        self.profile_list = [profile["name"] for profile in profiles]
+        self.window.show_quick_panel(
+            self.profile_list, self.on_ask_profile, 0, 0, None)
 
     def on_ask_profile(self, selected_index):
 
@@ -162,13 +177,13 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
 
 class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
-    def __init__(self, *args,**kwargs):
+    def __init__(self, *args, **kwargs):
 
         sublime_plugin.WindowCommand.__init__(self, *args, **kwargs)
 
         self.ask_scope_items = [
-            ["Default","Default settings"],
-            ["User","Normal user settings"],
+            ["Default", "Default settings"],
+            ["User", "Normal user settings"],
             ["OS", "Settings specific to this machine OS"],
             ["Host", "Settings specific to this machine"],
         ]
@@ -180,15 +195,21 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
             self.do_open_settings(scope)
 
     def ask_scope_and_open_settings(self):
-        self.window.show_quick_panel(self.ask_scope_items,self.on_ask_scope_done, 0, 0, None)
+        self.window.show_quick_panel(
+            self.ask_scope_items, self.on_ask_scope_done, 0, 0, None)
 
     def on_ask_scope_done(self, selected_index):
-        if selected_index < 0: return
+        if selected_index < 0:
+            return
         scope = self.ask_scope_items[selected_index][0].lower()
         self.do_open_settings(scope)
 
     def do_open_settings(self, scope):
-        self.window.run_command("open_file", {"file": settings.get_settings_file_path(scope)})
+        self.window.run_command(
+            "open_file",
+            {"file": settings.get_settings_file_path(scope)}
+        )
+
 
 class ToolRunnerListener(sublime_plugin.EventListener):
     def on_close(self, view):
@@ -196,15 +217,16 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         manager.remove_target_view(view)
 
     def on_post_save(self, view):
-        #debug.log("Saved view: %s" % view.id())
+        # debug.log("Saved view: %s" % view.id())
         source_view = manager.get_source_view_for_target_view(view)
         if source_view is None:
-            #debug.log("The view %s is not an output view" % view.id())
+            # debug.log("The view %s is not an output view" % view.id())
             return
 
         manager.remove_target_view(view)
         view.set_scratch(False)
         view.set_read_only(False)
+
 
 def plugin_loaded():
     debug.log("Plugin Loading")
@@ -213,7 +235,7 @@ def plugin_loaded():
     if settings.get_setting('devel'):
         debug.forget_modules()
 
+
 def plugin_unloaded():
     settings.on_unloaded()
     debug.log("Plugin Unloaded")
-
