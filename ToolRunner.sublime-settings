@@ -8,6 +8,8 @@
             "-u",
             "-b",
             "-s", "\t",
+            "-y", "0",
+            "-h", "2147483647",
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
             "-i", "$[toolrunner_input_file]"
@@ -19,8 +21,9 @@
         "output": {
             "mode": "pipe"
         },
-        "result": {
-            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
+        "results": {
+            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage",
+            "mode": "panel"
         },
         "params": {
             "server": {
@@ -69,8 +72,8 @@
             "mode": "tmpfile-path",
             "codec": "utf_16"
         },
-        "result": {
-            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
+        "results": {
+            "syntax_file": "Packages/${package}/lang/MSSQL Query results.tmLanguage"
         },
         "params": {
             "server": {

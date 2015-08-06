@@ -8,4 +8,12 @@ patterns:
   - name: comment
     begin: (\:\:)
     end: \n
+  - name: comment
+    begin: --
+    end: \n
+  - name: sublimelinter.mark.error
+    match: 'Msg \d+, Level \d+, State \d+, Server (.*), Procedure \w+, Line \d+'
+  - name: comment
+    match: '\(\d rows affected\)'
+
 ...

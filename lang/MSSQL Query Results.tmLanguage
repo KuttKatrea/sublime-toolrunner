@@ -16,6 +16,26 @@
 			<key>name</key>
 			<string>comment</string>
 		</dict>
+		<dict>
+			<key>begin</key>
+			<string>--</string>
+			<key>end</key>
+			<string>\n</string>
+			<key>name</key>
+			<string>comment</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>Msg \d+, Level \d+, State \d+, Server (.*), Procedure \w+, Line \d+</string>
+			<key>name</key>
+			<string>sublimelinter.mark.error</string>
+		</dict>
+		<dict>
+			<key>match</key>
+			<string>\(\d rows affected\)</string>
+			<key>name</key>
+			<string>comment</string>
+		</dict>
 	</array>
 	<key>scopeName</key>
 	<string>source.mssql_query_results</string>
