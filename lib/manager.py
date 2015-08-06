@@ -8,6 +8,7 @@ svid = source view id
 tv = target view
 tvid = target view id
 '''
+_source_views_by_tvid = dict()
 _target_views_by_svid = dict()
 _svids_by_tvid = dict()
 _command_for_source_view = dict()
@@ -47,11 +48,13 @@ def create_target_view_for_source_view(view, type):
             vid = 'toolrunner-output:' + source_id
             new_view = view.window().create_output_panel(vid)
             new_view.settings().set('toolrunner-output-id', vid)
+            new_view.settings().set('toolrunner-is-output', True)
 
         target_id = str(new_view.id())
         debug.log("Created view with id %s" % target_id)
 
         _target_views_by_svid[source_id] = new_view
+        _source_views_by_tvid[target_id] = view
         _svids_by_tvid[target_id] = source_id
 
     return _target_views_by_svid[source_id]
@@ -65,7 +68,6 @@ def _create_view_in_target_group(view):
         target = group
     else:
         layout = win.get_layout()
-        
 
         x1 = 0
         y1 = 1
@@ -122,7 +124,7 @@ def _create_view_in_target_group(view):
 
             layout['rows'].append(dic_y)
             rows = list(sorted(set(layout['rows'])))
-            
+
             layout['rows'] = rows
 
             for cell in new_cells:
@@ -143,7 +145,11 @@ def _create_view_in_target_group(view):
             win.focus_group(target)
 
     target_view = win.new_file()
+
+    group, idx = win.get_view_index(view)
+
     win.focus_group(group)
+    win.focus_view(view)
 
     return target_view
 
@@ -153,8 +159,7 @@ def get_source_view_id_for_target_view_id(view_id):
 
 def get_source_view_for_target_view(view):
     target_id = str(view.id())
-
-    return get_source_view_id_for_target_view_id(target_id)
+    return _source_views_by_tvid.get(target_id)
 
 def get_target_view_for_source_view(view):
     source_id = str(view.id())
@@ -186,28 +191,35 @@ def remove_source_view(view):
         targetid = targetid.id()
     debug.log("Forgetting as source %s => %s" % (vid, targetid))
     _svids_by_tvid.pop(targetid, None)
+    _source_views_by_tvid.pop(targetid, None)
 
 def remove_target_view(view):
     vid = str(view.id())
     sourceid = _svids_by_tvid.pop(vid, None)
-    debug.log("Forgetting as target %s => %s" % (sourceid, vid))
-    _target_views_by_svid.pop(sourceid, None)
+    _source_views_by_tvid.pop(vid, None)
 
-def focus_view(target_view):
+    debug.log("Forgetting as target %s => %s" % (sourceid, vid))
+    tv = _target_views_by_svid.pop(sourceid, None)
+
+    if tv and tv.settings().get('toolrunner-is-output'):
+        tv.run_command("close")
+
+def ensure_visible_view(target_view, focus=False):
     active_window = sublime.active_window()
-    active_view = active_window.active_view()
-    active_group = active_window.active_group()
 
     panel_id = target_view.settings().get('toolrunner-output-id')
+    use_panel = panel_id is not None
 
-    if panel_id is None:
-        target_window = target_view.window()
-        
+    if use_panel:
+        active_window.run_command(
+            'show_panel',
+            {'panel': 'output.' + panel_id}
+        )
+
+    target_window = target_view.window()
+    target_group, group_index = target_window.get_view_index(target_view)
+    target_window.set_view_index(target_view, target_group, group_index)
+
+    if focus:
+        target_window.focus_group(target_group)
         target_window.focus_view(target_view)
-        target_group = target_window.active_group()
-
-        if active_window != target_window or active_group != target_group:
-            active_window.focus_view(active_view)
-
-    else:
-        active_window.run_command('show_panel', {'panel': 'output.' + panel_id})

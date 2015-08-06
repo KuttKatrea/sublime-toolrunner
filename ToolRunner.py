@@ -137,9 +137,19 @@ class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
         source_view = self.window.active_view()
         target_view = manager.get_target_view_for_source_view(source_view)
         if target_view is not None:
-            manager.focus_view(target_view)
+            manager.ensure_visible_view(target_view, focus=True)
         else:
             util.notify("This view don't have an output")
+
+
+class ToolRunnerFocusSource(sublime_plugin.WindowCommand):
+    def run(self):
+        target_view = self.window.active_view()
+        source_view = manager.get_source_view_for_target_view(target_view)
+        if source_view is not None:
+            manager.ensure_visible_view(source_view, focus=True)
+        else:
+            util.notify("This view is not an output")
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def run(self, profile_group=None):

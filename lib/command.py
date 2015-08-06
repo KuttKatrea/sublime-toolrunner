@@ -280,6 +280,8 @@ class Command(object):
 
         self._clean()
 
+        manager.ensure_visible_view(self._target_view)
+
     def _create_window(self):
         tool = self._tool
 
@@ -300,11 +302,12 @@ class Command(object):
         self._target_view.settings().set('line_numbers', False)
         self._target_view.settings().set('translate_tabs_to_spaces', False)
 
-        manager.focus_view(self._target_view)
+        manager.ensure_visible_view(self._target_view)
 
     def write(self, text):
         if self._target_view is None or self._target_view.window() is None:
-            self._create_window()
+            return
+            #self._create_window()
 
         read_only = self._target_view.is_read_only()
 
@@ -430,12 +433,9 @@ class Command(object):
         if self._output_file:
             with open(self._output_file, mode='r',
                       encoding=self._tool.output.codec) as tmpfile:
-                for line in tmpfile:
-                    if self._cancelled:
-                        break
-                    outstring = line.replace('\r\n', '\n')
-                    # debug.log(outstring)
-                    self.write(outstring)
+                outlines = [line.replace('\r\n', '\n') for line in tmpfile]
+                # debug.log(outstring)
+            self.write(outlines)
 
     def _clean(self):
         if self._input_file:

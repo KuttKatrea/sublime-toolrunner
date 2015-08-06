@@ -16,7 +16,11 @@
         "command": "tool_runner_open_settings"
     },
     {
-        "caption": "ToolRunner: Focus output view",
+        "caption": "ToolRunner: Focus Output",
         "command": "tool_runner_focus_output"
+    },
+        {
+        "caption": "ToolRunner: Focus Source",
+        "command": "tool_runner_focus_source"
     }
 ]
