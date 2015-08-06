@@ -73,8 +73,8 @@ class Command(object):
             self._notify("There is no tool named:", tool_id)
             return
 
-        self._desc = "%s/%s (%s)" % (
-            selected_group, selected_profile, self._tool.name)
+        self._desc = "%s/%s" % (
+            selected_group, selected_profile)
 
         self._tool.set_command_arguments(
             group_descriptor, profile_descriptor, self._command_arguments)
