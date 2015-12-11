@@ -22,8 +22,7 @@
             "mode": "pipe"
         },
         "results": {
-            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage",
-            "mode": "panel"
+            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
         },
         "params": {
             "server": {
@@ -164,7 +163,7 @@
     }, {
         "name": "Mongo",
         "cmd": "mongo",
-        "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
+        "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"],
         "params": {
             "address": {
                 "type": "positional",
@@ -192,7 +191,9 @@
             }
         },
         "input": {
-            "codec": "utf-8"
+            "mode": "tmpfile-path",
+            "codec": "utf-8",
+            "file_suffix": ".mongodb.js"
         },
         "output": {
             "codec": "utf-8"

@@ -70,7 +70,7 @@ class Command(object):
         tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
 
         if self._create_tool(tool_id) is None:
-            self._notify("There is no tool named:", tool_id)
+            self._notify("There is no tool named: %s" % tool_id)
             return
 
         self._desc = "%s/%s" % (
