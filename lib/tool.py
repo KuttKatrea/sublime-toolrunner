@@ -137,7 +137,7 @@ class Output(ConfigContainer):
 class Results(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = 'buffer',
+            mode = settings.get_setting('default_output_mode'),
             read_only = False,
             scratch = True,
             line_numbers = False,

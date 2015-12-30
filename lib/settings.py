@@ -124,7 +124,7 @@ def _build_tool_list():
             key = key.lower()
 
             if key not in _tool_map:
-                override_cmd = get_override(key)
+                override_cmd = get_override(tool_item['cmd'])
                 if override_cmd is not None:
                     tool_item['cmd'] = override_cmd
 
