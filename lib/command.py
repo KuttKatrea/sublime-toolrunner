@@ -350,10 +350,10 @@ class Command(object):
         filename = self._source_view.file_name()
         project = self._source_window.project_file_name()
 
-        if filename is not None:
-            working_directory = path.dirname(filename)
-        elif project is not None:
+        if project is not None:
             working_directory = path.dirname(project)
+        elif filename is not None:
+            working_directory = path.dirname(filename)
         else:
             working_directory = os.environ.get(
                 'HOME', os.environ.get('USER_PROFILE'))
