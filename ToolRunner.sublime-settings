@@ -129,6 +129,16 @@
         "name": "NodeJS",
         "cmd": "node"
     }, {
+        "name": "CoffeeScript",
+        "cmd": "coffee",
+        "input": {
+            "mode": "tmpfile-path", // cmdline, pipe
+            "file_suffix": ".coffee"
+        },
+        "arguments": [
+            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
+        ]
+    }, {
         "name": "MySQL",
         "cmd": "mysql",
         "arguments": ["--batch", "--table", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
