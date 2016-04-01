@@ -10,8 +10,8 @@ def _set_default_codecs():
     global _default_input_codec
     global _default_output_codec
 
-    _default_input_codec = 'cp850'
-    _default_output_codec = 'cp850'
+    _default_input_codec = 'utf-8' #'cp850'
+    _default_output_codec =  'utf-8' #'cp850'
 
 class ConfigContainer(object):
     def _get_defaults(self):
