@@ -128,6 +128,16 @@
     }, {
         "name": "NodeJS",
         "cmd": "node"
+    },  {
+        "name": "Groovy",
+        "cmd": "groovy",
+        "input": {
+            "mode": "tmpfile-path", // cmdline, pipe
+            "file_suffix": ".groovy"
+        },
+        "arguments": [
+            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
+        ]
     }, {
         "name": "CoffeeScript",
         "cmd": "coffee",
@@ -173,49 +183,10 @@
     }, {
         "name": "MongoDB (Script)",
         "cmd": "mongo",
-        "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"],
-        "params": {
-            "address": {
-                "type": "positional",
-                "order": 0
-            },
-            "host": {
-                "type": "named",
-                "argument": "--host"
-            },
-            "port": {
-                "type": "named",
-                "argument": "--port"
-            },
-            "username": {
-                "type": "named",
-                "argument": "-u"
-            },
-            "password": {
-                "type": "named",
-                "argument": "-p"
-            },
-            "quiet": {
-                "type": "flag",
-                "argument": "--quiet"
-            }
-        },
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "utf-8",
-            "file_suffix": ".mongodb.js"
-        },
-        "output": {
-            "codec": "utf-8"
-        }
-    }, {
-        "name": "MongoDB (Shell)",
-        "cmd": "mongo",
         "arguments": [
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
             "$[toolrunner_positional_arguments]",
-            "--quiet",
             "$[toolrunner_input_file]"
         ],
         "params": {
@@ -242,6 +213,64 @@
             "quiet": {
                 "type": "flag",
                 "argument": "--quiet"
+            },
+            "nodb": {
+                "type": "flag",
+                "argument": "--nodb"
+            },
+            "eval": {
+                "type": "named",
+                "argument": "--eval"
+            },
+            "rc": {
+                "type": "positional",
+                "order": 1
+            }
+        },
+        "input": {
+            "mode": "tmpfile-path",
+            "codec": "utf-8",
+            "file_suffix": ".mongodb.js"
+        },
+        "output": {
+            "codec": "utf-8"
+        }
+    }, {
+        "name": "MongoDB (Shell)",
+        "cmd": "mongo",
+        "arguments": [
+            "$[toolrunner_flag_arguments]",
+            "$[toolrunner_named_arguments]",
+            "--quiet",
+            "$[toolrunner_positional_arguments]"
+        ],
+        "params": {
+            "address": {
+                "type": "positional",
+                "order": 0
+            },
+            "host": {
+                "type": "named",
+                "argument": "--host"
+            },
+            "port": {
+                "type": "named",
+                "argument": "--port"
+            },
+            "username": {
+                "type": "named",
+                "argument": "-u"
+            },
+            "password": {
+                "type": "named",
+                "argument": "-p"
+            },
+            "quiet": {
+                "type": "flag",
+                "argument": "--quiet"
+            }, "eval": {
+                "type": "named",
+                "argument": "--eval"
             }
         },
         "input": {
