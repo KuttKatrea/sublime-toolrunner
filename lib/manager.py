@@ -51,11 +51,13 @@ def create_target_view_for_source_view(view, type):
             new_view.settings().set('toolrunner-is-output', True)
 
         target_id = str(new_view.id())
-        debug.log("Created view with id %s" % target_id)
+        debug.log("Created view with id %s for view %s" % (target_id, source_id))
 
         _target_views_by_svid[source_id] = new_view
         _source_views_by_tvid[target_id] = view
         _svids_by_tvid[target_id] = source_id
+
+    _target_views_by_svid[source_id].set_name("ToolRunner Output for %s" % view.name())
 
     return _target_views_by_svid[source_id]
 
@@ -185,13 +187,22 @@ def set_current_command_for_source_view(source_view, command):
         _command_for_source_view[view_id] = command
 
 def remove_source_view(view):
-    vid = str(view.id())
-    targetid = _target_views_by_svid.pop(vid, None)
-    if targetid != None:
-        targetid = targetid.id()
-    debug.log("Forgetting as source %s => %s" % (vid, targetid))
-    _svids_by_tvid.pop(targetid, None)
-    _source_views_by_tvid.pop(targetid, None)
+    source_id = str(view.id())
+
+    target = _target_views_by_svid.pop(source_id, None)
+
+    if target == None:
+        debug.log("No target to forget")
+        return
+
+    target_id = target.id()
+
+    debug.log("Forgetting as source %s => %s" % (source_id, target_id))
+
+    _svids_by_tvid.pop(target_id, None)
+    _source_views_by_tvid.pop(target_id, None)
+
+    remove_panel(target)
 
 def remove_target_view(view):
     vid = str(view.id())
@@ -201,8 +212,24 @@ def remove_target_view(view):
     debug.log("Forgetting as target %s => %s" % (sourceid, vid))
     tv = _target_views_by_svid.pop(sourceid, None)
 
-    if tv and tv.settings().get('toolrunner-is-output'):
-        tv.run_command("close")
+    remove_panel(tv)
+
+def remove_panel(tv):
+    if not tv:
+        return
+
+    is_output = tv.settings().get('toolrunner-is-output')
+    panel_id = tv.settings().get('toolrunner-output-id')
+    win = tv.window()
+
+    debug.log("Target: %s, Is Output: %s" % (tv, is_output))
+    if is_output:
+        debug.log("Removing panel %s" % panel_id)
+        
+        try:
+            win.destroy_output_panel(panel_id)
+        except AttributeError:
+            tv.run_command("close")
 
 def ensure_visible_view(target_view, focus=False):
     active_window = sublime.active_window()
