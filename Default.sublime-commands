@@ -4,7 +4,7 @@
         "command": "tool_runner"
     },
     {
-        "caption": "ToolRunner: Stop running tool",
+        "caption": "ToolRunner: Cancel current tool execution",
         "command": "tool_runner_cancel_current"
     },
     {
