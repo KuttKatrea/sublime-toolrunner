@@ -96,6 +96,10 @@ class ToolRunner(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(group_list, callback, 0, 0, None)
 
     def _on_ask_group_done(self, command, group_list, selected_index):
+        if selected_index < 0:
+            sublime.error_message("There are no groups configured")
+            return
+
         group_selected = group_list[selected_index]
 
         if selected_index > -1:
@@ -151,6 +155,7 @@ class ToolRunnerFocusSource(sublime_plugin.WindowCommand):
         else:
             util.notify("This view is not an output")
 
+
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def run(self, profile_group=None):
         debug.log("Switching command for profile group: " + str(profile_group))
@@ -167,6 +172,10 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
             0, 0, None)
 
     def on_ask_group_done(self, callback, selected_index):
+        if selected_index < 0:
+            sublime.error_message("There are no groups configured")
+            return
+
         group_selected = self.groups[selected_index]
 
         if selected_index > -1:
