@@ -52,12 +52,15 @@ def get_platform_setting(setting_name, default=None):
 def get_user_setting(setting_name, default=None):
     return user_settings.get(setting_name, default)
 
+
 def set_setting(setting_name, settingValue):
     host_settings.set(setting_name, settingValue)
     sublime.save_settings(get_host_settings_filename())
 
+
 def get_settings_file_path(scope):
     return "${packages}/%0s/%1s" % get_settings_pieces(scope)
+
 
 def get_settings_pieces(scope):
     if scope == 'host':
@@ -69,12 +72,15 @@ def get_settings_pieces(scope):
     else:  # default
         return (basepackage, get_settings_filename())
 
+
 def get_groups():
-    groups = get_setting('user_groups', [])
-    groups += get_setting('os_groups', [])
-    groups += get_setting('host_groups', [])
+    groups = get_user_setting('default_groups', [])
+    groups += get_user_setting('user_groups', [])
+    groups += get_platform_setting('user_groups', [])
+    groups += get_host_setting('user_groups', [])
 
     return groups
+
 
 def get_profiles(profile_group):
     groups = get_groups()
