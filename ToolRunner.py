@@ -63,6 +63,10 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
         def_tool_list = settings.get_tools()
 
+        if len(def_tool_list) <= 0:
+            sublime.error_message("There are no tools configured")
+            return
+
         debug.log("Creating Tools item list for Quick Panel", def_tool_list)
 
         for single_tool in def_tool_list:
@@ -91,18 +95,18 @@ class ToolRunner(sublime_plugin.WindowCommand):
         group_list = [
             single_group['name'] for single_group in settings.get_groups()
         ]
-        callback = partial(callback, group_list)
 
-        self.window.show_quick_panel(group_list, callback, 0, 0, None)
+        if len(group_list) <= 0:
+            sublime.error_message("There are no groups configured")
+        else:
+            callback = partial(callback, group_list)
+
+            self.window.show_quick_panel(group_list, callback, 0, 0, None)
 
     def _on_ask_group_done(self, command, group_list, selected_index):
-        if selected_index < 0:
-            sublime.error_message("There are no groups configured")
-            return
-
         group_selected = group_list[selected_index]
 
-        if selected_index > -1:
+        if selected_index >= 0:
             callback = partial(self._on_ask_profile_done, command)
             sublime.set_timeout(
                 partial(
@@ -113,9 +117,15 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
     def _ask_profile_and_run_command(self, group_selected, callback):
         profiles = settings.get_profiles(group_selected)
+
+        if len(profiles) <= 0:
+            sublime.error_message("This group has no profiles configured")
+            return
+
         profile_list = [
             profile["name"] for profile in profiles
         ]
+
         self.window.show_quick_panel(
             profile_list,
             partial(callback, group_selected, profile_list),
@@ -124,7 +134,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
 
     def _on_ask_profile_done(self, command, group_selected, profile_list,
                              selected_index):
-        if selected_index > -1:
+        if selected_index >= 0:
             selected_profile = profile_list[selected_index]
             command.run_profile(group_selected, selected_profile)
 
@@ -166,6 +176,11 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
     def ask_group_and_switch_profile(self):
         self.groups = [group['name'] for group in settings.get_groups()]
+
+        if len(self.groups) <= 0:
+            sublime.error_message("There are no groups configured")
+            return
+
         self.window.show_quick_panel(
             self.groups,
             partial(self.on_ask_group_done, self.switch_profile),
