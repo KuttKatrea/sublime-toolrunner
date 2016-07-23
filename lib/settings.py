@@ -23,7 +23,7 @@ def get_platform_settings_filename():
 
 
 def get_host_settings_filename():
-    return get_settings_filename(platform.uname()[1])
+    return get_settings_filename(platform.uname()[1].lower())
 
 
 def get_settings_filename(special=None):
