@@ -7,6 +7,7 @@ from . import debug
 
 basepackage = re.sub(r"\.lib$", "", __package__)
 
+hostplatform_settings = None
 host_settings = None
 platform_settings = None
 user_settings = None
@@ -18,12 +19,18 @@ _plugin_loaded = False
 _on_plugin_loaded_callbacks = list()
 
 
-def get_platform_settings_filename():
-    return get_settings_filename(sublime.platform().capitalize())
+def get_hostplatform_settings_filename():
+    return get_settings_filename(
+        platform.uname()[1].lower() + " on " + sublime.platform().capitalize())
 
 
 def get_host_settings_filename():
-    return get_settings_filename(platform.uname()[1].lower())
+    return get_settings_filename(
+        platform.uname()[1])
+
+
+def get_platform_settings_filename():
+    return get_settings_filename(sublime.platform().capitalize())
 
 
 def get_settings_filename(special=None):
@@ -32,13 +39,20 @@ def get_settings_filename(special=None):
 
 
 def get_setting(setting_name, default=None):
-    return host_settings.get(
+    return hostplatform_settings.get(
         setting_name,
-        platform_settings.get(
+        host_settings.get(
             setting_name,
-            user_settings.get(setting_name, default)
+            platform_settings.get(
+                setting_name,
+                user_settings.get(setting_name, default)
+            )
         )
     )
+
+
+def get_hostplatform_setting(setting_name, default=None):
+    return hostplatform_settings.get(setting_name, default)
 
 
 def get_host_setting(setting_name, default=None):
@@ -54,8 +68,8 @@ def get_user_setting(setting_name, default=None):
 
 
 def set_setting(setting_name, settingValue):
-    host_settings.set(setting_name, settingValue)
-    sublime.save_settings(get_host_settings_filename())
+    hostplatform_settings.set(setting_name, settingValue)
+    sublime.save_settings(get_hostplatform_settings_filename())
 
 
 def get_settings_file_path(scope):
@@ -63,6 +77,8 @@ def get_settings_file_path(scope):
 
 
 def get_settings_pieces(scope):
+    if scope == 'host/os':
+        return ('User/', get_hostplatform_settings_filename())
     if scope == 'host':
         return ('User/', get_host_settings_filename())
     elif scope == 'user':
@@ -74,10 +90,10 @@ def get_settings_pieces(scope):
 
 
 def get_groups():
-    groups = get_user_setting('default_groups', [])
-    groups += get_user_setting('user_groups', [])
-    groups += get_platform_setting('user_groups', [])
+    groups = get_hostplatform_setting('user_groups', [])
     groups += get_host_setting('user_groups', [])
+    groups += get_platform_setting('user_groups', [])
+    groups += get_user_setting('user_groups', [])
 
     return groups
 
@@ -139,11 +155,14 @@ def _build_tool_list():
 
 
 def on_loaded():
-    global host_settings, platform_settings, user_settings
+    global hostplatform_settings, host_settings, platform_settings, user_settings
     global _plugin_loaded
 
     if _plugin_loaded:
         return
+
+    hostplatform_settings = sublime.load_settings(
+        get_hostplatform_settings_filename())
 
     host_settings = sublime.load_settings(
         get_host_settings_filename())
@@ -158,6 +177,7 @@ def on_loaded():
 
     debug.log('Registering Settings Callbacks')
 
+    hostplatform_settings.add_on_change('debug', on_debug_change)
     user_settings.add_on_change('debug', on_debug_change)
     platform_settings.add_on_change('debug', on_debug_change)
     host_settings.add_on_change('debug', on_debug_change)
@@ -171,6 +191,9 @@ def on_loaded():
 
 
 def on_unloaded():
+    if hostplatform_settings is not None:
+        hostplatform_settings.clear_on_change('debug')
+
     if host_settings is not None:
         host_settings.clear_on_change('debug')
 

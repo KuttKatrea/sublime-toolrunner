@@ -226,6 +226,7 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
             ["User", "Normal user settings"],
             ["OS", "Settings specific to this machine OS"],
             ["Host", "Settings specific to this machine"],
+            ["Host/OS", "Settings specific to this machine on this OS"],
         ]
 
     def run(self, scope=None):
