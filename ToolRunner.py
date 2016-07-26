@@ -188,7 +188,6 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
     def on_ask_group_done(self, callback, selected_index):
         if selected_index < 0:
-            sublime.error_message("There are no groups configured")
             return
 
         group_selected = self.groups[selected_index]
@@ -242,6 +241,7 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
     def on_ask_scope_done(self, selected_index):
         if selected_index < 0:
             return
+            
         scope = self.ask_scope_items[selected_index][0].lower()
         self.do_open_settings(scope)
 
