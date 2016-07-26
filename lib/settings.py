@@ -26,7 +26,7 @@ def get_hostplatform_settings_filename():
 
 def get_host_settings_filename():
     return get_settings_filename(
-        platform.uname()[1])
+        platform.uname()[1].lower())
 
 
 def get_platform_settings_filename():
@@ -129,6 +129,7 @@ def _build_tool_list():
     _tool_list = []
 
     for settings_set in (
+        get_hostplatform_setting('user_tools', []),
         get_host_setting('user_tools', []),
         get_platform_setting('user_tools', []),
         get_user_setting('user_tools', []),
@@ -159,6 +160,7 @@ def on_loaded():
     global _plugin_loaded
 
     if _plugin_loaded:
+        debug.log("Plugin already loaded")
         return
 
     hostplatform_settings = sublime.load_settings(
