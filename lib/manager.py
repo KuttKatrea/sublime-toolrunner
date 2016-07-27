@@ -13,6 +13,7 @@ _target_views_by_svid = dict()
 _svids_by_tvid = dict()
 _command_for_source_view = dict()
 
+
 def cancel_command_for_view_id(view_id, wait=False):
     command = get_current_command_for_source_view_id(view_id)
 
@@ -30,6 +31,7 @@ def cancel_command_for_view_id(view_id, wait=False):
     else:
         debug.log("No command to cancel")
 
+
 def cancel_command_for_source_view(source_view, wait=False):
     command = get_current_command_for_source_view(source_view)
     if command is not None:
@@ -37,6 +39,7 @@ def cancel_command_for_source_view(source_view, wait=False):
         command.cancel(wait)
     else:
         debug.log("No command to cancel")
+
 
 def create_target_view_for_source_view(view, type):
     source_id = str(view.id())
@@ -51,15 +54,18 @@ def create_target_view_for_source_view(view, type):
             new_view.settings().set('toolrunner-is-output', True)
 
         target_id = str(new_view.id())
-        debug.log("Created view with id %s for view %s" % (target_id, source_id))
+        debug.log("Created view with id %s for view %s" % (
+            target_id, source_id))
 
         _target_views_by_svid[source_id] = new_view
         _source_views_by_tvid[target_id] = view
         _svids_by_tvid[target_id] = source_id
 
-    _target_views_by_svid[source_id].set_name("ToolRunner Output for %s" % view.name())
+    _target_views_by_svid[source_id].set_name(
+        "ToolRunner Output for %s" % view.name())
 
     return _target_views_by_svid[source_id]
+
 
 def _create_view_in_target_group(view):
     win = view.window()
@@ -91,11 +97,11 @@ def _create_view_in_target_group(view):
             if tgroup[y1] == origin_coords[y2]:
                 debug.log('Y-Matches', idx, tgroup)
                 if tgroup[x1] >= origin_coords[x1]:
-                    if max_target == None or tgroup[x1] < max_target:
+                    if max_target is None or tgroup[x1] < max_target:
                         debug.log('X Max Matches: ', idx, tgroup)
                         max_target = idx
                 if tgroup[x1] <= origin_coords[x1]:
-                    if min_target == None or tgroup[x1] > min_target:
+                    if min_target is None or tgroup[x1] > min_target:
                         debug.log('X Min Matches: ', idx, tgroup)
                         min_target = idx
 
@@ -108,13 +114,17 @@ def _create_view_in_target_group(view):
 
             new_cells = list()
             for cell in cells:
-                new_cells.append([layout['cols'][cell[x1]], layout['rows'][cell[y1]], layout['cols'][cell[x2]], layout['rows'][cell[y2]]])
+                new_cells.append([
+                    layout['cols'][cell[x1]],
+                    layout['rows'][cell[y1]],
+                    layout['cols'][cell[x2]],
+                    layout['rows'][cell[y2]]])
 
             current_cell = new_cells[group]
 
             debug.log(new_cells, current_cell)
 
-            new_cell= list(current_cell)
+            new_cell = list(current_cell)
 
             nc_height = (current_cell[y2] - current_cell[y1]) / 3
             dic_y = current_cell[y2] - nc_height
@@ -155,21 +165,26 @@ def _create_view_in_target_group(view):
 
     return target_view
 
+
 def get_source_view_id_for_target_view_id(view_id):
     view_id = str(view_id)
     return _svids_by_tvid.get(view_id)
+
 
 def get_source_view_for_target_view(view):
     target_id = str(view.id())
     return _source_views_by_tvid.get(target_id)
 
+
 def get_target_view_for_source_view(view):
     source_id = str(view.id())
     return _target_views_by_svid.get(source_id)
 
+
 def get_current_command_for_source_view(view):
     view_id = str(view.id())
     return get_current_command_for_source_view_id(view_id)
+
 
 def get_current_command_for_source_view_id(view_id):
     view_id = str(view_id)
@@ -178,20 +193,22 @@ def get_current_command_for_source_view_id(view_id):
 
     return None
 
+
 def set_current_command_for_source_view(source_view, command):
     view_id = str(source_view.id())
 
     if command is None:
-        _command_for_source_view.pop(view_id,None)
+        _command_for_source_view.pop(view_id, None)
     else:
         _command_for_source_view[view_id] = command
+
 
 def remove_source_view(view):
     source_id = str(view.id())
 
     target = _target_views_by_svid.pop(source_id, None)
 
-    if target == None:
+    if target is None:
         debug.log("No target to forget")
         return
 
@@ -204,6 +221,7 @@ def remove_source_view(view):
 
     remove_panel(target)
 
+
 def remove_target_view(view):
     vid = str(view.id())
     sourceid = _svids_by_tvid.pop(vid, None)
@@ -213,6 +231,7 @@ def remove_target_view(view):
     tv = _target_views_by_svid.pop(sourceid, None)
 
     remove_panel(tv)
+
 
 def remove_panel(tv):
     if not tv:
@@ -225,11 +244,12 @@ def remove_panel(tv):
     debug.log("Target: %s, Is Output: %s" % (tv, is_output))
     if is_output:
         debug.log("Removing panel %s" % panel_id)
-        
+
         try:
             win.destroy_output_panel(panel_id)
         except AttributeError:
             tv.run_command("close")
+
 
 def ensure_visible_view(target_view, focus=False):
     active_window = sublime.active_window()

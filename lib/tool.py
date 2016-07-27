@@ -1,17 +1,17 @@
-import sublime
-import sys
 from . import debug
 from . import settings
 
 _default_input_codec = None
 _default_output_codec = None
 
+
 def _set_default_codecs():
     global _default_input_codec
     global _default_output_codec
 
-    _default_input_codec = 'utf-8' #'cp850'
-    _default_output_codec =  'utf-8' #'cp850'
+    _default_input_codec = 'utf-8'  # 'cp850'
+    _default_output_codec = 'utf-8'  # 'cp850'
+
 
 class ConfigContainer(object):
     def _get_defaults(self):
@@ -33,7 +33,7 @@ class ConfigContainer(object):
             if k in self._props:
                 attr_value = config.get(k)
 
-                #debug.log("Updating %s with %s" % (k, attr_value))
+                # debug.log("Updating %s with %s" % (k, attr_value))
 
                 current_attr = getattr(self, k, None)
 
@@ -43,7 +43,8 @@ class ConfigContainer(object):
                     setattr(self, k, attr_value)
 
     def __repr__(self):
-        return self.__class__.__name__ + ':' + self.__dict__.__repr__();
+        return self.__class__.__name__ + ':' + self.__dict__.__repr__()
+
 
 class Tool(ConfigContainer):
     command_arguments = dict(
@@ -54,15 +55,15 @@ class Tool(ConfigContainer):
 
     def _get_defaults(self):
         return dict(
-            name = "",
-            cmd = "",
-            arguments = list(),
-            input = Input(),
-            output = Output(),
-            results = Results(),
-            params = dict(),
-            input_source = None,
-            params_values = dict(),
+            name="",
+            cmd="",
+            arguments=list(),
+            input=Input(),
+            output=Output(),
+            results=Results(),
+            params=dict(),
+            input_source=None,
+            params_values=dict(),
         )
 
     def set_command_arguments(self, *args):
@@ -72,12 +73,14 @@ class Tool(ConfigContainer):
                     return conf[argName]
             return None
 
-        conf = {value: get_value(key) for (key, value) in Tool.command_arguments.items()}
+        conf = {
+            value: get_value(key) for (key, value) in Tool.command_arguments.items()
+        }
 
         self.update(conf)
 
     def get_command_array(self, input_text=None):
-        full_arguments = [ self.cmd ]
+        full_arguments = [self.cmd]
 
         positional_arguments = []
         named_arguments = []
@@ -111,13 +114,14 @@ class Tool(ConfigContainer):
 
         return full_arguments
 
+
 class Input(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = 'pipe', # tmpfile-path, cmdline
-            allow_empty = False,
-            file_suffix = None,
-            codec = _default_input_codec,
+            mode='pipe',  # tmpfile-path, cmdline
+            allow_empty=False,
+            file_suffix=None,
+            codec=_default_input_codec,
         )
 
     def update(self, config):
@@ -130,19 +134,21 @@ class Input(ConfigContainer):
 class Output(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = "pipe", # tmpfile-path, tmpfile-pipe
-            codec = _default_output_codec,
+            mode="pipe",  # tmpfile-path, tmpfile-pipe
+            codec=_default_output_codec,
         )
+
 
 class Results(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode = settings.get_setting('default_output_mode'),
-            read_only = False,
-            scratch = True,
-            line_numbers = False,
-            syntax_file = settings.get_setting('default_syntax_file'),
+            mode=settings.get_setting('default_output_mode'),
+            read_only=False,
+            scratch=True,
+            line_numbers=False,
+            syntax_file=settings.get_setting('default_syntax_file'),
         )
+
 
 def _on_plugin_loaded():
     debug.log("Setting defaults for tools")
