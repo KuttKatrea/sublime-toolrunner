@@ -213,7 +213,8 @@ class Command(object):
             return
 
         if tool.output.mode != 'none':
-            manager.set_current_command_for_source_view(self._source_view, self)
+            manager.set_current_command_for_source_view(
+                self._source_view, self)
 
         self._begin_write()
         self._running = True
@@ -313,7 +314,7 @@ class Command(object):
     def write(self, text):
         if self._target_view is None or self._target_view.window() is None:
             return
-            #self._create_window()
+            # self._create_window()
 
         read_only = self._target_view.is_read_only()
 
@@ -382,6 +383,8 @@ class Command(object):
         if tool.output.mode == "tmpfile-pipe":
             self._create_temp_output_file()
             stdout = open(self._output_file, 'wb+')
+        elif tool.output.mode == "none":
+            stdout = subprocess.STDOUT
         else:
             stdout = subprocess.PIPE
 
