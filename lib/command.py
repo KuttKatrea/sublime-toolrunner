@@ -197,7 +197,8 @@ class Command(object):
         self._create_working_directory()
         debug.log("Using Working Directory: %s" % self._working_directory)
 
-        manager.cancel_command_for_source_view(self._source_view, True)
+        if tool.output.mode != 'none':
+            manager.cancel_command_for_source_view(self._source_view, True)
 
         self._execution_cancelled = False
 
@@ -211,7 +212,8 @@ class Command(object):
             self._notify("Executable not found")
             return
 
-        manager.set_current_command_for_source_view(self._source_view, self)
+        if tool.output.mode != 'none':
+            manager.set_current_command_for_source_view(self._source_view, self)
 
         self._begin_write()
         self._running = True
@@ -253,6 +255,10 @@ class Command(object):
         self._end_run()
 
     def _end_run(self):
+        tool = self._tool
+        if tool.output.mode == 'none':
+            return
+
         self.endtime = datetime.datetime.now()
         timedelta = self.endtime - self.starttime
 
@@ -405,6 +411,11 @@ class Command(object):
         self._process = process
 
     def _begin_write(self):
+        tool = self._tool
+
+        if tool.output.mode == 'none':
+            return
+
         self._create_window()
 
         self._target_view.run_command("move_to", {"to": "eof"})
