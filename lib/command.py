@@ -363,7 +363,7 @@ class Command(object):
             working_directory = path.dirname(filename)
         else:
             working_directory = os.environ.get(
-                'HOME', os.environ.get('USER_PROFILE'))
+                'HOME', os.environ.get('USERPROFILE'))
 
         self._working_directory = working_directory
 
@@ -378,25 +378,26 @@ class Command(object):
                 subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE
             )
 
-        stdout = None
-
         if tool.output.mode == "tmpfile-pipe":
             self._create_temp_output_file()
             stdout = open(self._output_file, 'wb+')
+            stderr = subprocess.STDOUT
         elif tool.output.mode == "none":
-            stdout = subprocess.STDOUT
+            stdout = None
+            stderr = None
         else:
             stdout = subprocess.PIPE
+            stderr = subprocess.STDOUT
 
         try:
             process = subprocess.Popen(
                 self._command_array,
                 stdin=subprocess.PIPE,
                 stdout=stdout,
-                stderr=subprocess.STDOUT,
+                stderr=stderr,
                 shell=False,
                 startupinfo=startupinfo,
-                cwd=self._working_directory
+                cwd=self._working_directory,
             )
 
         except FileNotFoundError as e:
