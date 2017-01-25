@@ -152,7 +152,7 @@ class Command(object):
 
         opts = dict(delete=False)
 
-        opts["prefix"] = 'toolrunner-'
+        opts["prefix"] = 'toolrunner.'
 
         if input.file_suffix is not None:
             opts["suffix"] = input.file_suffix
@@ -297,7 +297,7 @@ class Command(object):
         self._target_view = manager.create_target_view_for_source_view(
             self._source_view, self._tool.results.mode)
 
-        panelname = ':: Results: %s ::' % (self._source_view.buffer_id())
+        panelname = ':: ToolRunner Output (%s) ::' % (self._source_view.buffer_id())
         self._target_view.set_name(panelname)
 
         self._target_view.set_read_only(tool.results.read_only)
