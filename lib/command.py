@@ -1,5 +1,6 @@
 import sublime
 
+import re
 import subprocess
 import datetime
 import os
@@ -336,9 +337,14 @@ class Command(object):
         command_array = tool.get_command_array()
 
         for i in range(len(command_array)):
-            if command_array[i] == '$[toolrunner_input_file]':
+            input_re = re.escape(r'$[toolrunner_input_file]')
+            if re.search(input_re, command_array[i]):
                 if tool.input.mode == "tmpfile-path":
-                    command_array[i] = self._create_temp_input_file()
+                    command_array[i] = re.sub(
+                        input_re,
+                        self._create_temp_input_file(),
+                        command_array[i]
+                    )
 
             if command_array[i] == '$[toolrunner_input_text]':
                 if tool.input.mode == "cmdline":

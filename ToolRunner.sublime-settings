@@ -101,6 +101,27 @@
             }
         }
     }, {
+        "name": "SQLCL",
+        "desc": "Oracle SQL Command Line",
+        "cmd": "sql",
+        "arguments": [
+            "-S", "-nohistory", "-L",
+            "$[toolrunner_flag_arguments]",
+            "$[toolrunner_named_arguments]",
+            "$[toolrunner_positional_arguments]",
+            "@$[toolrunner_input_file]"
+        ],
+        "input": {
+            "mode": "tmpfile-path",
+            "file_suffix": ".sql"
+        },
+        "params": {
+            "login": {
+                "type": "positional",
+                "order": 0
+            }
+        }
+    }, {
         "name": "CMD",
         "desc": "CMD Batch File",
         "cmd": "cmd",
