@@ -181,7 +181,7 @@
             "codec": "utf-8"
         }
     }, {
-        "name": "MongoDB (Script)",
+        "name": "MongoDB Script",
         "cmd": "mongo",
         "arguments": [
             "$[toolrunner_flag_arguments]",
@@ -202,13 +202,17 @@
                 "type": "named",
                 "argument": "--port"
             },
+            "authenticationDatabase": {
+                "type": "named",
+                "argument": "--authenticationDatabase"
+            },
             "username": {
                 "type": "named",
-                "argument": "-u"
+                "argument": "--username"
             },
             "password": {
                 "type": "named",
-                "argument": "-p"
+                "argument": "--password"
             },
             "quiet": {
                 "type": "flag",
@@ -236,7 +240,7 @@
             "codec": "utf-8"
         }
     }, {
-        "name": "MongoDB (Shell)",
+        "name": "MongoDB Shell",
         "cmd": "mongo",
         "arguments": [
             "$[toolrunner_flag_arguments]",
@@ -257,13 +261,17 @@
                 "type": "named",
                 "argument": "--port"
             },
+            "authenticationDatabase": {
+                "type": "named",
+                "argument": "--authenticationDatabase"
+            },
             "username": {
                 "type": "named",
-                "argument": "-u"
+                "argument": "--username"
             },
             "password": {
                 "type": "named",
-                "argument": "-p"
+                "argument": "--password"
             },
             "quiet": {
                 "type": "flag",
