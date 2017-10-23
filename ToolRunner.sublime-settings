@@ -159,6 +159,16 @@
         "arguments": [
             "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
         ]
+    },  {
+        "name": "Kotlin Script",
+        "cmd": "kscript",
+        "input": {
+            "mode": "tmpfile-path", // cmdline, pipe
+            "file_suffix": ".kts"
+        },
+        "arguments": [
+            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
+        ]
     }, {
         "name": "CoffeeScript",
         "cmd": "coffee",
