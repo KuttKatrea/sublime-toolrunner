@@ -362,9 +362,12 @@ class Command(object):
 
         filename = self._source_view.file_name()
         project = self._source_window.project_file_name()
+        folders = self._source_window.folders()
 
         if project is not None:
             working_directory = path.dirname(project)
+        elif len(folders) > 0:
+            working_directory = folders[0]
         elif filename is not None:
             working_directory = path.dirname(filename)
         else:
@@ -378,19 +381,25 @@ class Command(object):
 
         startupinfo = None
         process = None
+        stdin = None
+        stdout = None
+        stderr = None
+
         if sublime.platform() == "windows":
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= (
-                subprocess.STARTF_USESHOWWINDOW | subprocess.CREATE_NEW_CONSOLE
-            )
+            if tool.output.mode != 'none':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.CREATE_NEW_CONSOLE
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        if tool.output.mode != 'none':
+            stdin = subprocess.PIPE
 
         if tool.output.mode == "tmpfile-pipe":
             self._create_temp_output_file()
             stdout = open(self._output_file, 'wb+')
             stderr = subprocess.STDOUT
         elif tool.output.mode == "none":
-            stdout = None
-            stderr = None
+            pass
         else:
             stdout = subprocess.PIPE
             stderr = subprocess.STDOUT
@@ -398,10 +407,10 @@ class Command(object):
         try:
             process = subprocess.Popen(
                 self._command_array,
-                stdin=subprocess.PIPE,
+                stdin=stdin,
                 stdout=stdout,
                 stderr=stderr,
-                shell=False,
+                shell=tool.shell,
                 startupinfo=startupinfo,
                 cwd=self._working_directory,
             )
@@ -416,7 +425,8 @@ class Command(object):
             process.stdin.write(
                 self._input_text.encode(tool.input.codec, "replace"))
 
-        process.stdin.close()
+        if process.stdin is not None:
+            process.stdin.close()
 
         self._process = process
 

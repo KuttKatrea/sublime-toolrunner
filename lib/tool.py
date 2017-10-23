@@ -57,6 +57,7 @@ class Tool(ConfigContainer):
         return dict(
             name="",
             cmd="",
+            shell=False,
             arguments=list(),
             input=Input(),
             output=Output(),

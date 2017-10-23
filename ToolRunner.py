@@ -18,7 +18,6 @@ class ToolRunner(sublime_plugin.WindowCommand):
         )
 
         if tool is not None:
-            # debug.log("Running tool: ", tool)
             command.run_tool(tool)
 
         elif group is not None:
@@ -241,7 +240,7 @@ class ToolRunnerOpenSettings(sublime_plugin.WindowCommand):
     def on_ask_scope_done(self, selected_index):
         if selected_index < 0:
             return
-            
+
         scope = self.ask_scope_items[selected_index][0].lower()
         self.do_open_settings(scope)
 
