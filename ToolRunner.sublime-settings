@@ -362,6 +362,38 @@
             "mode": "none"
         }
     },
+    // PostgreSQL
+    {
+        "name": "psql",
+        "desc": "PostgreSQL Client",
+        "cmd": "psql",
+        "arguments": [
+            "$[toolrunner_flag_arguments]",
+            "$[toolrunner_named_arguments]",
+            "--no-password",
+            "$[toolrunner_positional_arguments]"
+        ],
+        "params": {
+            "host": {
+                "type": "named",
+                "argument": "--host"
+            },
+            "port": {
+                "type": "named",
+                "argument": "--port"
+            },
+            "username": {
+                "type": "named",
+                "argument": "--username"
+            },
+            "dbname": {
+                "type": "named",
+                "argument": "--dbname"
+            }
+        },
+        "input": { "mode": "pipe" },
+        "output": { "mode": "pipe" }
+    },
     ],
     "default_output_mode": "panel",
     // User-defined tools. Tools are appended Host + Platform + User + Default
