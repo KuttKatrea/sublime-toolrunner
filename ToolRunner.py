@@ -76,7 +76,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
             desc = single_tool.get('desc')
 
             if desc is not None:
-                tool_selection_list.append(tool_name + "(" + desc + ")")
+                tool_selection_list.append(desc + " (" + tool_name + ")")
             else:
                 tool_selection_list.append(tool_name)
 

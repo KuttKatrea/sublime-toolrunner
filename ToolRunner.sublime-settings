@@ -1,9 +1,9 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
     "default_tools": [{
-        "name": "SQLCMD",
+        "name": "sqlcmd",
         "desc": "SQL Server command-line client",
-        "cmd": "sqlcmd",
+        "cmd": ["sqlcmd"],
         "arguments": [
             "-u",
             "-b",
@@ -51,9 +51,9 @@
             }
         }
     }, {
-        "name": "SQLCMD2",
+        "name": "sqlcmd2",
         "desc": "SQL Server command-line client",
-        "cmd": "sqlcmd",
+        "cmd": ["sqlcmd"],
         "arguments": [
             "-u",
             "-b",
@@ -101,9 +101,9 @@
             }
         }
     }, {
-        "name": "SQLCL",
+        "name": "sqlcl",
         "desc": "Oracle SQL Command Line",
-        "cmd": "sql",
+        "cmd": ["sql"],
         "arguments": [
             "-S", "-nohistory", "-L",
             "$[toolrunner_flag_arguments]",
@@ -122,9 +122,9 @@
             }
         }
     }, {
-        "name": "CMD",
+        "name": "cmd",
         "desc": "CMD Batch File",
-        "cmd": "cmd",
+        "cmd": ["cmd"],
         "arguments": [
             "/C",
             "$[toolrunner_input_file]"
@@ -138,20 +138,25 @@
             "mode": "pipe", // tmpfile-pipe, tmpfile-path
         }
     }, {
-        "name": "Bash",
-        "cmd": "bash"
+        "name": "bash",
+        "desc": "Bash",
+        "cmd": ["bash"]
     }, {
-        "name": "Python",
-        "cmd": "python"
+        "name": "python",
+        "desc": "Python",
+        "cmd": ["python"]
     }, {
-        "name": "Ruby",
-        "cmd": "ruby"
+        "name": "ruby",
+        "desc": "Ruby",
+        "cmd": ["ruby"]
     }, {
-        "name": "NodeJS",
-        "cmd": "node"
+        "name": "node",
+        "desc": "NodeJS",
+        "cmd": ["node"]
     },  {
-        "name": "Groovy",
-        "cmd": "groovy",
+        "name": "groovy",
+        "desc": "Groovy",
+        "cmd": ["groovy"],
         "input": {
             "mode": "tmpfile-path", // cmdline, pipe
             "file_suffix": ".groovy"
@@ -160,8 +165,9 @@
             "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
         ]
     },  {
-        "name": "Kotlin Script",
-        "cmd": "kscript",
+        "name": "kscript",
+        "desc": "Kotlin Script",
+        "cmd": ["kscript"],
         "input": {
             "mode": "tmpfile-path", // cmdline, pipe
             "file_suffix": ".kts"
@@ -170,8 +176,9 @@
             "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
         ]
     }, {
-        "name": "CoffeeScript",
-        "cmd": "coffee",
+        "name": "coffeescript",
+        "desc": "CoffeeScript",
+        "cmd": ["coffee"],
         "input": {
             "mode": "tmpfile-path", // cmdline, pipe
             "file_suffix": ".coffee"
@@ -180,8 +187,9 @@
             "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
         ]
     }, {
-        "name": "MySQL",
-        "cmd": "mysql",
+        "name": "mysql",
+        "desc": "MySQL",
+        "cmd": ["mysql"],
         "arguments": ["--batch", "--table", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
         "params": {
             "host": {
@@ -212,8 +220,9 @@
             "codec": "utf-8"
         }
     }, {
-        "name": "MongoDB Script",
-        "cmd": "mongo",
+        "name": "mongo",
+        "desc": "MongoDB (Script)",
+        "cmd": ["mongo"],
         "arguments": [
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
@@ -271,8 +280,9 @@
             "codec": "utf-8"
         }
     }, {
-        "name": "MongoDB Shell",
-        "cmd": "mongo",
+        "name": "mongo-shell",
+        "desc": "MongoDB (Shell)",
+        "cmd": ["mongo"],
         "arguments": [
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
@@ -320,22 +330,38 @@
             "codec": "utf-8"
         }
     }, {
-        "name": "JScript",
-        "cmd": "cscript",
+        "name": "jscript",
+        "desc": "JScript",
+        "cmd": ["cscript"],
         "arguments": ["/E:JScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
         "input": {
             "mode": "tmpfile-path",
             "codec": "mbcs"
         }
     }, {
-        "name": "VBScript",
-        "cmd": "cscript",
+        "name": "vbscript",
+        "desc": "VBScript",
+        "cmd": ["cscript"],
         "arguments": ["/E:VBScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
         "input": {
             "mode": "tmpfile-path",
             "codec": "mbcs"
         }
-    }
+    }, {
+        "name": "wt",
+        "desc": "Windows Terminal",
+        "cmd": ["wt"],
+        "shell": false,
+        "arguments": [
+            "-d", "."
+        ],
+        "input": {
+            "mode": "none"
+        },
+        "output": {
+            "mode": "none"
+        }
+    },
     ],
     "default_output_mode": "panel",
     // User-defined tools. Tools are appended Host + Platform + User + Default
@@ -347,5 +373,7 @@
     "default_profiles": {}, // host-specific
     "debug": false,
     "devel": false,
-    "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage"
+    "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
+    "enable_default_keymap": true,
+    "enable_default_tools_keymap": true
 }

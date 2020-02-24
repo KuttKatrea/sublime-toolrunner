@@ -1,0 +1,355 @@
+[
+    // General
+    {
+        "keys": ["ctrl+k", "r", "x"],
+        "command": "tool_runner",
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_keymap"
+        }]
+    }, {
+        "keys": ["ctrl+k", "r", "c"],
+        "command": "tool_runner_cancel_current",
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_keymap"
+        }]
+    }, {
+        "keys": ["ctrl+k", "r", "o"],
+        "command": "tool_runner_focus_output",
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_keymap"
+        }]
+    }, {
+        "keys": ["ctrl+k", "r", "s"],
+        "command": "tool_runner_focus_source",
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_keymap"
+        }]
+    },
+
+    // Shell
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "sh",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.shell"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "sh",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.shell"
+        }]
+    },
+    // PowerShell
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "pwsh",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.powershell"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "pwsh",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.powershell"
+        }]
+    },
+    // Python
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "python",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.python"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "python",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.python"
+        }]
+    },
+    // Ruby
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "ruby",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.ruby"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "ruby",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.ruby"
+        }]
+    },
+    // NodeJS
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "node",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.js"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "node",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.js"
+        }]
+    },
+
+    // CoffeeScript
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "coffeescript",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.coffee"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "coffeescript",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.coffee"
+        }]
+    },
+    // Groovy
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "groovy",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.groovy"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "groovy",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.groovy"
+        }]
+    },
+    // Kotlin Script
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "kscript",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.Kotlin"
+        }]
+    }, {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "kscript",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.Kotlin"
+        }]
+    },
+    // PHP
+    {
+        "keys": ["f5"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "php",
+            "input_source": "auto-file",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.php"
+        }]
+    },
+    {
+        "keys": ["ctrl+enter"],
+        "command": "tool_runner",
+        "args": {
+            "tool": "php",
+            "input_source": "block",
+            "output": {
+                "type": "panel"
+            }
+        },
+        "context": [{
+            "key": "package_setting.ToolRunner.enable_default_tools_keymap"
+        }, {
+            "key": "selector",
+            "operator": "equal",
+            "operand": "source.Kotlin"
+        }]
+    },
+]
