@@ -138,6 +138,10 @@
             "mode": "pipe", // tmpfile-pipe, tmpfile-path
         }
     }, {
+        "name": "sh",
+        "desc": "Shell Script",
+        "cmd": ["sh"]
+    }, {
         "name": "bash",
         "desc": "Bash",
         "cmd": ["bash"]
@@ -366,7 +370,7 @@
     {
         "name": "psql",
         "desc": "PostgreSQL Client",
-        "cmd": "psql",
+        "cmd": ["psql"],
         "arguments": [
             "$[toolrunner_flag_arguments]",
             "$[toolrunner_named_arguments]",
