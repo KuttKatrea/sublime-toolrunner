@@ -155,7 +155,7 @@ class Command(object):
 
         opts = dict(delete=False)
 
-        opts["prefix"] = 'toolrunner.'
+        opts["prefix"] = "toolrunner."
 
         if input.file_suffix is not None:
             opts["suffix"] = input.file_suffix
@@ -303,7 +303,7 @@ class Command(object):
             self._source_view, self._tool.results.mode
         )
 
-        panelname = ':: ToolRunner Output (%s) ::' % (self._source_view.buffer_id())
+        panelname = ":: ToolRunner Output (%s) ::" % (self._source_view.buffer_id())
 
         self._target_view.set_name(panelname)
 
@@ -344,13 +344,11 @@ class Command(object):
         command_array = tool.get_command_array()
 
         for i in range(len(command_array)):
-            input_re = re.escape(r'$[toolrunner_input_file]')
+            input_re = re.escape(r"$[toolrunner_input_file]")
             if re.search(input_re, command_array[i]):
                 if tool.input.mode == "tmpfile-path":
                     command_array[i] = re.sub(
-                        input_re,
-                        self._create_temp_input_file(),
-                        command_array[i]
+                        input_re, self._create_temp_input_file(), command_array[i]
                     )
 
             if command_array[i] == "$[toolrunner_input_text]":
@@ -392,12 +390,12 @@ class Command(object):
         stderr = None
 
         if sublime.platform() == "windows":
-            if tool.output.mode != 'none':
+            if tool.output.mode != "none":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.CREATE_NEW_CONSOLE
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        if tool.output.mode != 'none':
+        if tool.output.mode != "none":
             stdin = subprocess.PIPE
 
         if tool.output.mode == "tmpfile-pipe":

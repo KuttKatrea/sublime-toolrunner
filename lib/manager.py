@@ -48,7 +48,7 @@ def create_target_view_for_source_view(view, type):
         if type == "buffer":
             new_view = _create_view_in_target_group(view)
         else:
-            vid = 'ToolRunner Output (%s)' % source_id
+            vid = "ToolRunner Output (%s)" % source_id
             new_view = view.window().create_output_panel(vid)
             new_view.settings().set("toolrunner-output-id", vid)
             new_view.settings().set("toolrunner-is-output", True)

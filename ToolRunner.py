@@ -85,10 +85,7 @@ class ToolRunner(sublime_plugin.WindowCommand):
             command.run_tool(tool_selected)
 
     def _ask_group_and_profile_to_run(self, callback):
-        group_list = [
-            single_group["name"]
-            for single_group in settings.get_groups()
-        ]
+        group_list = [single_group["name"] for single_group in settings.get_groups()]
 
         if len(group_list) <= 0:
             sublime.error_message("There are no groups configured")

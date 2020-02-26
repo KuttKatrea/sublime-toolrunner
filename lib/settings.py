@@ -1,8 +1,8 @@
 import platform
 import re
 
-import sublime
 import better_settings
+import sublime
 
 from . import debug
 
@@ -81,7 +81,7 @@ def _build_tool_list():
             key = key.lower()
 
             if key not in _tool_map:
-                override_cmd = get_override(tool_item['name'])
+                override_cmd = get_override(tool_item["name"])
                 if override_cmd is not None:
                     tool_item["cmd"] = override_cmd
 
@@ -129,6 +129,7 @@ def register_on_plugin_loaded(callback):
         callback()
     else:
         _on_plugin_loaded_callbacks.append(callback)
+
 
 def open_settings(window, scope):
     _settings.open_settings(window, scope)
