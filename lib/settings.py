@@ -14,6 +14,8 @@ _on_plugin_loaded_callbacks = list()
 _settings = None
 
 
+basepackage = re.sub(r"\.lib$", "", __package__)
+
 def get_setting(setting_name, default=None):
     return _settings.get(setting_name, default)
 
@@ -24,10 +26,10 @@ def set_setting(setting_name, setting_value):
 
 
 def get_groups():
-    groups = _settings.get_hostplatform_setting("user_groups", [])
-    groups += _settings.get_host_setting("user_groups", [])
-    groups += _settings.get_platform_setting("user_groups", [])
-    groups += _settings.get_user_setting("user_groups", [])
+    groups = _settings.get_scoped(better_settings.SCOPE_HOST_OS, "user_groups", [])
+    groups += _settings.get_scoped(better_settings.SCOPE_HOST, "user_groups", [])
+    groups += _settings.get_scoped(better_settings.SCOPE_OS, "user_groups", [])
+    groups += _settings.get_scoped(better_settings.SCOPE_DEFAULT, "user_groups", [])
 
     return groups
 
@@ -63,11 +65,11 @@ def _build_tool_list():
     _tool_list = []
 
     for settings_set in (
-        _settings.get_hostplatform_setting("user_tools", []),
-        _settings.get_host_setting("user_tools", []),
-        _settings.get_platform_setting("user_tools", []),
-        _settings.get_user_setting("user_tools", []),
-        _settings.get_user_setting("default_tools", []),
+        _settings.get_scoped(better_settings.SCOPE_HOST_OS, "user_tools", []),
+        _settings.get_scoped(better_settings.SCOPE_HOST, "user_tools", []),
+        _settings.get_scoped(better_settings.SCOPE_OS, "user_tools", []),
+        _settings.get_scoped(better_settings.SCOPE_DEFAULT, "user_tools", []),
+        _settings.get_scoped(better_settings.SCOPE_DEFAULT, "default_tools", []),
     ):
         for tool_item in settings_set:
             key = tool_item.get("name", tool_item.get("cmd"))
@@ -96,8 +98,6 @@ def on_loaded():
     if _plugin_loaded:
         debug.log("Plugin already loaded")
         return
-
-    basepackage = re.sub(r"\.lib$", "", __package__)
 
     _settings = better_settings.load_for(basepackage, "ToolRunner")
 
