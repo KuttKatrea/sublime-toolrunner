@@ -21,7 +21,7 @@ def get_setting(setting_name, default=None):
 
 
 def set_setting(setting_name, setting_value):
-    _settings.set(better_settings.SCOPE_HOST, setting_name, setting_value)
+    _settings.set(better_settings.SCOPE_HOST_OS, setting_name, setting_value)
     _settings.save()
 
 
