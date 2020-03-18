@@ -1,13 +1,13 @@
 import sublime
 
-from . import settings
-from . import debug
-'''
+from . import debug, settings
+
+"""
 sv = source view
 svid = source view id
 tv = target view
 tvid = target view id
-'''
+"""
 _source_views_by_tvid = dict()
 _target_views_by_svid = dict()
 _svids_by_tvid = dict()
@@ -18,12 +18,12 @@ def cancel_command_for_view_id(view_id, wait=False):
     command = get_current_command_for_source_view_id(view_id)
 
     if command is None:
-        debug.log('This source doesn\'t have a command')
+        debug.log("This source doesn't have a command")
         view_id = get_source_view_id_for_target_view_id(view_id)
         if view_id is not None:
             command = get_current_command_for_source_view_id(view_id)
         else:
-            debug.log('This target doesn\'t have a view')
+            debug.log("This target doesn't have a view")
 
     if command is not None:
         debug.log("Cancelling command")
@@ -45,24 +45,22 @@ def create_target_view_for_source_view(view, type):
     source_id = str(view.id())
 
     if source_id not in _target_views_by_svid:
-        if type == 'buffer':
+        if type == "buffer":
             new_view = _create_view_in_target_group(view)
         else:
-            vid = 'ToolRunner Output (%s)' % source_id
+            vid = "ToolRunner Output (%s)" % source_id
             new_view = view.window().create_output_panel(vid)
-            new_view.settings().set('toolrunner-output-id', vid)
-            new_view.settings().set('toolrunner-is-output', True)
+            new_view.settings().set("toolrunner-output-id", vid)
+            new_view.settings().set("toolrunner-is-output", True)
 
         target_id = str(new_view.id())
-        debug.log("Created view with id %s for view %s" % (
-            target_id, source_id))
+        debug.log("Created view with id %s for view %s" % (target_id, source_id))
 
         _target_views_by_svid[source_id] = new_view
         _source_views_by_tvid[target_id] = view
         _svids_by_tvid[target_id] = source_id
 
-    _target_views_by_svid[source_id].set_name(
-        "ToolRunner Output for %s" % view.name())
+    _target_views_by_svid[source_id].set_name("ToolRunner Output for %s" % view.name())
 
     return _target_views_by_svid[source_id]
 
@@ -71,8 +69,8 @@ def _create_view_in_target_group(view):
     win = view.window()
     group, idx = win.get_view_index(view)
 
-    target_group = settings.get_setting('output_tab_position')
-    if target_group not in set(['top', 'bottom', 'left', 'right']):
+    target_group = settings.get_setting("output_tab_position")
+    if target_group not in set(["top", "bottom", "left", "right"]):
         target = group
     else:
         layout = win.get_layout()
@@ -82,43 +80,46 @@ def _create_view_in_target_group(view):
         x2 = 2
         y2 = 3
 
-        origin_coords = layout['cells'][group]
+        origin_coords = layout["cells"][group]
         debug.log(origin_coords)
         min_y = 0
         min_x = 0
         max_target = None
         min_target = None
 
-        for idx in range(0, len(layout['cells'])):
+        for idx in range(0, len(layout["cells"])):
             if idx == group:
                 continue
-            tgroup = layout['cells'][idx]
+            tgroup = layout["cells"][idx]
 
             if tgroup[y1] == origin_coords[y2]:
-                debug.log('Y-Matches', idx, tgroup)
+                debug.log("Y-Matches", idx, tgroup)
                 if tgroup[x1] >= origin_coords[x1]:
                     if max_target is None or tgroup[x1] < max_target:
-                        debug.log('X Max Matches: ', idx, tgroup)
+                        debug.log("X Max Matches: ", idx, tgroup)
                         max_target = idx
                 if tgroup[x1] <= origin_coords[x1]:
                     if min_target is None or tgroup[x1] > min_target:
-                        debug.log('X Min Matches: ', idx, tgroup)
+                        debug.log("X Min Matches: ", idx, tgroup)
                         min_target = idx
 
-        debug.log('Target: %s, %s' % (max_target, min_target))
+        debug.log("Target: %s, %s" % (max_target, min_target))
 
         target = max_target or min_target
 
         if target is None:
-            cells = layout['cells']
+            cells = layout["cells"]
 
             new_cells = list()
             for cell in cells:
-                new_cells.append([
-                    layout['cols'][cell[x1]],
-                    layout['rows'][cell[y1]],
-                    layout['cols'][cell[x2]],
-                    layout['rows'][cell[y2]]])
+                new_cells.append(
+                    [
+                        layout["cols"][cell[x1]],
+                        layout["rows"][cell[y1]],
+                        layout["cols"][cell[x2]],
+                        layout["rows"][cell[y2]],
+                    ]
+                )
 
             current_cell = new_cells[group]
 
@@ -134,20 +135,20 @@ def _create_view_in_target_group(view):
 
             new_cells.append(new_cell)
 
-            layout['rows'].append(dic_y)
-            rows = list(sorted(set(layout['rows'])))
+            layout["rows"].append(dic_y)
+            rows = list(sorted(set(layout["rows"])))
 
-            layout['rows'] = rows
+            layout["rows"] = rows
 
             for cell in new_cells:
-                cell[x1] = layout['cols'].index(cell[x1])
-                cell[y1] = layout['rows'].index(cell[y1])
-                cell[x2] = layout['cols'].index(cell[x2])
-                cell[y2] = layout['rows'].index(cell[y2])
+                cell[x1] = layout["cols"].index(cell[x1])
+                cell[y1] = layout["rows"].index(cell[y1])
+                cell[x2] = layout["cols"].index(cell[x2])
+                cell[y2] = layout["rows"].index(cell[y2])
 
             debug.log("New cells", new_cells)
 
-            layout['cells'] = new_cells
+            layout["cells"] = new_cells
 
             target = len(new_cells) - 1
 
@@ -237,8 +238,8 @@ def remove_panel(tv):
     if not tv:
         return
 
-    is_output = tv.settings().get('toolrunner-is-output')
-    panel_id = tv.settings().get('toolrunner-output-id')
+    is_output = tv.settings().get("toolrunner-is-output")
+    panel_id = tv.settings().get("toolrunner-output-id")
     win = tv.window()
 
     debug.log("Target: %s, Is Output: %s" % (tv, is_output))
@@ -254,14 +255,11 @@ def remove_panel(tv):
 def ensure_visible_view(target_view, focus=False):
     active_window = sublime.active_window()
 
-    panel_id = target_view.settings().get('toolrunner-output-id')
+    panel_id = target_view.settings().get("toolrunner-output-id")
     use_panel = panel_id is not None
 
     if use_panel:
-        active_window.run_command(
-            'show_panel',
-            {'panel': 'output.' + panel_id}
-        )
+        active_window.run_command("show_panel", {"panel": "output." + panel_id})
 
     target_window = target_view.window()
     target_group, group_index = target_window.get_view_index(target_view)

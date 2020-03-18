@@ -1,5 +1,4 @@
-from . import debug
-from . import settings
+from . import debug, settings
 
 _default_input_codec = None
 _default_output_codec = None
@@ -9,8 +8,8 @@ def _set_default_codecs():
     global _default_input_codec
     global _default_output_codec
 
-    _default_input_codec = 'utf-8'  # 'cp850'
-    _default_output_codec = 'utf-8'  # 'cp850'
+    _default_input_codec = "utf-8"  # 'cp850'
+    _default_output_codec = "utf-8"  # 'cp850'
 
 
 class ConfigContainer(object):
@@ -43,14 +42,12 @@ class ConfigContainer(object):
                     setattr(self, k, attr_value)
 
     def __repr__(self):
-        return self.__class__.__name__ + ':' + self.__dict__.__repr__()
+        return self.__class__.__name__ + ":" + self.__dict__.__repr__()
 
 
 class Tool(ConfigContainer):
     command_arguments = dict(
-        input_source="input_source",
-        results="results",
-        params="params_values",
+        input_source="input_source", results="results", params="params_values"
     )
 
     def _get_defaults(self):
@@ -91,14 +88,14 @@ class Tool(ConfigContainer):
             for param_key, param_value in self.params_values.items():
                 param = self.params[param_key]
 
-                if param.get('type') == "positional":
+                if param.get("type") == "positional":
                     positional_arguments.append(param_value)
-                elif param.get('type') == "named":
-                    named_arguments.append(param.get('argument'))
+                elif param.get("type") == "named":
+                    named_arguments.append(param.get("argument"))
                     named_arguments.append(param_value)
-                elif param.get('type') == "flag":
+                elif param.get("type") == "flag":
                     if param_value:
-                        flag_arguments.append(param.get('argument'))
+                        flag_arguments.append(param.get("argument"))
 
         for argument in self.arguments:
             if argument == "$[toolrunner_positional_arguments]":
@@ -119,7 +116,7 @@ class Tool(ConfigContainer):
 class Input(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode='pipe',  # tmpfile-path, cmdline
+            mode="pipe",  # tmpfile-path, cmdline
             allow_empty=False,
             file_suffix=None,
             codec=_default_input_codec,
@@ -128,31 +125,31 @@ class Input(ConfigContainer):
     def update(self, config):
         ConfigContainer.update(self, config)
 
-        if self.mode == 'none':
+        if self.mode == "none":
             self.allow_empty = True
 
 
 class Output(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode="pipe",  # tmpfile-path, tmpfile-pipe
-            codec=_default_output_codec,
+            mode="pipe", codec=_default_output_codec  # tmpfile-path, tmpfile-pipe
         )
 
 
 class Results(ConfigContainer):
     def _get_defaults(self):
         return dict(
-            mode=settings.get_setting('default_output_mode'),
+            mode=settings.get_setting("default_output_mode"),
             read_only=False,
             scratch=True,
             line_numbers=False,
-            syntax_file=settings.get_setting('default_syntax_file'),
+            syntax_file=settings.get_setting("default_syntax_file"),
         )
 
 
 def _on_plugin_loaded():
     debug.log("Setting defaults for tools")
     _set_default_codecs()
+
 
 settings.register_on_plugin_loaded(_on_plugin_loaded)

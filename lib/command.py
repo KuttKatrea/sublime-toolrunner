@@ -1,17 +1,14 @@
-import sublime
-
-import re
-import subprocess
 import datetime
 import os
+import re
+import subprocess
 import tempfile
 from os import path
 from threading import Thread
 
-from . import settings
-from . import manager
-from . import debug
-from . import util
+import sublime
+
+from . import debug, manager, settings, util
 from .tool import Tool
 
 
@@ -37,8 +34,7 @@ class Command(object):
         self._output_file = None
 
     def run_tool(self, tool_id):
-        debug.log("Running command for tool: ",
-                  tool_id, self._command_arguments)
+        debug.log("Running command for tool: ", tool_id, self._command_arguments)
 
         if self._create_tool(tool_id) is None:
             self._notify("There is no tool named %s" % tool_id)
@@ -65,8 +61,7 @@ class Command(object):
             if single_profile["name"] == selected_profile:
                 profile_descriptor = single_profile
 
-        debug.log("Running command for profile: ",
-                  group_descriptor, profile_descriptor)
+        debug.log("Running command for profile: ", group_descriptor, profile_descriptor)
 
         tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
 
@@ -74,11 +69,11 @@ class Command(object):
             self._notify("There is no tool named: %s" % tool_id)
             return
 
-        self._desc = "%s/%s" % (
-            selected_group, selected_profile)
+        self._desc = "%s/%s" % (selected_group, selected_profile)
 
         self._tool.set_command_arguments(
-            group_descriptor, profile_descriptor, self._command_arguments)
+            group_descriptor, profile_descriptor, self._command_arguments
+        )
 
         self._run_thread()
 
@@ -104,45 +99,52 @@ class Command(object):
         if input_source is None:
             input_source = "auto-file"
 
-        if input_source not in set(['selection', 'auto-line', 'line',
-                                    'auto-block', 'block', 'auto-file',
-                                    'file', 'none']):
+        if input_source not in set(
+            [
+                "selection",
+                "auto-line",
+                "line",
+                "auto-block",
+                "block",
+                "auto-file",
+                "file",
+                "none",
+            ]
+        ):
             raise ValueError("Input source invalid")
 
-        if input_source == 'none':
-            self._input_text = ''
-            return ''
+        if input_source == "none":
+            self._input_text = ""
+            return ""
 
         active_view = self._source_view
 
-        input_text = ''
+        input_text = ""
 
         current_selection = active_view.sel()
 
-        if input_source in set(['selection', 'auto-file',
-                                'auto-block', 'auto-line']):
+        if input_source in set(["selection", "auto-file", "auto-block", "auto-line"]):
             if len(current_selection) > 0:
                 for partial_selection in current_selection:
                     input_text += active_view.substr(partial_selection)
 
-        if input_source != 'selection' and input_text == '':
+        if input_source != "selection" and input_text == "":
             region = None
-            if input_source in set(['line', 'auto-line']):
+            if input_source in set(["line", "auto-line"]):
                 region = active_view.line(current_selection[0])
 
-            if input_source in set(['block', 'auto-block']):
+            if input_source in set(["block", "auto-block"]):
                 region = active_view.expand_by_class(
-                    current_selection[0],
-                    sublime.CLASS_EMPTY_LINE
+                    current_selection[0], sublime.CLASS_EMPTY_LINE
                 )
 
-            if input_source in set(['file', 'auto-file']):
+            if input_source in set(["file", "auto-file"]):
                 region = sublime.Region(0, active_view.size())
 
             input_text = active_view.substr(region)
 
-        if input_text != "" and input_text[-1] != '\n':
-            input_text += '\n'
+        if input_text != "" and input_text[-1] != "\n":
+            input_text += "\n"
 
         self._input_text = input_text
         return input_text
@@ -153,7 +155,7 @@ class Command(object):
 
         opts = dict(delete=False)
 
-        opts["prefix"] = 'toolrunner.'
+        opts["prefix"] = "toolrunner."
 
         if input.file_suffix is not None:
             opts["suffix"] = input.file_suffix
@@ -169,8 +171,7 @@ class Command(object):
         return input_file
 
     def _create_temp_output_file(self):
-        with tempfile.NamedTemporaryFile(
-                delete=False, prefix='toolrunner-') as tmpfile:
+        with tempfile.NamedTemporaryFile(delete=False, prefix="toolrunner-") as tmpfile:
             self._output_file = tmpfile.name
 
         debug.log("Created output file: %s" % self._output_file)
@@ -198,7 +199,7 @@ class Command(object):
         self._create_working_directory()
         debug.log("Using Working Directory: %s" % self._working_directory)
 
-        if tool.output.mode != 'none':
+        if tool.output.mode != "none":
             manager.cancel_command_for_source_view(self._source_view, True)
 
         self._execution_cancelled = False
@@ -213,9 +214,8 @@ class Command(object):
             self._notify("Executable not found")
             return
 
-        if tool.output.mode != 'none':
-            manager.set_current_command_for_source_view(
-                self._source_view, self)
+        if tool.output.mode != "none":
+            manager.set_current_command_for_source_view(self._source_view, self)
 
         self._begin_write()
         self._running = True
@@ -224,23 +224,27 @@ class Command(object):
         self._thread.start()
 
     def _command_monitor_worker(self):
-        '''
+        """
         This must be called in it's own thread as it will block while
         the process is running, and while the process is reading the
         output
-        '''
+        """
         tool = self._tool
         process = self._process
 
         self._read_thread = None
 
-        if tool.output.mode == 'pipe':
+        if tool.output.mode == "pipe":
+
             def outputreader():
                 while True:
                     if self._cancelled:
                         break
-                    outstring = process.stdout.readline().decode(
-                        tool.output.codec, "replace").replace('\r', '')
+                    outstring = (
+                        process.stdout.readline()
+                        .decode(tool.output.codec, "replace")
+                        .replace("\r", "")
+                    )
                     if outstring == "":
                         break
                     self.write(outstring)
@@ -258,7 +262,7 @@ class Command(object):
 
     def _end_run(self):
         tool = self._tool
-        if tool.output.mode == 'none':
+        if tool.output.mode == "none":
             return
 
         self.endtime = datetime.datetime.now()
@@ -269,7 +273,7 @@ class Command(object):
         if self._cancelled:
             self.write("\n:: Execution cancelled ::\n")
 
-        self.write('\n:: End at %s ::\n' % self.endtime)
+        self.write("\n:: End at %s ::\n" % self.endtime)
 
         self._target_view.sel().clear()
         self._target_view.sel().add(self._current_cursor_position)
@@ -296,9 +300,11 @@ class Command(object):
         self._source_window = self._source_view.window()
 
         self._target_view = manager.create_target_view_for_source_view(
-            self._source_view, self._tool.results.mode)
+            self._source_view, self._tool.results.mode
+        )
 
-        panelname = ':: ToolRunner Output (%s) ::' % (self._source_view.buffer_id())
+        panelname = ":: ToolRunner Output (%s) ::" % (self._source_view.buffer_id())
+
         self._target_view.set_name(panelname)
 
         self._target_view.set_read_only(tool.results.read_only)
@@ -307,8 +313,8 @@ class Command(object):
             util.expand(tool.results.syntax_file, self._source_view)
         )
 
-        self._target_view.settings().set('line_numbers', False)
-        self._target_view.settings().set('translate_tabs_to_spaces', False)
+        self._target_view.settings().set("line_numbers", False)
+        self._target_view.settings().set("translate_tabs_to_spaces", False)
 
         manager.ensure_visible_view(self._target_view)
 
@@ -328,8 +334,9 @@ class Command(object):
             self._target_view.set_read_only(True)
 
     def _notify(self, msg):
-        util.notify(msg, desc=self._desc, source=self._source_view,
-                    target=self._target_view)
+        util.notify(
+            msg, desc=self._desc, source=self._source_view, target=self._target_view
+        )
 
     def _create_command_line(self):
         tool = self._tool
@@ -337,20 +344,18 @@ class Command(object):
         command_array = tool.get_command_array()
 
         for i in range(len(command_array)):
-            input_re = re.escape(r'$[toolrunner_input_file]')
+            input_re = re.escape(r"$[toolrunner_input_file]")
             if re.search(input_re, command_array[i]):
                 if tool.input.mode == "tmpfile-path":
                     command_array[i] = re.sub(
-                        input_re,
-                        self._create_temp_input_file(),
-                        command_array[i]
+                        input_re, self._create_temp_input_file(), command_array[i]
                     )
 
-            if command_array[i] == '$[toolrunner_input_text]':
+            if command_array[i] == "$[toolrunner_input_text]":
                 if tool.input.mode == "cmdline":
                     command_array[i] = self._input_text
 
-            if command_array[i] == '$[toolrunner_output_file]':
+            if command_array[i] == "$[toolrunner_output_file]":
                 if tool.output.mode == "tmpfile-path":
                     command_array[i] = self._create_temp_output_file()
 
@@ -371,8 +376,7 @@ class Command(object):
         elif filename is not None:
             working_directory = path.dirname(filename)
         else:
-            working_directory = os.environ.get(
-                'HOME', os.environ.get('USERPROFILE'))
+            working_directory = os.environ.get("HOME", os.environ.get("USERPROFILE"))
 
         self._working_directory = working_directory
 
@@ -386,17 +390,17 @@ class Command(object):
         stderr = None
 
         if sublime.platform() == "windows":
-            if tool.output.mode != 'none':
+            if tool.output.mode != "none":
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.CREATE_NEW_CONSOLE
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        if tool.output.mode != 'none':
+        if tool.output.mode != "none":
             stdin = subprocess.PIPE
 
         if tool.output.mode == "tmpfile-pipe":
             self._create_temp_output_file()
-            stdout = open(self._output_file, 'wb+')
+            stdout = open(self._output_file, "wb+")
             stderr = subprocess.STDOUT
         elif tool.output.mode == "none":
             pass
@@ -421,9 +425,8 @@ class Command(object):
 
         self._stdout = stdout if process.stdout is None else process.stdout
 
-        if tool.input.mode == 'pipe':
-            process.stdin.write(
-                self._input_text.encode(tool.input.codec, "replace"))
+        if tool.input.mode == "pipe":
+            process.stdin.write(self._input_text.encode(tool.input.codec, "replace"))
 
         if process.stdin is not None:
             process.stdin.close()
@@ -433,7 +436,7 @@ class Command(object):
     def _begin_write(self):
         tool = self._tool
 
-        if tool.output.mode == 'none':
+        if tool.output.mode == "none":
             return
 
         self._create_window()
@@ -444,27 +447,29 @@ class Command(object):
         current_line = self._target_view.line(current_cursor_position)
 
         if current_cursor_position.a > current_line.a:
-            self.write('\n')
+            self.write("\n")
 
         if current_cursor_position.a != 0:
-            self.write('\n')
+            self.write("\n")
             current_cursor_position = sublime.Region(
-                current_cursor_position.a+1, current_cursor_position.a+1)
+                current_cursor_position.a + 1, current_cursor_position.a + 1
+            )
 
         self._current_cursor_position = current_cursor_position
 
         self._target_view.sel().clear()
         self._target_view.sel().add(current_cursor_position)
 
-        self.write(':: Start at %s ::\n' % self.starttime)
+        self.write(":: Start at %s ::\n" % self.starttime)
 
         self._target_view.run_command("move_to", {"to": "eof"})
 
     def _write_output(self):
         if self._output_file:
-            with open(self._output_file, mode='r',
-                      encoding=self._tool.output.codec) as tmpfile:
-                outlines = [line.replace('\r\n', '\n') for line in tmpfile]
+            with open(
+                self._output_file, mode="r", encoding=self._tool.output.codec
+            ) as tmpfile:
+                outlines = [line.replace("\r\n", "\n") for line in tmpfile]
                 # debug.log(outstring)
             self.write(outlines)
 
