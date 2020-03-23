@@ -61,7 +61,7 @@ class Command(object):
             if single_profile["name"] == selected_profile:
                 profile_descriptor = single_profile
 
-        debug.log("Running command for profile: ", group_descriptor, profile_descriptor)
+        debug.log("Running command for profile: ", profile_descriptor)
 
         tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
 
@@ -342,6 +342,8 @@ class Command(object):
         tool = self._tool
 
         command_array = tool.get_command_array()
+
+        debug.log('Command array: ', command_array)
 
         for i in range(len(command_array)):
             input_re = re.escape(r"$[toolrunner_input_file]")
