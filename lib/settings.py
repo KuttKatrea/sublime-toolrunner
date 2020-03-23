@@ -1,8 +1,6 @@
-import platform
 import re
 
 import better_settings
-import sublime
 
 from . import debug
 
@@ -15,6 +13,7 @@ _settings = None
 
 
 basepackage = re.sub(r"\.lib$", "", __package__)
+
 
 def get_setting(setting_name, default=None):
     return _settings.get(setting_name, default)

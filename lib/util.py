@@ -21,7 +21,7 @@ def expand(value, view):
 def expand_variables(str, vars):
     try:
         return sublime.expand_variables(str, vars)
-    except AttributeError as e:
+    except AttributeError:
 
         def repl(match):
             replacement = vars.get(match.group(1), None)
@@ -40,7 +40,7 @@ def extract_variables(view):
     win = view.window()
     try:
         return win.extract_variables()
-    except AttributeError as e:
+    except AttributeError:
         filename = view.file_name()
         folder, basename = (
             path.split(filename) if filename is not None else (None, None)

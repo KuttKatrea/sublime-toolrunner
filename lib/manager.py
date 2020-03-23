@@ -82,8 +82,8 @@ def _create_view_in_target_group(view):
 
         origin_coords = layout["cells"][group]
         debug.log(origin_coords)
-        min_y = 0
-        min_x = 0
+        #  min_y = 0
+        #  min_x = 0
         max_target = None
         min_target = None
 

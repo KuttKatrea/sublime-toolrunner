@@ -285,8 +285,8 @@ class Command(object):
         else:
             self._notify("Complete on %s seconds" % timedelta.total_seconds())
 
-        l = self._target_view.text_to_layout(begin)
-        self._target_view.set_viewport_position(l)
+        viewport_position = self._target_view.text_to_layout(begin)
+        self._target_view.set_viewport_position(viewport_position)
 
         manager.set_current_command_for_source_view(self._source_view, None)
 
@@ -343,7 +343,7 @@ class Command(object):
 
         command_array = tool.get_command_array()
 
-        debug.log('Command array: ', command_array)
+        debug.log("Command array: ", command_array)
 
         for i in range(len(command_array)):
             input_re = re.escape(r"$[toolrunner_input_file]")
