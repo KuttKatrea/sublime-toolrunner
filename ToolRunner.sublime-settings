@@ -324,6 +324,10 @@
             }, "eval": {
                 "type": "named",
                 "argument": "--eval"
+            },
+            "nodb": {
+                "type": "flag",
+                "argument": "--nodb"
             }
         },
         "input": {
