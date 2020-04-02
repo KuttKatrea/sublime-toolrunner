@@ -78,7 +78,10 @@ class Tool(ConfigContainer):
         self.update(conf)
 
     def get_command_array(self, input_text=None):
-        full_arguments = self.cmd.copy()
+        if type(self.cmd) == list:
+            full_arguments = self.cmd.copy()
+        else:
+            full_arguments = [self.cmd]
 
         positional_arguments = []
         named_arguments = []
