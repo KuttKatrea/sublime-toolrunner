@@ -1,419 +1,472 @@
 // As always, please edit User/SQLQuickRun.sublime-settings rather than this file.
 {
-    "default_tools": [{
-        "name": "sqlcmd",
-        "desc": "SQL Server command-line client",
-        "cmd": ["sqlcmd"],
-        "arguments": [
-            "-u",
-            "-b",
-            "-s", "\t",
-            "-y", "0",
-            "-h", "2147483647",
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "-i", "$[toolrunner_input_file]"
-        ],
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "utf_8_sig"
+  "default_tools": [
+    {
+      "name": "sqlcmd",
+      "desc": "SQL Server command-line client",
+      "cmd": ["sqlcmd"],
+      "arguments": ["-u", "-b", "-s", "\t", "-y", "0", "-h", "2147483647", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "-i", "$[toolrunner_input_file]"],
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "codec": "utf_8_sig"
+      },
+      "output":
+      {
+        "mode": "pipe"
+      },
+      "results":
+      {
+        "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
+      },
+      "params":
+      {
+        "server":
+        {
+          "type": "named",
+          "argument": "-S"
         },
-        "output": {
-            "mode": "pipe"
+        "database":
+        {
+          "type": "named",
+          "argument": "-d"
         },
-        "results": {
-            "syntax_file": "Packages/${package}/lang/MSSQL Query Results.tmLanguage"
+        "user":
+        {
+          "type": "named",
+          "argument": "-U"
         },
-        "params": {
-            "server": {
-                "type": "named",
-                "argument": "-S"
-            },
-            "database": {
-                "type": "named",
-                "argument": "-d"
-            },
-            "user": {
-                "type": "named",
-                "argument": "-U"
-            },
-            "password": {
-                "type": "named",
-                "argument": "-P"
-            },
-            "workstation": {
-                "type": "named",
-                "argument": "-H"
-            },
-            "trusted": {
-                "type": "flag",
-                "argument": "-E"
-            }
+        "password":
+        {
+          "type": "named",
+          "argument": "-P"
+        },
+        "workstation":
+        {
+          "type": "named",
+          "argument": "-H"
+        },
+        "trusted":
+        {
+          "type": "flag",
+          "argument": "-E"
         }
-    }, {
-        "name": "sqlcmd2",
-        "desc": "SQL Server command-line client",
-        "cmd": ["sqlcmd"],
-        "arguments": [
-            "-u",
-            "-b",
-            "-s", "\t",
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "-i", "$[toolrunner_input_file]",
-            "-o", "$[toolrunner_output_file]"
-        ],
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "utf_8_sig"
+      }
+    },
+    {
+      "name": "sqlcmd2",
+      "desc": "SQL Server command-line client",
+      "cmd": ["sqlcmd"],
+      "arguments": ["-u", "-b", "-s", "\t", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "-i", "$[toolrunner_input_file]", "-o", "$[toolrunner_output_file]"],
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "codec": "utf_8_sig"
+      },
+      "output":
+      {
+        "mode": "tmpfile-path",
+        "codec": "utf_16"
+      },
+      "results":
+      {
+        "syntax_file": "Packages/${package}/lang/MSSQL Query results.tmLanguage"
+      },
+      "params":
+      {
+        "server":
+        {
+          "type": "named",
+          "argument": "-S"
         },
-        "output": {
-            "mode": "tmpfile-path",
-            "codec": "utf_16"
+        "database":
+        {
+          "type": "named",
+          "argument": "-d"
         },
-        "results": {
-            "syntax_file": "Packages/${package}/lang/MSSQL Query results.tmLanguage"
+        "user":
+        {
+          "type": "named",
+          "argument": "-U"
         },
-        "params": {
-            "server": {
-                "type": "named",
-                "argument": "-S"
-            },
-            "database": {
-                "type": "named",
-                "argument": "-d"
-            },
-            "user": {
-                "type": "named",
-                "argument": "-U"
-            },
-            "password": {
-                "type": "named",
-                "argument": "-P"
-            },
-            "workstation": {
-                "type": "named",
-                "argument": "-H"
-            },
-            "trusted": {
-                "type": "flag",
-                "argument": "-E"
-            }
+        "password":
+        {
+          "type": "named",
+          "argument": "-P"
+        },
+        "workstation":
+        {
+          "type": "named",
+          "argument": "-H"
+        },
+        "trusted":
+        {
+          "type": "flag",
+          "argument": "-E"
         }
-    }, {
-        "name": "sqlcl",
-        "desc": "Oracle SQL Command Line",
-        "cmd": ["sql"],
-        "arguments": [
-            "-S", "-nohistory", "-L",
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "$[toolrunner_positional_arguments]",
-            "@$[toolrunner_input_file]"
-        ],
-        "input": {
-            "mode": "tmpfile-path",
-            "file_suffix": ".sql"
-        },
-        "params": {
-            "login": {
-                "type": "positional",
-                "order": 0
-            }
+      }
+    },
+    {
+      "name": "sqlcl",
+      "desc": "Oracle SQL Command Line",
+      "cmd": ["sql"],
+      "arguments": ["-S", "-nohistory", "-L", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "@$[toolrunner_input_file]"],
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "file_suffix": ".sql"
+      },
+      "params":
+      {
+        "login":
+        {
+          "type": "positional",
+          "order": 0
         }
-    }, {
-        "name": "cmd",
-        "desc": "CMD Batch File",
-        "cmd": ["cmd"],
-        "arguments": [
-            "/C",
-            "$[toolrunner_input_file]"
-        ],
-        "input": {
-            "mode": "tmpfile-path", // cmdline, pipe
-            "file_suffix": ".bat",
-            "codec": "mbcs"
+      }
+    },
+    {
+      "name": "cmd",
+      "desc": "CMD Batch File",
+      "cmd": ["cmd"],
+      "arguments": ["/C", "$[toolrunner_input_file]"],
+      "input":
+      {
+        "mode": "tmpfile-path", // cmdline, pipe
+        "file_suffix": ".bat",
+        "codec": "mbcs",
+      },
+      "output":
+      {
+        "mode": "pipe", // tmpfile-pipe, tmpfile-path
+      }
+    },
+    {
+      "name": "sh",
+      "desc": "Shell Script",
+      "cmd": ["sh"]
+    },
+    {
+      "name": "bash",
+      "desc": "Bash",
+      "cmd": ["bash"]
+    },
+    {
+      "name": "python",
+      "desc": "Python",
+      "cmd": ["python"]
+    },
+    {
+      "name": "ruby",
+      "desc": "Ruby",
+      "cmd": ["ruby"]
+    },
+    {
+      "name": "node",
+      "desc": "NodeJS",
+      "cmd": ["node"]
+    },
+    {
+      "name": "groovy",
+      "desc": "Groovy",
+      "cmd": ["groovy"],
+      "input":
+      {
+        "mode": "tmpfile-path", // cmdline, pipe
+        "file_suffix": ".groovy"
+      },
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"]
+    },
+    {
+      "name": "kscript",
+      "desc": "Kotlin Script",
+      "cmd": ["kscript"],
+      "input":
+      {
+        "mode": "tmpfile-path", // cmdline, pipe
+        "file_suffix": ".kts"
+      },
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"]
+    },
+    {
+      "name": "coffeescript",
+      "desc": "CoffeeScript",
+      "cmd": ["coffee"],
+      "input":
+      {
+        "mode": "tmpfile-path", // cmdline, pipe
+        "file_suffix": ".coffee"
+      },
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"]
+    },
+    {
+      "name": "mysql",
+      "desc": "MySQL",
+      "cmd": ["mysql"],
+      "arguments": ["--batch", "--table", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
+      "params":
+      {
+        "host":
+        {
+          "type": "named",
+          "argument": "-h"
         },
-        "output": {
-            "mode": "pipe", // tmpfile-pipe, tmpfile-path
+        "user":
+        {
+          "type": "named",
+          "argument": "-u"
+        },
+        "password":
+        {
+          "type": "named",
+          "argument": "-p"
+        },
+        "port":
+        {
+          "type": "named",
+          "argument": "-P"
+        },
+        "database":
+        {
+          "type": "named",
+          "argument": "-D"
         }
-    }, {
-        "name": "sh",
-        "desc": "Shell Script",
-        "cmd": ["sh"]
-    }, {
-        "name": "bash",
-        "desc": "Bash",
-        "cmd": ["bash"]
-    }, {
-        "name": "python",
-        "desc": "Python",
-        "cmd": ["python"]
-    }, {
-        "name": "ruby",
-        "desc": "Ruby",
-        "cmd": ["ruby"]
-    }, {
-        "name": "node",
-        "desc": "NodeJS",
-        "cmd": ["node"]
-    },  {
-        "name": "groovy",
-        "desc": "Groovy",
-        "cmd": ["groovy"],
-        "input": {
-            "mode": "tmpfile-path", // cmdline, pipe
-            "file_suffix": ".groovy"
+      },
+      "input":
+      {
+        "codec": "utf-8"
+      },
+      "output":
+      {
+        "codec": "utf-8"
+      }
+    },
+    {
+      "name": "mongo",
+      "desc": "MongoDB (Script)",
+      "cmd": ["mongo"],
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"],
+      "params":
+      {
+        "address":
+        {
+          "type": "positional",
+          "order": 0
         },
-        "arguments": [
-            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
-        ]
-    },  {
-        "name": "kscript",
-        "desc": "Kotlin Script",
-        "cmd": ["kscript"],
-        "input": {
-            "mode": "tmpfile-path", // cmdline, pipe
-            "file_suffix": ".kts"
+        "host":
+        {
+          "type": "named",
+          "argument": "--host"
         },
-        "arguments": [
-            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
-        ]
-    }, {
-        "name": "coffeescript",
-        "desc": "CoffeeScript",
-        "cmd": ["coffee"],
-        "input": {
-            "mode": "tmpfile-path", // cmdline, pipe
-            "file_suffix": ".coffee"
+        "port":
+        {
+          "type": "named",
+          "argument": "--port"
         },
-        "arguments": [
-            "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]", "$[toolrunner_input_file]"
-        ]
-    }, {
-        "name": "mysql",
-        "desc": "MySQL",
-        "cmd": ["mysql"],
-        "arguments": ["--batch", "--table", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
-        "params": {
-            "host": {
-                "type": "named",
-                "argument": "-h"
-            },
-            "user": {
-                "type": "named",
-                "argument": "-u"
-            },
-            "password": {
-                "type": "named",
-                "argument": "-p"
-            },
-            "port": {
-                "type": "named",
-                "argument": "-P"
-            },
-            "database": {
-                "type": "named",
-                "argument": "-D"
-            }
+        "authenticationDatabase":
+        {
+          "type": "named",
+          "argument": "--authenticationDatabase"
         },
-        "input": {
-            "codec": "utf-8"
+        "username":
+        {
+          "type": "named",
+          "argument": "--username"
         },
-        "output": {
-            "codec": "utf-8"
+        "password":
+        {
+          "type": "named",
+          "argument": "--password"
+        },
+        "quiet":
+        {
+          "type": "flag",
+          "argument": "--quiet"
+        },
+        "nodb":
+        {
+          "type": "flag",
+          "argument": "--nodb"
+        },
+        "eval":
+        {
+          "type": "named",
+          "argument": "--eval"
+        },
+        "rc":
+        {
+          "type": "positional",
+          "order": 1
         }
-    }, {
-        "name": "mongo",
-        "desc": "MongoDB (Script)",
-        "cmd": ["mongo"],
-        "arguments": [
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "$[toolrunner_positional_arguments]",
-            "$[toolrunner_input_file]"
-        ],
-        "params": {
-            "address": {
-                "type": "positional",
-                "order": 0
-            },
-            "host": {
-                "type": "named",
-                "argument": "--host"
-            },
-            "port": {
-                "type": "named",
-                "argument": "--port"
-            },
-            "authenticationDatabase": {
-                "type": "named",
-                "argument": "--authenticationDatabase"
-            },
-            "username": {
-                "type": "named",
-                "argument": "--username"
-            },
-            "password": {
-                "type": "named",
-                "argument": "--password"
-            },
-            "quiet": {
-                "type": "flag",
-                "argument": "--quiet"
-            },
-            "nodb": {
-                "type": "flag",
-                "argument": "--nodb"
-            },
-            "eval": {
-                "type": "named",
-                "argument": "--eval"
-            },
-            "rc": {
-                "type": "positional",
-                "order": 1
-            }
+      },
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "codec": "utf-8",
+        "file_suffix": ".mongodb.js"
+      },
+      "output":
+      {
+        "codec": "utf-8"
+      }
+    },
+    {
+      "name": "mongo-shell",
+      "desc": "MongoDB (Shell)",
+      "cmd": ["mongo"],
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "--quiet", "$[toolrunner_positional_arguments]"],
+      "params":
+      {
+        "address":
+        {
+          "type": "positional",
+          "order": 0
         },
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "utf-8",
-            "file_suffix": ".mongodb.js"
+        "host":
+        {
+          "type": "named",
+          "argument": "--host"
         },
-        "output": {
-            "codec": "utf-8"
-        }
-    }, {
-        "name": "mongo-shell",
-        "desc": "MongoDB (Shell)",
-        "cmd": ["mongo"],
-        "arguments": [
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "--quiet",
-            "$[toolrunner_positional_arguments]"
-        ],
-        "params": {
-            "address": {
-                "type": "positional",
-                "order": 0
-            },
-            "host": {
-                "type": "named",
-                "argument": "--host"
-            },
-            "port": {
-                "type": "named",
-                "argument": "--port"
-            },
-            "authenticationDatabase": {
-                "type": "named",
-                "argument": "--authenticationDatabase"
-            },
-            "username": {
-                "type": "named",
-                "argument": "--username"
-            },
-            "password": {
-                "type": "named",
-                "argument": "--password"
-            },
-            "quiet": {
-                "type": "flag",
-                "argument": "--quiet"
-            }, "eval": {
-                "type": "named",
-                "argument": "--eval"
-            },
-            "nodb": {
-                "type": "flag",
-                "argument": "--nodb"
-            }
+        "port":
+        {
+          "type": "named",
+          "argument": "--port"
         },
-        "input": {
-            "mode": "pipe",
-            "codec": "utf-8"
+        "authenticationDatabase":
+        {
+          "type": "named",
+          "argument": "--authenticationDatabase"
         },
-        "output": {
-            "codec": "utf-8"
-        }
-    }, {
-        "name": "jscript",
-        "desc": "JScript",
-        "cmd": ["cscript"],
-        "arguments": ["/E:JScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "mbcs"
-        }
-    }, {
-        "name": "vbscript",
-        "desc": "VBScript",
-        "cmd": ["cscript"],
-        "arguments": ["/E:VBScript", "/NoLogo","$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
-        "input": {
-            "mode": "tmpfile-path",
-            "codec": "mbcs"
-        }
-    }, {
-        "name": "wt",
-        "desc": "Windows Terminal",
-        "cmd": ["wt"],
-        "shell": false,
-        "arguments": [
-            "-d", "."
-        ],
-        "input": {
-            "mode": "none"
+        "username":
+        {
+          "type": "named",
+          "argument": "--username"
         },
-        "output": {
-            "mode": "none"
+        "password":
+        {
+          "type": "named",
+          "argument": "--password"
+        },
+        "quiet":
+        {
+          "type": "flag",
+          "argument": "--quiet"
+        },
+        "eval":
+        {
+          "type": "named",
+          "argument": "--eval"
+        },
+        "nodb":
+        {
+          "type": "flag",
+          "argument": "--nodb"
         }
+      },
+      "input":
+      {
+        "mode": "pipe",
+        "codec": "utf-8"
+      },
+      "output":
+      {
+        "codec": "utf-8"
+      }
+    },
+    {
+      "name": "jscript",
+      "desc": "JScript",
+      "cmd": ["cscript"],
+      "arguments": ["/E:JScript", "/NoLogo", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "codec": "mbcs"
+      }
+    },
+    {
+      "name": "vbscript",
+      "desc": "VBScript",
+      "cmd": ["cscript"],
+      "arguments": ["/E:VBScript", "/NoLogo", "$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_input_file]", "$[toolrunner_positional_arguments]"],
+      "input":
+      {
+        "mode": "tmpfile-path",
+        "codec": "mbcs"
+      }
+    },
+    {
+      "name": "wt",
+      "desc": "Windows Terminal",
+      "cmd": ["wt"],
+      "shell": false,
+      "arguments": ["-d", "."],
+      "input":
+      {
+        "mode": "none"
+      },
+      "output":
+      {
+        "mode": "none"
+      }
     },
     // PostgreSQL
     {
-        "name": "psql",
-        "desc": "PostgreSQL Client",
-        "cmd": ["psql"],
-        "arguments": [
-            "$[toolrunner_flag_arguments]",
-            "$[toolrunner_named_arguments]",
-            "--no-password",
-            "$[toolrunner_positional_arguments]"
-        ],
-        "params": {
-            "host": {
-                "type": "named",
-                "argument": "--host"
-            },
-            "port": {
-                "type": "named",
-                "argument": "--port"
-            },
-            "username": {
-                "type": "named",
-                "argument": "--username"
-            },
-            "dbname": {
-                "type": "named",
-                "argument": "--dbname"
-            }
+      "name": "psql",
+      "desc": "PostgreSQL Client",
+      "cmd": ["psql"],
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "--no-password", "$[toolrunner_positional_arguments]"],
+      "params":
+      {
+        "uri":
+        {
+          "position": 0,
+          "type": "positional"
         },
-        "input": { "mode": "pipe" },
-        "output": { "mode": "pipe" }
+        "host":
+        {
+          "type": "named",
+          "argument": "--host"
+        },
+        "port":
+        {
+          "type": "named",
+          "argument": "--port"
+        },
+        "username":
+        {
+          "type": "named",
+          "argument": "--username"
+        },
+        "dbname":
+        {
+          "type": "named",
+          "argument": "--dbname"
+        }
+      },
+      "input":
+      {
+        "mode": "pipe"
+      },
+      "output":
+      {
+        "mode": "pipe"
+      }
     },
-    ],
-    "default_output_mode": "panel",
-    // User-defined tools. Tools are appended Host + Platform + User + Default
-    "user_tools": [],
-    // User-defined groups. Groups are appended Host + Platform + User + Default
-    "user_groups": [],
-    // User-tools
-    "user_tool_overrides": {},
-    "default_profiles": {}, // host-specific
-    "debug": false,
-    "devel": false,
-    "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
-    "enable_default_keymap": true,
-    "enable_default_tools_keymap": true
+  ],
+  "default_output_mode": "panel",
+  // User-defined tools. Tools are appended Host + Platform + User + Default
+  "user_tools": [],
+  // User-defined groups. Groups are appended Host + Platform + User + Default
+  "user_groups": [],
+  // User-tools
+  "user_tool_overrides":
+  {},
+  "default_profiles":
+  {}, // host-specific
+  "debug": false,
+  "devel": false,
+  "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
+  "enable_default_keymap": true,
+  "enable_default_tools_keymap": true
 }
