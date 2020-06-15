@@ -1,4 +1,5 @@
 import datetime
+import sys
 import os
 import re
 import subprocess
@@ -162,7 +163,11 @@ class Command(object):
 
         with tempfile.NamedTemporaryFile(**opts) as tmpfile:
             tmpfile.write(bytes(input_text, input.codec))
-            input_file = tmpfile.name
+            input_file = path.normpath(tmpfile.name)
+
+        if sys.platform == 'win32':
+            # Fixing input file path in windows
+            input_file = input_file.replace('\\', '\\\\')
 
         self._input_file = input_file
 
