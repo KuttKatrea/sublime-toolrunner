@@ -142,6 +142,22 @@
       }
     },
     {
+      "name": "pwsh",
+      "desc": "Powershell Core",
+      "cmd": ["pwsh", "-NoLogo", "-NonInteractive"],
+      "arguments": ["$[toolrunner_flag_arguments]"],
+      "input":
+      {
+        "mode": "pipe", // cmdline, pipe
+        "file_suffix": ".bat",
+        "codec": "mbcs",
+      },
+      "output":
+      {
+        "mode": "pipe", // tmpfile-pipe, tmpfile-path
+      }
+    },
+    {
       "name": "sh",
       "desc": "Shell Script",
       "cmd": ["sh"]
