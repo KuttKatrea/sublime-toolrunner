@@ -400,7 +400,20 @@
       "desc": "Windows Terminal",
       "cmd": ["wt"],
       "shell": false,
-      "arguments": ["-d", "."],
+      "arguments": ["$[toolrunner_flag_arguments]", "$[toolrunner_named_arguments]", "$[toolrunner_positional_arguments]"],
+      "params":
+      {
+        "startingDirectory":
+        {
+          "type": "named",
+          "argument": "--startingDirectory"
+        },
+        "profile":
+        {
+          "type": "named",
+          "argument": "--profile"
+        }
+      },
       "input":
       {
         "mode": "none"
