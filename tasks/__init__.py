@@ -8,7 +8,7 @@ def flake8(c):
 
 @task
 def isort_check(c):
-    run("isort --check -rc ToolRunner.py lib tasks")
+    run("isort --check ToolRunner.py lib tasks")
 
 
 @task
@@ -18,7 +18,7 @@ def black_check(c):
 
 @task
 def isort(c):
-    run("isort -rc ToolRunner.py lib tasks")
+    run("isort ToolRunner.py lib tasks")
 
 
 @task
@@ -28,7 +28,7 @@ def black(c):
 
 @task
 def pytest(c):
-    run("pytest src")
+    run("pytest")
 
 
 @task(pre=[flake8, isort_check, black_check])

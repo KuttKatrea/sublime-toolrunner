@@ -229,6 +229,12 @@ But you can create your own keybindings and commands, for example:
 
 will allow you to execute ToolRunner with F5 (asking you which Tool/Profile to use), and CTRL+F5 to cancel the current running command for that view
 
+Development
+---
+You can run `poetry run inv fix` to sort imports and format code.
+
+Run `poetry run inv lint` must be succesful.
+
 Future
 ---
   - Testing on MacOS

@@ -1,8 +1,8 @@
 import datetime
-import sys
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from os import path
 from threading import Thread
@@ -165,9 +165,9 @@ class Command(object):
             tmpfile.write(bytes(input_text, input.codec))
             input_file = path.normpath(tmpfile.name)
 
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             # Fixing input file path in windows
-            input_file = input_file.replace('\\', '\\\\')
+            input_file = input_file.replace("\\", "\\\\")
 
         self._input_file = input_file
 
