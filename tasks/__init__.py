@@ -1,46 +1,96 @@
-from invoke import run, task
+"""
+Development tasks for usage with Invoke
+"""
+from invoke import Exit, UnexpectedExit, run, task
+
+SOURCE_PATHS = "ToolRunner.py lib tasks"
 
 
 @task
-def flake8(c):
-    run("flake8 ToolRunner.py lib tasks")
+def pylint(_, warn=False):
+    run(f"pylint --rcfile=setupf.cfg {SOURCE_PATHS}", warn=warn)
 
 
 @task
-def isort_check(c):
-    run("isort --check ToolRunner.py lib tasks")
+def flake8(_, warn=False):
+    run(f"flake8 {SOURCE_PATHS}", warn=warn)
 
 
 @task
-def black_check(c):
-    run("black --check ToolRunner.py lib tasks")
+def mypy(_, warn=False):
+    run(f"mypy {SOURCE_PATHS}", warn=warn)
 
 
 @task
-def isort(c):
-    run("isort ToolRunner.py lib tasks")
+def isort_check(_, warn=False):
+    run(f"isort --check {SOURCE_PATHS}", warn=warn)
 
 
 @task
-def black(c):
-    run("black ToolRunner.py lib tasks")
+def black_check(_, warn=False):
+    run(f"black -t py38 --check {SOURCE_PATHS}", warn=warn)
 
 
 @task
-def pytest(c):
-    run("pytest")
+def isort(_):
+    run(f"isort {SOURCE_PATHS}")
 
 
-@task(pre=[flake8, isort_check, black_check])
-def lint(c):
-    pass
+@task
+def black(_):
+    run(f"black -t py38 {SOURCE_PATHS}")
 
 
-@task(pre=[isort, black])
+@task
+def pytest(_):
+    run("pytest test")
+
+
+@task()
+def check(context):
+    errored = False
+
+    print("--- Flake8 ---")
+    try:
+        flake8(context)
+    except UnexpectedExit:
+        errored = True
+
+    print("--- MyPy ---")
+    try:
+        mypy(context)
+    except UnexpectedExit:
+        errored = True
+
+    print("--- iSort ---")
+    try:
+        isort_check(context)
+    except UnexpectedExit:
+        errored = True
+
+    print("--- black ---")
+    try:
+        black_check(context)
+    except UnexpectedExit:
+        errored = True
+    if errored:
+        raise Exit(message="Some checks failed", code=1)
+
+
+@task()
+def lint(context):
+    check(context)
+
+    print("--- PyLint ---")
+    pylint(context, warn=True)
+
+
+@task()
 def fix(c):
-    pass
+    isort(c)
+    black(c)
 
 
-@task(pre=[pytest])
-def test(c):
-    pass
+@task()
+def test(context):
+    pytest(context)

@@ -1,9 +1,12 @@
+import logging
 import re
 from os import path
 
 import sublime
 
-from . import debug, settings
+from . import settings
+
+_logger = logging.getLogger("ToolRunner:Util")
 
 
 def expand(value, view):
@@ -80,12 +83,14 @@ def notify(msg, desc=None, source=None, target=None):
     else:
         desc = "ToolRunner[%s]" % desc
 
-    debug.log(msg)
+    message = "%s: %s" % (desc, msg)
+
+    _logger.info("Notifying: %s", message)
 
     if source is None:
         source = sublime.active_window().active_view()
 
-    source.set_status("toolrunner", "%s: %s" % (desc, msg))
+    source.set_status("toolrunner", message)
 
     if target is not None:
-        target.set_status("toolrunner", "%s: %s" % (desc, msg))
+        target.set_status("toolrunner", message)

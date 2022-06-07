@@ -1,6 +1,8 @@
+import logging
+
 import sublime
 
-from . import debug, settings
+from . import settings
 
 """
 sv = source view
@@ -14,31 +16,34 @@ _svids_by_tvid = dict()
 _command_for_source_view = dict()
 
 
+_logger = logging.getLogger("ToolRunner:Manager")
+
+
 def cancel_command_for_view_id(view_id, wait=False):
     command = get_current_command_for_source_view_id(view_id)
 
     if command is None:
-        debug.log("This source doesn't have a command")
+        _logger.info("This source doesn't have a command")
         view_id = get_source_view_id_for_target_view_id(view_id)
         if view_id is not None:
             command = get_current_command_for_source_view_id(view_id)
         else:
-            debug.log("This target doesn't have a view")
+            _logger.info("This target doesn't have a view")
 
     if command is not None:
-        debug.log("Cancelling command")
+        _logger.info("Cancelling command")
         command.cancel(wait)
     else:
-        debug.log("No command to cancel")
+        _logger.info("No command to cancel")
 
 
 def cancel_command_for_source_view(source_view, wait=False):
     command = get_current_command_for_source_view(source_view)
     if command is not None:
-        debug.log("Cancelling command")
+        _logger.info("Cancelling command")
         command.cancel(wait)
     else:
-        debug.log("No command to cancel")
+        _logger.info("No command to cancel")
 
 
 def create_target_view_for_source_view(view, type):
@@ -54,7 +59,7 @@ def create_target_view_for_source_view(view, type):
             new_view.settings().set("toolrunner-is-output", True)
 
         target_id = str(new_view.id())
-        debug.log("Created view with id %s for view %s" % (target_id, source_id))
+        _logger.info("Created view with id %s for view %s", target_id, source_id)
 
         _target_views_by_svid[source_id] = new_view
         _source_views_by_tvid[target_id] = view
@@ -81,7 +86,7 @@ def _create_view_in_target_group(view):
         y2 = 3
 
         origin_coords = layout["cells"][group]
-        debug.log(origin_coords)
+        _logger.info(origin_coords)
         #  min_y = 0
         #  min_x = 0
         max_target = None
@@ -93,17 +98,17 @@ def _create_view_in_target_group(view):
             tgroup = layout["cells"][idx]
 
             if tgroup[y1] == origin_coords[y2]:
-                debug.log("Y-Matches", idx, tgroup)
+                _logger.info("Y-Matches: %s, %s", idx, tgroup)
                 if tgroup[x1] >= origin_coords[x1]:
                     if max_target is None or tgroup[x1] < max_target:
-                        debug.log("X Max Matches: ", idx, tgroup)
+                        _logger.info("X Max Matches: %s, %s", idx, tgroup)
                         max_target = idx
                 if tgroup[x1] <= origin_coords[x1]:
                     if min_target is None or tgroup[x1] > min_target:
-                        debug.log("X Min Matches: ", idx, tgroup)
+                        _logger.info("X Min Matches: %s, %s", idx, tgroup)
                         min_target = idx
 
-        debug.log("Target: %s, %s" % (max_target, min_target))
+        _logger.info("Target: %s, %s", max_target, min_target)
 
         target = max_target or min_target
 
@@ -123,7 +128,7 @@ def _create_view_in_target_group(view):
 
             current_cell = new_cells[group]
 
-            debug.log(new_cells, current_cell)
+            _logger.info("Cells: %s, %s", new_cells, current_cell)
 
             new_cell = list(current_cell)
 
@@ -146,7 +151,7 @@ def _create_view_in_target_group(view):
                 cell[x2] = layout["cols"].index(cell[x2])
                 cell[y2] = layout["rows"].index(cell[y2])
 
-            debug.log("New cells", new_cells)
+            _logger.info("New cells: %s", new_cells)
 
             layout["cells"] = new_cells
 
@@ -210,12 +215,12 @@ def remove_source_view(view):
     target = _target_views_by_svid.pop(source_id, None)
 
     if target is None:
-        debug.log("No target to forget")
+        _logger.info("No target to forget")
         return
 
     target_id = target.id()
 
-    debug.log("Forgetting as source %s => %s" % (source_id, target_id))
+    _logger.info("Forgetting as source %s => %s", source_id, target_id)
 
     _svids_by_tvid.pop(target_id, None)
     _source_views_by_tvid.pop(target_id, None)
@@ -228,7 +233,7 @@ def remove_target_view(view):
     sourceid = _svids_by_tvid.pop(vid, None)
     _source_views_by_tvid.pop(vid, None)
 
-    debug.log("Forgetting as target %s => %s" % (sourceid, vid))
+    _logger.info("Forgetting as target %s => %s", sourceid, vid)
     tv = _target_views_by_svid.pop(sourceid, None)
 
     remove_panel(tv)
@@ -242,9 +247,9 @@ def remove_panel(tv):
     panel_id = tv.settings().get("toolrunner-output-id")
     win = tv.window()
 
-    debug.log("Target: %s, Is Output: %s" % (tv, is_output))
+    _logger.info("Target: %s, Is Output: %s", tv, is_output)
     if is_output:
-        debug.log("Removing panel %s" % panel_id)
+        _logger.info("Removing panel %s", panel_id)
 
         try:
             win.destroy_output_panel(panel_id)
@@ -258,10 +263,15 @@ def ensure_visible_view(target_view, focus=False):
     panel_id = target_view.settings().get("toolrunner-output-id")
     use_panel = panel_id is not None
 
+    _logger.info("Use panel: %s", use_panel)
     if use_panel:
         active_window.run_command("show_panel", {"panel": "output." + panel_id})
 
     target_window = target_view.window()
+    if target_window is None:
+        _logger.info("No window?")
+        return
+
     target_group, group_index = target_window.get_view_index(target_view)
     target_window.set_view_index(target_view, target_group, group_index)
 

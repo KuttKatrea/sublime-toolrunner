@@ -1,8 +1,7 @@
+import logging
 import re
 
-import better_settings
-
-from . import debug
+from . import better_settings
 
 _tool_list = None
 _tool_map = None
@@ -13,6 +12,9 @@ _settings = None
 
 
 basepackage = re.sub(r"\.lib$", "", __package__)
+
+
+_logger = logging.getLogger("ToolRunner:Settings")
 
 
 def get_setting(setting_name, default=None):
@@ -49,7 +51,7 @@ def get_tools():
 
 
 def get_tool(tool_id):
-    _build_tool_list()
+    _build_tool_list(_settings)
     return _tool_map.get(tool_id.lower(), None)
 
 
@@ -57,7 +59,7 @@ def get_override(tool_id):
     return _settings.get("user_tool_overrides", {}).get(tool_id)
 
 
-def _build_tool_list():
+def _build_tool_list(_settings):
     global _tool_map, _tool_list
 
     _tool_map = {}
@@ -74,7 +76,7 @@ def _build_tool_list():
             key = tool_item.get("name", tool_item.get("cmd"))
 
             if key is None:
-                debug.log("Tool has no cmd: ", tool_item)
+                _logger.info("Tool has no cmd: %s", tool_item)
                 continue
 
             tool_item["name"] = key
@@ -95,16 +97,12 @@ def on_loaded():
     global _settings
 
     if _plugin_loaded:
-        debug.log("Plugin already loaded")
+        _logger.info("Plugin already loaded")
         return
 
     _settings = better_settings.load_for(basepackage, "ToolRunner")
 
-    on_debug_change()
-
-    debug.log("Registering Settings Callbacks")
-
-    _settings.add_on_change("debug", on_debug_change)
+    _logger.info("Registering Settings Callbacks")
 
     if _on_plugin_loaded_callbacks is not None:
         for callback in _on_plugin_loaded_callbacks:
@@ -115,12 +113,7 @@ def on_loaded():
 
 
 def on_unloaded():
-    _settings.clear_on_change("debug")
     del _on_plugin_loaded_callbacks[:]
-
-
-def on_debug_change():
-    debug.enabled = _settings.get("debug")
 
 
 def register_on_plugin_loaded(callback):

@@ -1,7 +1,11 @@
-from . import debug, settings
+import logging
+
+from . import settings
 
 _default_input_codec = None
 _default_output_codec = None
+
+_logger = logging.getLogger("ToolRunner:Log")
 
 
 def _set_default_codecs():
@@ -32,7 +36,7 @@ class ConfigContainer(object):
             if k in self._props:
                 attr_value = config.get(k)
 
-                # debug.log("Updating %s with %s" % (k, attr_value))
+                # _logger.info("Updating %s with %s" % (k, attr_value))
 
                 current_attr = getattr(self, k, None)
 
@@ -151,8 +155,8 @@ class Results(ConfigContainer):
 
 
 def _on_plugin_loaded():
-    debug.log("Setting defaults for tools")
+    _logger.info("Setting defaults for tools")
     _set_default_codecs()
 
 
-settings.register_on_plugin_loaded(_on_plugin_loaded)
+# settings.register_on_plugin_loaded(_on_plugin_loaded)

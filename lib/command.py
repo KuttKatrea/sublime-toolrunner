@@ -1,16 +1,25 @@
 import datetime
+import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import threading
 from os import path
 from threading import Thread
 
 import sublime
 
-from . import debug, manager, settings, util
+from . import manager, settings, util
 from .tool import Tool
+
+_logger = logging.getLogger("ToolRunner:Command")
+
+
+def exceptionhook(args):
+    _logger.error("ERROR in thead: %s", args)
+    pass
 
 
 class Command(object):
@@ -35,7 +44,9 @@ class Command(object):
         self._output_file = None
 
     def run_tool(self, tool_id):
-        debug.log("Running command for tool: ", tool_id, self._command_arguments)
+        _logger.info(
+            "Running command for tool: %s, %s", tool_id, self._command_arguments
+        )
 
         if self._create_tool(tool_id) is None:
             self._notify("There is no tool named %s" % tool_id)
@@ -46,6 +57,8 @@ class Command(object):
         self._tool.set_command_arguments(self._command_arguments)
 
         self._run_thread()
+
+        _logger.info("END OF THE WORLD")
 
     def run_profile(self, selected_group, selected_profile):
         group_descriptor = None
@@ -62,7 +75,7 @@ class Command(object):
             if single_profile["name"] == selected_profile:
                 profile_descriptor = single_profile
 
-        debug.log("Running command for profile: ", profile_descriptor)
+        _logger.info("Running command for profile: %s", profile_descriptor)
 
         tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
 
@@ -100,8 +113,8 @@ class Command(object):
         if input_source is None:
             input_source = "auto-file"
 
-        if input_source not in set(
-            [
+        if input_source not in frozenset(
+            {
                 "selection",
                 "auto-line",
                 "line",
@@ -110,7 +123,7 @@ class Command(object):
                 "auto-file",
                 "file",
                 "none",
-            ]
+            }
         ):
             raise ValueError("Input source invalid")
 
@@ -124,22 +137,22 @@ class Command(object):
 
         current_selection = active_view.sel()
 
-        if input_source in set(["selection", "auto-file", "auto-block", "auto-line"]):
+        if input_source in {"selection", "auto-file", "auto-block", "auto-line"}:
             if len(current_selection) > 0:
                 for partial_selection in current_selection:
                     input_text += active_view.substr(partial_selection)
 
         if input_source != "selection" and input_text == "":
             region = None
-            if input_source in set(["line", "auto-line"]):
+            if input_source in {"line", "auto-line"}:
                 region = active_view.line(current_selection[0])
 
-            if input_source in set(["block", "auto-block"]):
+            if input_source in {"block", "auto-block"}:
                 region = active_view.expand_by_class(
                     current_selection[0], sublime.CLASS_EMPTY_LINE
                 )
 
-            if input_source in set(["file", "auto-file"]):
+            if input_source in {"file", "auto-file"}:
                 region = sublime.Region(0, active_view.size())
 
             input_text = active_view.substr(region)
@@ -171,7 +184,7 @@ class Command(object):
 
         self._input_file = input_file
 
-        debug.log("Created input file: %s" % input_file)
+        _logger.info("Created input file: %s", input_file)
 
         return input_file
 
@@ -179,13 +192,25 @@ class Command(object):
         with tempfile.NamedTemporaryFile(delete=False, prefix="toolrunner-") as tmpfile:
             self._output_file = tmpfile.name
 
-        debug.log("Created output file: %s" % self._output_file)
+        _logger.info("Created output file: %s", self._output_file)
 
         return self._output_file
 
     def _run_thread(self):
-        self._main_thread = Thread(target=self._begin_run)
-        self._main_thread.start()
+        _logger.info("Running thread")
+        # threading.excepthook = exceptionhook
+        try:
+            # self._main_thread = Thread(target=self._begin_run_thread)
+            # self._main_thread.start()
+            self._begin_run_thread()
+        except Exception as ex:
+            _logger.warning("Error running thread", ex)
+
+    def _begin_run_thread(self):
+        try:
+            self._begin_run()
+        except Exception as ex:
+            _logger.exception("Error in thread", ex)
 
     def _begin_run(self):
         tool = self._tool
@@ -199,10 +224,10 @@ class Command(object):
             return
 
         self._create_command_line()
-        debug.log("Using Command Line: %s" % self._command_array)
+        _logger.info("Using Command Line: %s", self._command_array)
 
         self._create_working_directory()
-        debug.log("Using Working Directory: %s" % self._working_directory)
+        _logger.info("Using Working Directory: %s", self._working_directory)
 
         if tool.output.mode != "none":
             manager.cancel_command_for_source_view(self._source_view, True)
@@ -225,8 +250,14 @@ class Command(object):
         self._begin_write()
         self._running = True
 
-        self._thread = Thread(target=self._command_monitor_worker)
-        self._thread.start()
+        _logger.info("Before thread")
+
+        try:
+            self._command_monitor_worker()
+            # self._thread = Thread(target=self._command_monitor_worker)
+            # self._thread.start()
+        except Exception:
+            _logger.exception("Other thread")
 
     def _command_monitor_worker(self):
         """
@@ -254,10 +285,21 @@ class Command(object):
                         break
                     self.write(outstring)
 
-            self._read_thread = Thread(target=outputreader)
-            self._read_thread.start()
+            # self._read_thread = Thread(target=outputreader)
+            self._read_thread = None
 
-        self._process.wait()
+            try:
+                # self._read_thread.start()
+                pass
+            except Exception:
+                _logger.exception("ERROR")
+                self._read_thread = None
+
+        try:
+            self._process.wait()
+        except Exception:
+            _logger.exception("ERROR WAITING")
+
         self._lock = True
 
         if self._read_thread is not None:
@@ -297,7 +339,7 @@ class Command(object):
 
         self._clean()
 
-        manager.ensure_visible_view(self._target_view)
+        # manager.ensure_visible_view(self._target_view)
 
     def _create_window(self):
         tool = self._tool
@@ -310,8 +352,9 @@ class Command(object):
 
         panelname = ":: ToolRunner Output (%s) ::" % (self._source_view.buffer_id())
 
-        self._target_view.set_name(panelname)
+        _logger.info("Panel name: %s", panelname)
 
+        self._target_view.set_name(panelname)
         self._target_view.set_read_only(tool.results.read_only)
         self._target_view.set_scratch(tool.results.scratch)
         self._target_view.set_syntax_file(
@@ -324,9 +367,13 @@ class Command(object):
         manager.ensure_visible_view(self._target_view)
 
     def write(self, text):
+        _logger.info("Writing: %s", text)
+
         if self._target_view is None or self._target_view.window() is None:
             return
             # self._create_window()
+
+        _logger.info("Really writing: %s", text)
 
         read_only = self._target_view.is_read_only()
 
@@ -348,7 +395,7 @@ class Command(object):
 
         command_array = tool.get_command_array()
 
-        debug.log("Command array: ", command_array)
+        _logger.info("Command array: %s", command_array)
 
         for i in range(len(command_array)):
             input_re = re.escape(r"$[toolrunner_input_file]")
@@ -415,6 +462,8 @@ class Command(object):
             stdout = subprocess.PIPE
             stderr = subprocess.STDOUT
 
+        _logger.info("Command: %s", self._command_array)
+
         try:
             process = subprocess.Popen(
                 self._command_array,
@@ -427,8 +476,12 @@ class Command(object):
             )
 
         except FileNotFoundError as e:
-            debug.log("Error: ", e)
-            return
+            _logger.info("Error: ", e)
+            raise
+
+        except Exception as e:
+            _logger.info("Error executing", e)
+            raise
 
         self._stdout = stdout if process.stdout is None else process.stdout
 
@@ -471,20 +524,22 @@ class Command(object):
 
         self._target_view.run_command("move_to", {"to": "eof"})
 
+        _logger.info("Begin write end")
+
     def _write_output(self):
         if self._output_file:
             with open(
                 self._output_file, mode="r", encoding=self._tool.output.codec
             ) as tmpfile:
                 outlines = [line.replace("\r\n", "\n") for line in tmpfile]
-                # debug.log(outstring)
+                # _logger.info(outstring)
             self.write(outlines)
 
     def _clean(self):
         if self._input_file:
-            debug.log("Eliminando: %s" % self._input_file)
+            _logger.info("Eliminando: %s", self._input_file)
             os.unlink(self._input_file)
 
         if self._output_file:
-            debug.log("Eliminando: %s" % self._output_file)
+            _logger.info("Eliminando: %s", self._output_file)
             os.unlink(self._output_file)

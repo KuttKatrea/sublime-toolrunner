@@ -62,9 +62,6 @@ This is the general view of configuration options
   "default_profiles": {
     "group": "profile"
   },
-
-  // Whether to dump debug messages to console
-  "debug": false
 }
 ```
 

@@ -1,21 +1,11 @@
-import datetime
+import logging
 import sys
 
-enabled = True
-
-
-def log(*args):
-    if enabled:
-        print(
-            *(
-                ["[ToolRunner][%s]" % datetime.datetime.now().strftime("%H:%M:%S.%f")]
-                + list(args)
-            )
-        )
+_logger = logging.getLogger("ToolRunner:Debug")
 
 
 def forget_modules():
-    log("Deleting submodules")
+    _logger.info("Deleting submodules")
     deletekeys = []
     for key in sys.modules:
         if key.startswith(__package__):
