@@ -6,6 +6,7 @@ authors = ["Alan Reyes <kutt@katrea.net>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+types-invoke = "^1.6.8"
 
 [tool.poetry.dev-dependencies]
 invoke = "^1.7.1"

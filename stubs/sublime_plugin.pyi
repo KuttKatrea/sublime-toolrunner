@@ -1,6 +1,5 @@
 import sublime
 
-
 class WindowCommand:
     window: sublime.Window
 

@@ -1,6 +1,14 @@
 import logging
 
-from lib.engine import Command, Tool, Input, Output, InputProvider, OutputProvider, run_command
+from lib.engine import (
+    Command,
+    Input,
+    InputProvider,
+    Output,
+    OutputProvider,
+    Tool,
+    run_command,
+)
 
 
 class InlineInputProvider(InputProvider):
@@ -16,7 +24,11 @@ class ConsoleOutputProvider(OutputProvider):
         logging.info(line.rstrip())
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)-15s.%(msecs)03d %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)-15s.%(msecs)03d %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 cmd = Command(
     tool=Tool(
@@ -28,10 +40,10 @@ cmd = Command(
         output=Output(
             mode="tmpfile-path",
         ),
-        placeholders={
-        }
+        placeholders={},
     ),
-    input_provider=InlineInputProvider("""
+    input_provider=InlineInputProvider(
+        """
 import time, sys
 print(sys.argv[1])
 with open(sys.argv[1], mode="w", buffering=1) as out:
@@ -39,14 +51,11 @@ with open(sys.argv[1], mode="w", buffering=1) as out:
         print(f"{k}")
         out.write(f"{k}\\n")
         time.sleep(1)
-"""),
+"""
+    ),
     output_provider=ConsoleOutputProvider(),
-    placeholders_values={
-
-    },
-    environment={
-        "PYTHONUNBUFFERED": "1"
-    }
+    placeholders_values={},
+    environment={"PYTHONUNBUFFERED": "1"},
 )
 
 run_command(cmd)

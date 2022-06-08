@@ -324,6 +324,14 @@ optional = false
 python-versions = ">=3.6,<4.0"
 
 [[package]]
+name = "types-invoke"
+version = "1.6.8"
+description = "Typing stubs for invoke"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.2.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -342,7 +350,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "87354c34da03da4710791c99ab9b3540dba059cc58f863c0044d02ae62be85cb"
+content-hash = "c82b9bb847518492981cd91606f60176fc461e89fb00b30df90547719974d579"
 
 [metadata.files]
 astroid = [
@@ -533,6 +541,10 @@ tomli = [
 tomlkit = [
     {file = "tomlkit-0.11.0-py3-none-any.whl", hash = "sha256:0f4050db66fd445b885778900ce4dd9aea8c90c4721141fde0d6ade893820ef1"},
     {file = "tomlkit-0.11.0.tar.gz", hash = "sha256:71ceb10c0eefd8b8f11fe34e8a51ad07812cb1dc3de23247425fbc9ddc47b9dd"},
+]
+types-invoke = [
+    {file = "types-invoke-1.6.8.tar.gz", hash = "sha256:aee549ffcca37e778d332a299ebcd969c5d2a98ad4dce3a547ce1981ec6493a9"},
+    {file = "types_invoke-1.6.8-py3-none-any.whl", hash = "sha256:68f0b0915f7d3708f87029b423bd335401da21234968fb4af7f7d8db4f87a022"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.2.0-py3-none-any.whl", hash = "sha256:6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708"},

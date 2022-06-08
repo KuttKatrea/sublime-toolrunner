@@ -1,22 +1,11 @@
 import logging
-import re
 from functools import partial
-from typing import Any, Literal, Optional, Union
+from typing import Any, Optional, Union
 
 import sublime
 import sublime_plugin
 
-from .lib import debug, manager, mapper, settings, util
-from .lib.command import Command
-from .lib.mapper import (
-    InputSource,
-    OutputTarget,
-    ask_profile_and_run_command,
-    ask_type_to_run,
-    focus_output,
-    run_profile,
-    run_tool,
-)
+from .lib import commands, debug, manager, mapper, settings, util
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -30,12 +19,25 @@ class ToolRunner(sublime_plugin.WindowCommand):
         group: Union[str, None] = None,
         profile: Union[str, None] = None,
         default_profile: bool = False,
-        input_source: InputSource = None,
-        output: OutputTarget = None,
+        input_source: Optional[mapper.InputSource] = None,
+        output: Optional[mapper.OutputTarget] = None,
+        params: Optional[dict] = None,
     ):
-        return mapper.run(
-            self, tool, group, profile, default_profile, input_source, output
-        )
+
+        try:
+            commands.run(
+                self,
+                tool,
+                group,
+                profile,
+                default_profile,
+                input_source,
+                output,
+                params,
+            )
+        except Exception as ex:
+            _logger.exception("Error running", exc_info=ex)
+            util.notify(str(ex))
 
 
 class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
@@ -45,12 +47,12 @@ class ToolRunnerCancelCurrent(sublime_plugin.WindowCommand):
 
 class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
     def run(self):
-        focus_output(self)
+        commands.focus_output(self)
 
 
 class ToolRunnerFocusSource(sublime_plugin.WindowCommand):
     def run(self):
-        mapper.focus_source(self)
+        commands.focus_source(self)
 
 
 class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
@@ -93,7 +95,6 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(self.profile_list, self.on_ask_profile, 0, 0, None)
 
     def on_ask_profile(self, selected_index):
-
         if selected_index > -1:
             selected_profile_name = self.profile_list[selected_index]
             current_settings = settings.get_setting("default_profiles", {})
@@ -118,19 +119,27 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         operand: Any,
         match_all: bool,
     ) -> Optional[bool]:
-        if (
-            key == "toolrunner.enable_default_tools_keymap"
-            and operator == sublime.OP_EQUAL
-        ):
-            setting_value = settings.get_setting("enable_default_tools_keymap", False)
-            _logger.info(
-                "Setting: %s (%s), operand: %s (%s)",
-                setting_value,
-                type(setting_value),
-                operand,
-                type(operand),
-            )
+        if not key.startswith("toolrunner."):
+            return None
+
+        settings_key = key[len("toolrunner.") :]
+        setting_value = settings.get_setting(settings_key, None)
+
+        _logger.info(
+            "Checking setting: %s %s %s (%s)",
+            settings_key,
+            operand,
+            setting_value,
+            type(setting_value),
+        )
+
+        if operator == sublime.OP_EQUAL:
             return setting_value == operand
+
+        if operator == sublime.OP_NOT_EQUAL:
+            return setting_value != operand
+
+        return None
 
     def on_pre_close(self, view):
         mapper.on_pre_close_view(self, view)
@@ -156,12 +165,12 @@ def plugin_loaded():
     try:
         settings.on_loaded()
     except Exception as ex:
-        _logger.exception("Error when loading settings")
+        _logger.exception("Error when loading settings", exc_info=ex)
 
     try:
         debug.forget_modules()
     except Exception as ex:
-        _logger.exception("Error when unloading modules")
+        _logger.exception("Error when unloading modules", exc_info=ex)
 
     _logger.info("Plugin Loaded")
 
@@ -170,11 +179,11 @@ def plugin_unloaded():
     try:
         settings.on_unloaded()
     except Exception as ex:
-        _logger.exception("Error when unloading settings")
+        _logger.exception("Error when unloading settings", exc_info=ex)
 
     try:
         debug.forget_modules()
     except Exception as ex:
-        _logger.exception("Error when unloading modules")
+        _logger.exception("Error when unloading modules", exc_info=ex)
 
     _logger.info("Plugin Unloaded")

@@ -9,7 +9,7 @@
     "command": "tool_runner",
     "context": [
       {
-        "key": "toolrunner.enable_default_keymap"
+        "key": "toolrunner.default_keymap_enabled"
       }
     ]
   },
@@ -22,7 +22,7 @@
     "command": "tool_runner_cancel_current",
     "context": [
       {
-        "key": "toolrunner.enable_default_keymap"
+        "key": "toolrunner.default_keymap_enabled"
       }
     ]
   },
@@ -35,7 +35,7 @@
     "command": "tool_runner_focus_output",
     "context": [
       {
-        "key": "toolrunner.enable_default_keymap"
+        "key": "toolrunner.default_keymap_enabled"
       }
     ]
   },
@@ -48,7 +48,7 @@
     "command": "tool_runner_focus_source",
     "context": [
       {
-        "key": "toolrunner.enable_default_keymap"
+        "key": "toolrunner.default_keymap_enabled"
       }
     ]
   },
@@ -58,7 +58,7 @@
     ],
     "command": "tool_runner",
     "args": {
-      "input_source": "auto-file",
+      "input_source": "file",
       "output": {
         "type": "panel"
       }
@@ -75,7 +75,7 @@
     ],
     "command": "tool_runner",
     "args": {
-      "input_source": "block",
+      "input_source": "auto-block",
       "output": {
         "type": "panel"
       }
@@ -92,7 +92,7 @@
     ],
     "command": "tool_runner",
     "args": {
-      "input_source": "syntax",
+      "input_source": "auto-scope",
       "output": {
         "type": "panel"
       }

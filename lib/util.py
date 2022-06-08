@@ -1,5 +1,6 @@
 import logging
 import re
+import uuid
 from os import path
 
 import sublime
@@ -77,7 +78,9 @@ def extract_variables(view):
         }
 
 
-def notify(msg, desc=None, source=None, target=None):
+def notify(
+    msg: str, desc: str = None, source: sublime.View = None, target: sublime.View = None
+):
     if desc is None:
         desc = "ToolRunner"
     else:
@@ -92,5 +95,24 @@ def notify(msg, desc=None, source=None, target=None):
 
     source.set_status("toolrunner", message)
 
+    status_id = str(uuid.uuid4())
+
+    source.settings().set("tr-status-id", status_id)
+    sublime.set_timeout_async(create_clear_status_at_callback(source, status_id), 5000)
+
     if target is not None:
         target.set_status("toolrunner", message)
+        source.settings().set("tr-status-id", status_id)
+        sublime.set_timeout_async(
+            create_clear_status_at_callback(target, status_id), 5000
+        )
+
+
+def create_clear_status_at_callback(source: sublime.View, status_id: str):
+    def clear_status_at():
+        _logger.info("Clearing status: %s", status_id)
+        if source.settings().get("tr-status-id", None) == status_id:
+            source.erase_status("toolrunner")
+            source.settings().erase("tr-status-id")
+
+    return clear_status_at

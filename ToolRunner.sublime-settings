@@ -538,13 +538,23 @@
       }
     },
   ],
-  "default_extensions": {
-    "mongodb": "mongo"
+  "default_scopes_mapping": {
+    "source.python": {"tool": "python" },
+    "source.ruby": {"tool": "ruby" },
+    "source.js": {"tool": "node" },
+    "source.powershell": {"tool": "pwsh" },
+    "source.dosbatch": {"tool": "cmd" },
+    "source.shell.bash": {"tool": "bash" },
+    "source.shell.fish": {"tool": "fish" },
+    "source.mongodb.js": {"tool": "mongodb" }
   },
-  "default_scopes": {
-    "source.python": "python"
+  "default_extensions_mapping": {
+    "mongodb": {"tool": "mongodb"},
+    "bat": {"tool": "cmd"},
+    "cmd": {"tool": "cmd"}
   },
-  "default_output_mode": "panel",
+  "user_scopes_mapping": {},
+  "user_extensions_mapping": {},
   // User-defined tools. Tools are appended Host + Platform + User + Default
   "user_tools": [],
   // User-defined groups. Groups are appended Host + Platform + User + Default
@@ -552,7 +562,7 @@
   // User-tools
   "user_tool_overrides": {},
   "default_profiles": {}, // host-specific
-  "devel": false,
+  "default_output_mode": "panel",
   "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
   "enable_default_tools_keymap": true,
   "cwd": ["project", "file", "home", "other:/tmp"]

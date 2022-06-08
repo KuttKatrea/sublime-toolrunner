@@ -3,7 +3,7 @@ Development tasks for usage with Invoke
 """
 from invoke import Exit, UnexpectedExit, run, task
 
-SOURCE_PATHS = "ToolRunner.py lib tasks"
+SOURCE_PATHS = "ToolRunner.py lib tasks stubs test"
 
 
 @task

@@ -239,7 +239,7 @@ def remove_target_view(view):
     remove_panel(tv)
 
 
-def remove_panel(tv):
+def remove_panel(tv: sublime.View):
     if not tv:
         return
 

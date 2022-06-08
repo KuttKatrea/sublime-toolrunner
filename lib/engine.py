@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import sys
@@ -5,7 +6,7 @@ import tempfile
 import threading
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Literal, Protocol, TextIO, Union
+from typing import Callable, Dict, List, Literal, Optional, Protocol, TextIO, Union
 
 TEMPFILE_PREFIX = "sttr_"
 
@@ -18,6 +19,8 @@ ResultsMode = Literal["panel", "buffer"]
 
 PlaceholderType = Literal["positional", "named", "flag"]
 PlaceholderValue = Union[str, bool]
+
+_logger = logging.getLogger("ToolRunner:Engine")
 
 
 @dataclass()
@@ -55,7 +58,8 @@ class Results:
 @dataclass
 class Placeholder:
     type: PlaceholderType
-    argument: str
+    argument: Optional[str] = None
+    order: Optional[int] = None
 
 
 @dataclass
@@ -99,7 +103,12 @@ def get_command_array(
 
     if command.placeholders_values:
         for placeholder_key, placeholder_value in command.placeholders_values.items():
-            param = command.tool.placeholders[placeholder_key]
+            param = command.tool.placeholders.get(placeholder_key, None)
+
+            if param is None:
+                raise Exception(
+                    f"Tool {command.tool.name} doesn't have a parameter {placeholder_key}"
+                )
 
             if param.type == "positional":
                 positional_arguments.append(placeholder_value)
@@ -175,10 +184,10 @@ def get_command_output(command: Command):
         (osd, output_file) = tempfile.mkstemp(prefix=TEMPFILE_PREFIX)
         output_fd = os.fdopen(osd, mode="r", encoding=command.tool.output.codec)
 
-    return (output_file, output_fd)
+    return output_file, output_fd
 
 
-def run_command(command: Command):
+def run_command(command: Command, on_exit_callback: Optional[Callable[[int], None]]):
     (input_file, input_text, input_stream) = get_command_input(command)
     (output_file, output_fd) = get_command_output(command)
 
@@ -188,7 +197,7 @@ def run_command(command: Command):
         input_text=input_text,
         output_file=output_file,
     )
-    print(command_array)
+    _logger.info(command_array)
 
     environment = {}
     environment.update(os.environ)
@@ -201,19 +210,24 @@ def run_command(command: Command):
             startupinfo.dwFlags |= subprocess.CREATE_NEW_CONSOLE
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-    command.output_provider.writeline("> Process started\n")
-    sp = subprocess.Popen(
-        args=command_array,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        env=environment,
-        # shell=tool.shell,
-        startupinfo=startupinfo,
-        # cwd=self._working_directory,
-    )
+    try:
+        sp = subprocess.Popen(
+            args=command_array,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            env=environment,
+            # shell=tool.shell,
+            startupinfo=startupinfo,
+            # cwd=self._working_directory,
+        )
+    except FileNotFoundError as err:
+        raise Exception(f"Executable not found: {err}")
 
+    command.output_provider.writeline("> Process started\n")
     assert sp.stdin is not None
+
+    _logger.info("Feeding input")
 
     sp.stdin.write(input_stream)
     sp.stdin.close()
@@ -226,6 +240,9 @@ def run_command(command: Command):
             command.output_provider.writeline(line.decode(command.tool.output.codec))
         sp.wait()
         command.output_provider.writeline("> Process finished\n")
+
+        if on_exit_callback is not None:
+            on_exit_callback(sp.returncode)
 
     # subprocess_thread()
     th = threading.Thread(target=subprocess_thread, daemon=True)
