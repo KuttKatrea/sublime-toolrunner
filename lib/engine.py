@@ -192,7 +192,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
     (output_file, output_fd) = get_command_output(command)
 
     command_array = get_command_array(
-        command,
+        command=command,
         input_file=input_file,
         input_text=input_text,
         output_file=output_file,

@@ -57,6 +57,11 @@ class ConsoleOutputProvider(engine.OutputProvider):
         logging.info(line.rstrip())
 
 
+class NullOutputProvider(engine.OutputProvider):
+    def writeline(self, line: str):
+        pass
+
+
 class ViewOutputProvider(engine.OutputProvider):
     def __init__(self, target_view: sublime.View) -> None:
         super().__init__()
@@ -186,8 +191,11 @@ def find_view_by_id(view_id):
     return None
 
 
-def create_output_provider(cmd: sublime_plugin.WindowCommand, output: Dict[str, str]):
+def create_output_provider(cmd: sublime_plugin.WindowCommand, output: OutputTarget):
     _logger.info(f"Output configuration: {output}")
+
+    if output["type"] == "none":
+        return NullOutputProvider()
 
     source_view = cmd.window.active_view()
 

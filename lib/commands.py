@@ -165,6 +165,8 @@ def run_profile(
             group_descriptor = single_group
             break
 
+    _logger.info("Running command for group: %s", group_descriptor)
+
     for single_profile in group_descriptor["profiles"]:
         if single_profile["name"] == profile:
             profile_descriptor = single_profile
