@@ -7,6 +7,9 @@
       "x"
     ],
     "command": "tool_runner",
+    "args": {
+            "default_profile": false
+           },
     "context": [
       {
         "key": "toolrunner.default_keymap_enabled"
@@ -58,11 +61,8 @@
     ],
     "command": "tool_runner",
     "args": {
-      "input_source": "file",
-      "output": {
-        "type": "panel"
-      }
-    },
+        "default_profile": true
+       },
     "context": [
       {
         "key": "toolrunner.enable_default_tools_keymap"
@@ -76,9 +76,7 @@
     "command": "tool_runner",
     "args": {
       "input_source": "auto-block",
-      "output": {
-        "type": "panel"
-      }
+      "default_profile": true
     },
     "context": [
       {
@@ -93,9 +91,7 @@
     "command": "tool_runner",
     "args": {
       "input_source": "auto-scope",
-      "output": {
-        "type": "panel"
-      }
+      "default_profile": true
     },
     "context": [
       {

@@ -2,6 +2,8 @@ import logging
 import re
 from typing import Optional
 
+import sublime
+
 from . import better_settings
 
 
@@ -38,12 +40,12 @@ def set_setting(setting_name, setting_value):
 def get_groups():
     groups = _loaded_settings.get_scoped(
         better_settings.SCOPE_HOST_OS, "user_groups", []
-    )
-    groups += _loaded_settings.get_scoped(better_settings.SCOPE_HOST, "user_groups", [])
-    groups += _loaded_settings.get_scoped(better_settings.SCOPE_OS, "user_groups", [])
+    ) or []
+    groups += _loaded_settings.get_scoped(better_settings.SCOPE_HOST, "user_groups")  or []
+    groups += _loaded_settings.get_scoped(better_settings.SCOPE_OS, "user_groups")  or []
     groups += _loaded_settings.get_scoped(
-        better_settings.SCOPE_DEFAULT, "user_groups", []
-    )
+        better_settings.SCOPE_DEFAULT, "user_groups"
+    ) or []
 
     return groups
 
@@ -69,6 +71,15 @@ def get_tool(tool_id):
 
 
 def get_override(tool_id):
+    project_tool_overrides = (
+        sublime.active_window()
+        .project_data()
+        .get("tool_runner", {})
+        .get("tool_overrides", {})
+    )
+    if tool_id in project_tool_overrides:
+        return project_tool_overrides[tool_id]
+
     return _loaded_settings.get("user_tool_overrides", {}).get(tool_id)
 
 
@@ -86,15 +97,23 @@ def _build_tool_list():
         _loaded_settings.get_scoped(better_settings.SCOPE_DEFAULT, "default_tools", []),
     ):
         for tool_item in settings_set:
-            key = tool_item.get("name", tool_item.get("cmd"))
+            name = tool_item.get("name")
+            cmd = tool_item.get("cmd")
 
-            if key is None:
-                _logger.info("Tool has no cmd: %s", tool_item)
+            if name:
+                key = name
+            elif cmd and len(cmd) > 0:
+                key = cmd[0]
+                tool_item["name"] = key
+
+            if not key:
+                _logger.info("Tool has no valid name: %s", tool_item)
                 continue
 
-            tool_item["name"] = key
+            if not tool_item.get("cmd"):
+                tool_item["cmd"] = [key]
 
-            key = key.lower()
+            # key = key.lower()
 
             if key not in _tool_map:
                 override_cmd = get_override(tool_item["name"])

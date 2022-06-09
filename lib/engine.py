@@ -66,6 +66,7 @@ class Placeholder:
 class Tool:
     name: str
     cmd: List[str] = field(default_factory=list)
+    arguments: List[str] = field(default_factory=list)
     shell: bool = False
     input: Input = field(default_factory=Input)
     output: Output = field(default_factory=Output)
@@ -119,31 +120,32 @@ def get_command_array(
                 if placeholder_value:
                     flag_arguments.append(param.argument)
 
-    full_arguments = []
+    full_command_template = [] + command.tool.cmd + command.tool.arguments
+    full_command = []
 
-    for argument in command.tool.cmd:
+    for argument in full_command_template:
         if argument == "$[toolrunner_positional_arguments]":
-            full_arguments += positional_arguments
+            full_command += positional_arguments
 
         elif argument == "$[toolrunner_named_arguments]":
-            full_arguments += named_arguments
+            full_command += named_arguments
 
         elif argument == "$[toolrunner_flag_arguments]":
-            full_arguments += flag_arguments
+            full_command += flag_arguments
 
         elif argument == "$[toolrunner_input_file]":
-            full_arguments += [input_file]
+            full_command += [input_file]
 
         elif argument == "$[toolrunner_input_text]":
-            full_arguments += [input_text]
+            full_command += [input_text]
 
         elif argument == "$[toolrunner_output_file]":
-            full_arguments += [output_file]
+            full_command += [output_file]
 
         else:
-            full_arguments.append(argument)
+            full_command.append(argument)
 
-    return full_arguments
+    return full_command
 
 
 def get_command_input(command: Command):
@@ -197,7 +199,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
         input_text=input_text,
         output_file=output_file,
     )
-    _logger.info(command_array)
+    _logger.info("Command to run: %s", command_array)
 
     environment = {}
     environment.update(os.environ)

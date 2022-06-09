@@ -308,7 +308,7 @@
       }
     },
     {
-      "name": "mongo",
+      "name": "mongodb",
       "desc": "MongoDB (Script)",
       "cmd": [
         "mongo"
@@ -371,7 +371,7 @@
       }
     },
     {
-      "name": "mongo-shell",
+      "name": "mongodb-shell",
       "desc": "MongoDB (Shell)",
       "cmd": [
         "mongo"
@@ -467,10 +467,10 @@
       }
     },
     {
-      "name": "wt",
+      "name": "wt-new-tab",
       "desc": "Windows Terminal",
       "cmd": [
-        "wt"
+        "wt", "new-tab"
       ],
       "shell": false,
       "arguments": [
@@ -537,6 +537,13 @@
         "mode": "pipe"
       }
     },
+    {
+      "name": "csi",
+    },
+    {
+      "name": "dotnet-script",
+      "desc": "DO NOT USE, has Memory Leak"
+    }
   ],
   "default_scopes_mapping": {
     "source.python": {"tool": "python" },
@@ -546,12 +553,17 @@
     "source.dosbatch": {"tool": "cmd" },
     "source.shell.bash": {"tool": "bash" },
     "source.shell.fish": {"tool": "fish" },
-    "source.mongodb.js": {"tool": "mongodb" }
+    "source.mongodb.js": {"tool": "mongodb" },
+    "source.cs": {"tool": "csi" }
   },
   "default_extensions_mapping": {
     "mongodb": {"tool": "mongodb"},
     "bat": {"tool": "cmd"},
     "cmd": {"tool": "cmd"}
+  },
+  "default_output_target": {
+    "mode": "panel",
+    "syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage"
   },
   "user_scopes_mapping": {},
   "user_extensions_mapping": {},
@@ -562,8 +574,7 @@
   // User-tools
   "user_tool_overrides": {},
   "default_profiles": {}, // host-specific
-  "default_output_mode": "panel",
-  "default_syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage",
+  "enable_default_keymap": true,
   "enable_default_tools_keymap": true,
-  "cwd": ["project", "file", "home", "other:/tmp"]
+  "cwd": ["project", "file", "container:node_modules", "home", "other:/tmp"]
 }

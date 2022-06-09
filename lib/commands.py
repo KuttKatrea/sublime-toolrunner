@@ -22,8 +22,8 @@ def run(
     group: Union[str, None],
     profile: Union[str, None],
     default_profile: bool,
-    input_source: Optional[mapper.InputSource],
-    output_target: Optional[mapper.OutputTarget],
+    input_source: Optional[str],
+    output_target: Optional[dict],
     params: Optional[dict],
 ):
     _logger.info(
@@ -42,25 +42,25 @@ def run(
         if default_profile:
             profile = settings.get_default_profile(group)
         if profile is not None:
-            run_profile(self, group, profile, input_source, output_target)
+            run_group(self, group, profile, input_source, output_target)
         else:
             ask_profile_to_run(
                 self,
                 group,
-                create_run_profile_callback(self, input_source, output_target),
+                create_run_group_callback(self, input_source, output_target),
             )
     else:
         ask_type_to_run(
             self,
             create_run_tool_callback(self, input_source, output_target),
-            create_run_profile_callback(self, input_source, output_target),
+            create_run_group_callback(self, input_source, output_target),
         )
 
 
 def create_run_tool_callback(
     self: sublime_plugin.WindowCommand,
-    input_source: mapper.InputSource,
-    output_target: mapper.OutputTarget,
+    input_source: Optional[str],
+    output_target: Optional[dict],
 ) -> RunToolCallback:
     def run_tool_callback(tool: str):
         try:
@@ -72,35 +72,39 @@ def create_run_tool_callback(
     return run_tool_callback
 
 
-def create_run_profile_callback(
+def create_run_group_callback(
     self: sublime_plugin.WindowCommand,
-    input_source: mapper.InputSource,
-    output_target: mapper.OutputTarget,
+    input_source: Optional[str],
+    output_target: Optional[dict],
 ) -> RunGroupCallback:
-    def run_profile_callback(group: str, profile: str):
+    def run_group_callback(group: str, profile: str):
         try:
-            run_profile(self, group, profile, input_source, output_target)
+            run_group(self, group, profile, input_source, output_target)
         except Exception as ex:
             _logger.exception("Error running profile on callback", exc_info=ex)
             util.notify(str(ex))
 
-    return run_profile_callback
+    return run_group_callback
 
 
 def run_tool(
     cmd: sublime_plugin.WindowCommand,
     tool_id: str,
-    input_source: Optional[mapper.InputSource],
-    output: Optional[mapper.OutputTarget],
+    input_source: Optional[str],
+    output: Optional[dict],
     placeholder_values: Optional[dict],
     *args,
     **kwargs,
 ):
     if input_source is None:
         input_source = mapper.InputSource.AUTO_FILE
+    else:
+        input_source = mapper.InputSource(input_source)
 
     if output is None:
-        output = {"type": "panel"}
+        output = mapper.OutputTarget()
+    else:
+        output = mapper.OutputTarget(**output)
 
     input_provider = mapper.create_input_provider_from(
         cmd.window.active_view(), input_source
@@ -120,8 +124,9 @@ def run_tool(
     util.notify(f"Running {tool_settings['name']}")
 
     engine_tool = engine.Tool(
-        name=tool_settings["name"],
-        cmd=tool_settings["cmd"],
+        name=tool_settings.get("name"),
+        cmd=tool_settings.get("cmd", [tool_id]),
+        arguments=tool_settings.get("arguments", []),
         input=engine.Input(**tool_settings.get("input", {})),
         output=engine.Output(**tool_settings.get("output", {})),
         placeholders={
@@ -148,7 +153,7 @@ def run_tool(
     engine.run_command(engine_cmd, callback)
 
 
-def run_profile(
+def run_group(
     cmd: sublime_plugin.WindowCommand,
     group: str,
     profile: str,
@@ -251,7 +256,7 @@ def ask_tool_to_run(
 
 
 def ask_group_and_profile_to_run(
-    self: sublime_plugin.WindowCommand, run_profile_callback: RunGroupCallback
+    self: sublime_plugin.WindowCommand, run_group_callback: RunGroupCallback
 ):
     group_list = [single_group["name"] for single_group in settings.get_groups()]
 
@@ -259,7 +264,7 @@ def ask_group_and_profile_to_run(
         def ask_profile_and_run_command():
             group_selected = group_list[group_selected_index]
 
-            ask_profile_to_run(self, group_selected, run_profile_callback)
+            ask_profile_to_run(self, group_selected, run_group_callback)
 
         sublime.set_timeout(ask_profile_and_run_command, 0)
 
@@ -274,7 +279,7 @@ def ask_group_and_profile_to_run(
 def ask_profile_to_run(
     self: sublime_plugin.WindowCommand,
     group: str,
-    run_profile_callback: RunGroupCallback,
+    run_group_callback: RunGroupCallback,
 ):
     profiles = settings.get_profiles(group)
     profile_list = [profile["name"] for profile in profiles]
@@ -283,7 +288,7 @@ def ask_profile_to_run(
         def on_profile_selected():
             if selected_index >= 0:
                 selected_profile_name = profile_list[selected_index]
-                run_profile_callback(group, selected_profile_name)
+                run_group_callback(group, selected_profile_name)
 
         if len(profiles) <= 0:
             sublime.error_message("This group has no profiles configured")

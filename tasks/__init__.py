@@ -18,7 +18,7 @@ def flake8(_, warn=False):
 
 @task()
 def mypy(_, warn=False):
-    run(f"mypy {SOURCE_PATHS}", warn=warn)
+    run(f"mypy --strict {SOURCE_PATHS}", warn=warn)
 
 
 @task()

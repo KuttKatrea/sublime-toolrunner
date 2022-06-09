@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sublime-toolrunner"
+name = "tool_runner"
 version = "2021.2.1"
 description = ""
 authors = ["Alan Reyes <kutt@katrea.net>"]

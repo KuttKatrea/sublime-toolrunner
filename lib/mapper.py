@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import os.path
 import re
@@ -23,7 +24,25 @@ class InputSource(str, Enum):
     AUTO_SCOPE = "auto-scope"
 
 
-OutputTarget = dict
+class OutputTargetMode(str, Enum):
+    NONE = "none"
+    PANEL = "panel"
+    BUFFER = "buffer"
+
+
+class OutputTargetPosition(str, Enum):
+    TOP = "top"
+    BOTTOM = "bottom"
+    RIGHT = "right"
+    LEFT = "left"
+
+
+@dataclasses.dataclass
+class OutputTarget:
+    mode: OutputTargetMode = OutputTargetMode.PANEL
+    position: OutputTargetPosition = OutputTargetPosition.BOTTOM
+    syntax: str = ""
+
 
 basepackage = re.sub(r"\.lib$", "", __package__)
 pluginname = "ToolRunner"
@@ -151,7 +170,7 @@ def create_input_provider_from(
             current_selection, sublime.CLASS_EMPTY_LINE
         )
         region.a += 1
-        region.b -= 1
+        # region.b -= 1
         update_selection = True
 
     if input_source in {InputSource.SCOPE, InputSource.AUTO_SCOPE}:
@@ -194,7 +213,7 @@ def find_view_by_id(view_id):
 def create_output_provider(cmd: sublime_plugin.WindowCommand, output: OutputTarget):
     _logger.info(f"Output configuration: {output}")
 
-    if output["type"] == "none":
+    if output.mode == OutputTargetMode.NONE:
         return NullOutputProvider()
 
     source_view = cmd.window.active_view()

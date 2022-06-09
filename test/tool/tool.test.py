@@ -33,7 +33,8 @@ logging.basicConfig(
 cmd = Command(
     tool=Tool(
         name="python",
-        cmd=["python", "-B", "-", "$[toolrunner_output_file]"],
+        cmd=["python"],
+        arguments=["-B", "-", "$[toolrunner_output_file]"],
         input=Input(
             mode="pipe",
         ),
@@ -63,4 +64,5 @@ def on_exit(status_code: int):
     logging.info(f"Process exited with {status_code}")
 
 
-run_command(cmd, on_exit)
+if __name__ == "__main__":
+    run_command(cmd, on_exit)
