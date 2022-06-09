@@ -716,7 +716,7 @@ class View:
     def is_primary(self) -> bool:
         """Whether view is the primary view into a Buffer. Will only be False if the user has opened multiple views into a file."""
         ...
-    def window(self) -> None:
+    def window(self) -> Optional[Window]:
         """A reference to the window containing the view, if any."""
         ...
     def clones(self) -> [View]:

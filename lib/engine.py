@@ -211,7 +211,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
     try:
-        sp = subprocess.Popen(
+        tool_process = subprocess.Popen(
             args=command_array,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -225,24 +225,24 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
         raise Exception(f"Executable not found: {err}")
 
     command.output_provider.writeline("> Process started\n")
-    assert sp.stdin is not None
+    assert tool_process.stdin is not None
 
     _logger.info("Feeding input")
 
-    sp.stdin.write(input_stream)
-    sp.stdin.close()
+    tool_process.stdin.write(input_stream)
+    tool_process.stdin.close()
 
     def subprocess_thread():
-        assert sp.stdout is not None
+        assert tool_process.stdout is not None
 
         command.output_provider.writeline("> Reading stdout\n")
-        while line := sp.stdout.readline():
+        while line := tool_process.stdout.readline():
             command.output_provider.writeline(line.decode(command.tool.output.codec))
-        sp.wait()
+        tool_process.wait()
         command.output_provider.writeline("> Process finished\n")
 
         if on_exit_callback is not None:
-            on_exit_callback(sp.returncode)
+            on_exit_callback(tool_process.returncode)
 
     # subprocess_thread()
     th = threading.Thread(target=subprocess_thread, daemon=True)

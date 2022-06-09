@@ -58,4 +58,9 @@ with open(sys.argv[1], mode="w", buffering=1) as out:
     environment={"PYTHONUNBUFFERED": "1"},
 )
 
-run_command(cmd)
+
+def on_exit(status_code: int):
+    logging.info(f"Process exited with {status_code}")
+
+
+run_command(cmd, on_exit)

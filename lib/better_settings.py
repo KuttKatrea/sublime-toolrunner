@@ -32,7 +32,7 @@ _valid_scopes = {SCOPE_DEFAULT, SCOPE_OS, SCOPE_HOST, SCOPE_HOST_OS}
 _logger = logging.getLogger(__name__)
 
 
-class _BetterSettings(object):
+class _BetterSettings:
     def __init__(self, default_settings_dir, scoped_settings):
         self.default_settings_dir = default_settings_dir
         self.scoped_settings = scoped_settings
@@ -135,9 +135,7 @@ def load_for(default_settings_dir, settings_name):
 
 def _ensure_valid_scope(scope):
     if scope not in _valid_scopes:
-        raise Exception(
-            "Invalid scope: %s (Valid scopes are %s)" % (scope, _valid_scopes)
-        )
+        raise Exception(f"Invalid scope: {scope} (Valid scopes are {_valid_scopes})")
 
 
 def _build_settings_file_path(directory, filename):

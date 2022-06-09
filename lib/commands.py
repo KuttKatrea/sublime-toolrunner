@@ -22,62 +22,49 @@ def run(
     group: Union[str, None],
     profile: Union[str, None],
     default_profile: bool,
-    input_source: mapper.InputSource,
-    output_target: mapper.OutputTarget,
+    input_source: Optional[mapper.InputSource],
+    output_target: Optional[mapper.OutputTarget],
     params: Optional[dict],
 ):
-    if input_source is None:
-        input_source = mapper.InputSource.BLOCK
-
-    if output_target is None:
-        output_target = {type: "panel"}
-
-    if params is None:
-        params = {}
-
     _logger.info(
         "RUN %s/%s/%s/%s/%s", tool, group, profile, default_profile, input_source
     )
 
-    input_provider = mapper.create_input_provider_from(
-        self.window.active_view(), input_source
-    )
-
-    if not tool:
+    if not tool and not group:
         _logger.info("No tool specified, discovering...")
-        tool, group = mapper.discover_tool(input_provider)
+        tool, group = mapper.discover_tool(self.window.active_view())
 
-    _logger.info(f"Selected tool and group: {tool}, {group}")
+    _logger.info("Selected tool and group: %s, %s", tool, group)
 
     if tool is not None:
-        run_tool(self, tool, input_provider, output_target, params)
+        run_tool(self, tool, input_source, output_target, params)
     elif group is not None:
         if default_profile:
             profile = settings.get_default_profile(group)
         if profile is not None:
-            run_profile(self, group, profile, input_provider, output_target)
+            run_profile(self, group, profile, input_source, output_target)
         else:
             ask_profile_to_run(
                 self,
                 group,
-                create_run_profile_callback(self, input_provider, output_target),
+                create_run_profile_callback(self, input_source, output_target),
             )
     else:
         ask_type_to_run(
             self,
-            create_run_tool_callback(self, input_provider, output_target),
-            create_run_profile_callback(self, input_provider, output_target),
+            create_run_tool_callback(self, input_source, output_target),
+            create_run_profile_callback(self, input_source, output_target),
         )
 
 
 def create_run_tool_callback(
     self: sublime_plugin.WindowCommand,
-    input_provider: mapper.InlineInputProvider,
+    input_source: mapper.InputSource,
     output_target: mapper.OutputTarget,
 ) -> RunToolCallback:
     def run_tool_callback(tool: str):
         try:
-            run_tool(self, tool, input_provider, output_target)
+            run_tool(self, tool, input_source, output_target, {})
         except Exception as ex:
             _logger.exception("Error running tool on callback", exc_info=ex)
             util.notify(str(ex))
@@ -87,12 +74,12 @@ def create_run_tool_callback(
 
 def create_run_profile_callback(
     self: sublime_plugin.WindowCommand,
-    input_provider: mapper.InlineInputProvider,
+    input_source: mapper.InputSource,
     output_target: mapper.OutputTarget,
 ) -> RunGroupCallback:
     def run_profile_callback(group: str, profile: str):
         try:
-            run_profile(self, group, profile, input_provider, output_target)
+            run_profile(self, group, profile, input_source, output_target)
         except Exception as ex:
             _logger.exception("Error running profile on callback", exc_info=ex)
             util.notify(str(ex))
@@ -103,12 +90,24 @@ def create_run_profile_callback(
 def run_tool(
     cmd: sublime_plugin.WindowCommand,
     tool_id: str,
-    input_provider: engine.InputProvider,
-    output: mapper.OutputTarget,
-    placeholder_values: dict,
+    input_source: Optional[mapper.InputSource],
+    output: Optional[mapper.OutputTarget],
+    placeholder_values: Optional[dict],
     *args,
     **kwargs,
 ):
+    if input_source is None:
+        input_source = mapper.InputSource.AUTO_FILE
+
+    if output is None:
+        output = {"type": "panel"}
+
+    input_provider = mapper.create_input_provider_from(
+        cmd.window.active_view(), input_source
+    )
+
+    output_provider = mapper.create_output_provider(cmd, output)
+
     _logger.debug("Ignoring parameters %s, %s", args, kwargs)
 
     _logger.info("Input: %s", input_provider)
@@ -134,7 +133,7 @@ def run_tool(
     engine_cmd = engine.Command(
         tool=engine_tool,
         input_provider=input_provider,
-        output_provider=mapper.create_output_provider(cmd, output),
+        output_provider=output_provider,
         placeholders_values=placeholder_values,
         environment={"PYTHONUNBUFFERED": "1"},
         platform=sublime.platform(),
@@ -153,8 +152,8 @@ def run_profile(
     cmd: sublime_plugin.WindowCommand,
     group: str,
     profile: str,
-    input_provider: engine.InputProvider,
-    output: mapper.OutputTarget,
+    input_source: Optional[mapper.InputSource],
+    output: Optional[mapper.OutputTarget],
 ):
     group_descriptor = None
     profile_descriptor = None
@@ -174,12 +173,20 @@ def run_profile(
 
     tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
 
-    # self._desc = "%s/%s" % (selected_group, selected_profile)
+    input_source = (
+        input_source
+        or profile_descriptor.get("input_source")
+        or group_descriptor.get("input_source")
+    )
+    output = (
+        output or profile_descriptor.get("output") or group_descriptor.get("output")
+    )
 
     run_tool(
         cmd=cmd,
+        desc=f"{group}/{profile}",
         tool_id=tool_id,
-        input_provider=input_provider,
+        input_source=input_source,
         output=output,
         placeholder_values=profile_descriptor.get("params", {}),
     )

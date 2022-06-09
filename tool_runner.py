@@ -23,7 +23,6 @@ class ToolRunner(sublime_plugin.WindowCommand):
         output: Optional[mapper.OutputTarget] = None,
         params: Optional[dict] = None,
     ):
-
         try:
             commands.run(
                 self,
@@ -126,10 +125,11 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         setting_value = settings.get_setting(settings_key, None)
 
         _logger.info(
-            "Checking setting: %s %s %s (%s)",
+            "Checking setting: %s > %s %s %s (%s)",
             settings_key,
-            operand,
             setting_value,
+            operator,
+            operand,
             type(setting_value),
         )
 
@@ -142,7 +142,7 @@ class ToolRunnerListener(sublime_plugin.EventListener):
         return None
 
     def on_pre_close(self, view):
-        mapper.on_pre_close_view(self, view)
+        commands.on_pre_close_view(self, view)
         # manager.remove_source_view(view)
         # manager.remove_target_view(view)
         pass

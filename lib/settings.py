@@ -156,7 +156,8 @@ def get_scopes_mapping() -> dict:
             better_settings.SCOPE_HOST_OS, "user_scopes_mapping", {}
         ),
     ):
-        scopes_mapping.update(settings_map)
+        if settings_map:
+            scopes_mapping.update(settings_map)
 
     return scopes_mapping
 
