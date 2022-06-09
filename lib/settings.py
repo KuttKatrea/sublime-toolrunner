@@ -24,28 +24,32 @@ _settings = better_settings.load_for(basepackage, "ToolRunner")
 
 _logger = logging.getLogger("ToolRunner:Settings")
 
+_settings = None
 
-_loaded_settings = better_settings.load_for(basepackage, "ToolRunner")
+
+def settings():
+    global _settings
+    if not _settings:
+        _settings = better_settings.load_for(basepackage, "ToolRunner")
+    return _settings
 
 
 def get_setting(setting_name, default=None):
-    return _loaded_settings.get(setting_name, default)
+    return settings().get(setting_name, default)
 
 
 def set_setting(setting_name, setting_value):
-    _loaded_settings.set(better_settings.SCOPE_HOST_OS, setting_name, setting_value)
-    _loaded_settings.save()
+    settings().set(better_settings.SCOPE_HOST_OS, setting_name, setting_value)
+    settings().save()
 
 
 def get_groups():
-    groups = _loaded_settings.get_scoped(
-        better_settings.SCOPE_HOST_OS, "user_groups", []
-    ) or []
-    groups += _loaded_settings.get_scoped(better_settings.SCOPE_HOST, "user_groups")  or []
-    groups += _loaded_settings.get_scoped(better_settings.SCOPE_OS, "user_groups")  or []
-    groups += _loaded_settings.get_scoped(
-        better_settings.SCOPE_DEFAULT, "user_groups"
-    ) or []
+    groups = (
+        settings().get_scoped(better_settings.SCOPE_HOST_OS, "user_groups", []) or []
+    )
+    groups += settings().get_scoped(better_settings.SCOPE_HOST, "user_groups") or []
+    groups += settings().get_scoped(better_settings.SCOPE_OS, "user_groups") or []
+    groups += settings().get_scoped(better_settings.SCOPE_DEFAULT, "user_groups") or []
 
     return groups
 
@@ -80,7 +84,7 @@ def get_override(tool_id):
     if tool_id in project_tool_overrides:
         return project_tool_overrides[tool_id]
 
-    return _loaded_settings.get("user_tool_overrides", {}).get(tool_id)
+    return settings().get("user_tool_overrides", {}).get(tool_id)
 
 
 def _build_tool_list():
@@ -90,11 +94,11 @@ def _build_tool_list():
     _tool_list = []
 
     for settings_set in (
-        _loaded_settings.get_scoped(better_settings.SCOPE_HOST_OS, "user_tools", []),
-        _loaded_settings.get_scoped(better_settings.SCOPE_HOST, "user_tools", []),
-        _loaded_settings.get_scoped(better_settings.SCOPE_OS, "user_tools", []),
-        _loaded_settings.get_scoped(better_settings.SCOPE_DEFAULT, "user_tools", []),
-        _loaded_settings.get_scoped(better_settings.SCOPE_DEFAULT, "default_tools", []),
+        settings().get_scoped(better_settings.SCOPE_HOST_OS, "user_tools", []),
+        settings().get_scoped(better_settings.SCOPE_HOST, "user_tools", []),
+        settings().get_scoped(better_settings.SCOPE_OS, "user_tools", []),
+        settings().get_scoped(better_settings.SCOPE_DEFAULT, "user_tools", []),
+        settings().get_scoped(better_settings.SCOPE_DEFAULT, "default_tools", []),
     ):
         for tool_item in settings_set:
             name = tool_item.get("name")
@@ -153,27 +157,19 @@ def register_on_plugin_loaded(callback):
 
 
 def open_settings(window, scope):
-    _loaded_settings.open_settings(window, scope)
+    settings().open_settings(window, scope)
 
 
 def get_scopes_mapping() -> dict:
     scopes_mapping = {}
     for settings_map in (
-        _loaded_settings.get_scoped(
+        settings().get_scoped(
             better_settings.SCOPE_DEFAULT, "default_scopes_mapping", {}
         ),
-        _loaded_settings.get_scoped(
-            better_settings.SCOPE_DEFAULT, "user_scopes_mapping", {}
-        ),
-        _loaded_settings.get_scoped(
-            better_settings.SCOPE_OS, "user_scopes_mapping", {}
-        ),
-        _loaded_settings.get_scoped(
-            better_settings.SCOPE_HOST, "user_scopes_mapping", {}
-        ),
-        _loaded_settings.get_scoped(
-            better_settings.SCOPE_HOST_OS, "user_scopes_mapping", {}
-        ),
+        settings().get_scoped(better_settings.SCOPE_DEFAULT, "user_scopes_mapping", {}),
+        settings().get_scoped(better_settings.SCOPE_OS, "user_scopes_mapping", {}),
+        settings().get_scoped(better_settings.SCOPE_HOST, "user_scopes_mapping", {}),
+        settings().get_scoped(better_settings.SCOPE_HOST_OS, "user_scopes_mapping", {}),
     ):
         if settings_map:
             scopes_mapping.update(settings_map)
@@ -184,19 +180,17 @@ def get_scopes_mapping() -> dict:
 def get_extensions_mapping():
     scopes_mapping = {}
     for settings_map in (
-        _loaded_settings.get_scoped(
+        settings().get_scoped(
             better_settings.SCOPE_DEFAULT, "default_extensions_mapping", {}
         ),
-        _loaded_settings.get_scoped(
+        settings().get_scoped(
             better_settings.SCOPE_DEFAULT, "user_extensions_mapping", {}
         ),
-        _loaded_settings.get_scoped(
-            better_settings.SCOPE_OS, "user_extensions_mapping", {}
-        ),
-        _loaded_settings.get_scoped(
+        settings().get_scoped(better_settings.SCOPE_OS, "user_extensions_mapping", {}),
+        settings().get_scoped(
             better_settings.SCOPE_HOST, "user_extensions_mapping", {}
         ),
-        _loaded_settings.get_scoped(
+        settings().get_scoped(
             better_settings.SCOPE_HOST_OS, "user_extensions_mapping", {}
         ),
     ):

@@ -1,11 +1,10 @@
 import logging
-from functools import partial
 from typing import Any, Optional, Union
 
 import sublime
 import sublime_plugin
 
-from .lib import commands, debug, manager, mapper, settings, util
+from .lib import commands, debug, manager, settings, util
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -82,10 +81,7 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
         self.set_group_profile()
 
     def ask_group_and_switch_profile(self):
-        self.groups = [
-            group["name"]
-            for group in settings.get_groups()
-        ]
+        self.groups = [group["name"] for group in settings.get_groups()]
 
         if len(self.groups) <= 0:
             sublime.error_message("There are no groups configured")
@@ -114,9 +110,7 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
     def switch_profile(self):
         profiles = settings.get_profiles(self.group_selected)
 
-        self.profile_list = [
-            profile["name"] for profile in profiles
-        ]
+        self.profile_list = [profile["name"] for profile in profiles]
 
         def on_ask_profile(selected_index):
             if selected_index > -1:

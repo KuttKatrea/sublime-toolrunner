@@ -3,7 +3,7 @@ import logging
 import os.path
 import re
 from enum import Enum
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 
 import sublime
 import sublime_plugin
