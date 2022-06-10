@@ -14,7 +14,7 @@ from .src.tool_runner.cmd.main import ToolRunner
 from .src.tool_runner.cmd.open_settings import ToolRunnerOpenSettings
 from .src.tool_runner.cmd.switch_default_profile import ToolRunnerSwitchDefaultProfile
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 def plugin_loaded():

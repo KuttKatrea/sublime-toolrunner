@@ -16,7 +16,7 @@ _svids_by_tvid = dict()
 _command_for_source_view = dict()
 
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 def cancel_command_for_view_id(view_id, wait=False):

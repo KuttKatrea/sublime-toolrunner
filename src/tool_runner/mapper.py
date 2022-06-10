@@ -48,7 +48,7 @@ class OutputTarget:
 basepackage = re.sub(r"\.lib$", "", __package__)
 pluginname = "ToolRunner"
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 TR_SETTING_TARGET_OUTPUT_NAME = "tr-target-output-name"
 TR_SETTING_IS_OUTPUT = "tr-is-output"

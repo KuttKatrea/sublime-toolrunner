@@ -13,7 +13,7 @@ RunGroupCallback = Callable[[str, str], None]
 SELECTED_TYPE_TOOL = 0
 SELECTED_TYPE_GROUP = 1
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 class ToolRunner(sublime_plugin.WindowCommand):

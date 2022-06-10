@@ -4,7 +4,7 @@ from typing import Any, Optional
 import sublime
 import sublime_plugin
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 from .. import mapper, settings
 

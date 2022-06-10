@@ -5,7 +5,7 @@ from typing import Callable, TypeVar, cast
 
 from . import util
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 T = TypeVar("T", bound=Callable)
 

@@ -18,11 +18,11 @@ _tool_list: List[Dict[str, "sublime.Value"]] = []
 _plugin_loaded = False
 _on_plugin_loaded_callbacks = list()
 
-basepackage = re.sub(r"\.lib$", "", __package__)
+basepackage = re.sub(r"\.src$", "", __package__)
 
 _settings = better_settings.load_for(basepackage, "ToolRunner")
 
-_logger = logging.getLogger(__package__)
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 _settings = None
 

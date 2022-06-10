@@ -20,7 +20,7 @@ ResultsMode = Literal["panel", "buffer"]
 PlaceholderType = Literal["positional", "named", "flag"]
 PlaceholderValue = Union[str, bool]
 
-_logger = logging.getLogger("ToolRunner:Engine")
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 @dataclass()
