@@ -3,6 +3,9 @@ name = "tool_runner"
 version = "2021.2.1"
 description = ""
 authors = ["Alan Reyes <kutt@katrea.net>"]
+packages = [
+    { include = "tool_runner", from = "src" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"

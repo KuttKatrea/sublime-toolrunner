@@ -96,7 +96,7 @@ This is the model for tool configuration options (default_tools, user_tools)
         "codec": "utf_8"
       },
       // Configuration for the execution results view
-      "output": {
+      "output_target": {
         // "buffer" creates a normal view next to the current view
         // "panel" creates an output panel (like a build command)
         "mode": "buffer",

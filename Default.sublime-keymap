@@ -12,7 +12,7 @@
            },
     "context": [
       {
-        "key": "toolrunner.default_keymap_enabled"
+        "key": "tool_runner.default_keymap_enabled"
       }
     ]
   },
@@ -25,7 +25,7 @@
     "command": "tool_runner_cancel_current",
     "context": [
       {
-        "key": "toolrunner.default_keymap_enabled"
+        "key": "tool_runner.default_keymap_enabled"
       }
     ]
   },
@@ -38,7 +38,7 @@
     "command": "tool_runner_focus_output",
     "context": [
       {
-        "key": "toolrunner.default_keymap_enabled"
+        "key": "tool_runner.default_keymap_enabled"
       }
     ]
   },
@@ -51,7 +51,7 @@
     "command": "tool_runner_focus_source",
     "context": [
       {
-        "key": "toolrunner.default_keymap_enabled"
+        "key": "tool_runner.default_keymap_enabled"
       }
     ]
   },
@@ -65,7 +65,7 @@
        },
     "context": [
       {
-        "key": "toolrunner.enable_default_tools_keymap"
+        "key": "tool_runner.enable_default_tools_keymap"
       }
     ]
   },
@@ -80,7 +80,7 @@
     },
     "context": [
       {
-        "key": "toolrunner.enable_default_tools_keymap"
+        "key": "tool_runner.enable_default_tools_keymap"
       }
     ]
   },
@@ -95,7 +95,7 @@
     },
     "context": [
       {
-        "key": "toolrunner.enable_default_tools_keymap"
+        "key": "tool_runner.enable_default_tools_keymap"
       },
       {
         "key": "selector",

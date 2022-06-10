@@ -3,7 +3,7 @@ Development tasks for usage with Invoke
 """
 from invoke import Exit, UnexpectedExit, run, task
 
-SOURCE_PATHS = "."
+SOURCE_PATHS = "tool_runner_plugin.py src tasks test"
 
 
 @task()

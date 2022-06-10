@@ -10,7 +10,7 @@ Vector = Tuple[DIP, DIP]
 Point = int
 """Represents the offset from the beginning of the editor buffer."""
 
-Value = Union[bool, str, int, float, List[Value], Dict[str, Value]]
+Value = Union[bool, str, int, float, List["Value"], Dict[str, "Value"]]
 """A JSON-equivalent value."""
 
 CommandArgs = Optional[Dict[str, Value]]
@@ -134,7 +134,7 @@ class Settings:
         """Same as __contains__."""
     def set(self, key: str, value: Value):
         """Same as __setitem__."""
-    def get(self, key: str, default: Value = None) -> Value:
+    def get(self, key: str, default: Optional[Value] = None) -> Value:
         """Same as __getitem__."""
     def erase(self, key: str):
         """Same as __delitem__."""
@@ -250,7 +250,7 @@ class Window:
         ...
     def file_history(
         self,
-    ) -> [str]:
+    ) -> List[str]:
         """
         Get the list of previously opened files. This is the same list as File > Open Recent.
         """
@@ -284,7 +284,7 @@ class Window:
         Switches to the given View.
         """
         ...
-    def select_sheets(self, sheets: [Sheet]):
+    def select_sheets(self, sheets: List[Sheet]):
         """
         Change the selected sheets for the entire window.
         """
@@ -296,6 +296,7 @@ class Window:
         Bring the window in front of any other windows.
         """
         ...
+
     def get_sheet_index(self, sheet: Sheet):
         """
         :returns: The a tuple of the group and index within the group of the given Sheet.
@@ -317,7 +318,7 @@ class Window:
         """
         ...
     def move_sheets_to_group(
-        self, sheets: [Sheet], group: int, insertion_idx=-1, select=True
+        self, sheets: List[Sheet], group: int, insertion_idx=-1, select=True
     ):
         """
          Moves all provided sheets to specified group at insertion index provided. If an index is not provided defaults to last index of the destination group.
@@ -329,12 +330,12 @@ class Window:
         ...
     def sheets(
         self,
-    ) -> [Sheet]:
+    ) -> List[Sheet]:
         """
         :return: All open sheets in the window.
         """
         ...
-    def views(self, *, include_transient=False) -> [View]:
+    def views(self, *, include_transient=False) -> List[View]:
         """
         :param include_transient:  Whether the transient sheet should be included.
         :return: All open sheets in the window.
@@ -342,12 +343,12 @@ class Window:
         ...
     def selected_sheets(
         self,
-    ) -> [Sheet]:
+    ) -> List[Sheet]:
         """
         :return: All selected sheets in the window.
         """
         ...
-    def selected_sheets_in_group(self, group: int) -> [Sheet]:
+    def selected_sheets_in_group(self, group: int) -> List[Sheet]:
         """
         :return: All selected sheets in the specified group.
         """
@@ -362,12 +363,12 @@ class Window:
         :return: The currently focused View in the given group.
         """
         ...
-    def sheets_in_group(self, group: int) -> [Sheet]:
+    def sheets_in_group(self, group: int) -> List[Sheet]:
         """
         :return: A list of all sheets in the specified group.
         """
         ...
-    def views_in_group(self, group: int) -> [View]:
+    def views_in_group(self, group: int) -> List[View]:
         """
         :return: A list of all views in the specified group.
         """
@@ -429,7 +430,7 @@ class Window:
         ...
     def panels(
         self,
-    ) -> [str]:
+    ) -> List[str]:
         """
         Returns a list of the names of all panels that have not been marked as unlisted. Includes certain built-in panels in addition to output panels.
         """
@@ -604,7 +605,7 @@ class Window:
         :return: the found symbol locations.
         """
         ...
-    def lookup_symbol_in_index(self, symbol: str) -> [SymbolLocation]:
+    def lookup_symbol_in_index(self, symbol: str) -> List[SymbolLocation]:
         """
         All locations where the symbol is defined across files in the current project.
         Deprecated
@@ -612,7 +613,7 @@ class Window:
         Use symbol_locations() instead.
         """
         ...
-    def lookup_symbol_in_open_files(self, symbol: str) -> [SymbolLocation]:
+    def lookup_symbol_in_open_files(self, symbol: str) -> List[SymbolLocation]:
         """
         All locations where the symbol is defined across open files.
         Deprecated
@@ -620,7 +621,7 @@ class Window:
         Use symbol_locations() instead.
         """
         ...
-    def lookup_references_in_index(self, symbol: str) -> [SymbolLocation]:
+    def lookup_references_in_index(self, symbol: str) -> List[SymbolLocation]:
         """
         All locations where the symbol is referenced across files in the current project.
         Deprecated
@@ -628,7 +629,7 @@ class Window:
         Use symbol_locations() instead.
         """
         ...
-    def lookup_references_in_open_files(self, symbol: str) -> [SymbolLocation]:
+    def lookup_references_in_open_files(self, symbol: str) -> List[SymbolLocation]:
         """
         All locations where the symbol is referenced across open files.
         Deprecated
@@ -719,13 +720,13 @@ class View:
     def window(self) -> Optional[Window]:
         """A reference to the window containing the view, if any."""
         ...
-    def clones(self) -> [View]:
+    def clones(self) -> List[View]:
         """All the other views into the same Buffer. See View."""
         ...
     def file_name(self) -> Optional[str]:
         """The full name of the file associated with the sheet, or None if it doesn’t exist on disk."""
         ...
-    def close(self, on_close=Callable[View]) -> bool:
+    def close(self, on_close=Callable[[View], None]) -> bool:
         """Closes the view."""
         ...
     def retarget(self, new_fname: str):
@@ -834,7 +835,7 @@ class View:
         flags=FindFlags.NONE,
         fmt: Optional[str] = None,
         extractions: Optional[List[str]] = None,
-    ) -> [Region]:
+    ) -> List[Region]:
         """
         :param pattern: The regex or literal pattern to search by.
         :param flags: Controls various behaviors of find. See FindFlags.
@@ -853,7 +854,7 @@ class View:
         Examples of keys are TM_COMMENT_START and showInSymbolList.
         """
         ...
-    def extract_tokens_with_scopes(self, region: Region) -> List[Region, str]:
+    def extract_tokens_with_scopes(self, region: Region) -> List[Tuple[Region, str]]:
         """
         :param region: The region from which to extract tokens and scopes.
         :return: A list of pairs containing the Region and the scope of each token.
@@ -942,7 +943,7 @@ class View:
         :return: A list of lines (in sorted order) intersecting the provided Region.
         """
         ...
-    def split_by_newlines(self, region: Region) -> [Region]:
+    def split_by_newlines(self, region: Region) -> List[Region]:
         """
         Splits the region up such that each Region returned exists on exactly one line.
         """
@@ -1115,11 +1116,11 @@ class View:
     def add_regions(
         self,
         key: str,
-        regions: [Region],
+        regions: List[Region],
         scope="",
         icon="",
         flags=RegionFlags.NONE,
-        annotations: [str] = [],
+        annotations: List[str] = [],
         annotation_color="",
         on_navigate: Optional[Callable[[str], None]] = None,
         on_close: Optional[Callable[[], None]] = None,
@@ -1167,7 +1168,7 @@ class View:
         Called when the annotations are closed.
         """
         ...
-    def get_regions(self, key: str) -> [Region]:
+    def get_regions(self, key: str) -> List[Region]:
         """
         :return: The regions associated with the given key, if any.
         """
@@ -1197,7 +1198,7 @@ class View:
         :return: The syntax assigned to the buffer.
         """
         ...
-    def symbols(self) -> List[Region, str]:
+    def symbols(self) -> List[Tuple[Region, str]]:
         """
         Extract all the symbols defined in the buffer.
 
@@ -1206,14 +1207,14 @@ class View:
         Use symbol_regions() instead.
         """
         ...
-    def get_symbols(self) -> List[Region, str]:
+    def get_symbols(self) -> List[Tuple[Region, str]]:
         """
         Deprecated
 
         Use symbol_regions() instead.
         """
         ...
-    def indexed_symbols(self) -> List[Region, str]:
+    def indexed_symbols(self) -> List[Tuple[Region, str]]:
         """
         A list of the Region and name of symbols.
         Deprecated
@@ -1221,7 +1222,7 @@ class View:
         Use indexed_symbol_regions() instead.
         """
         ...
-    def indexed_references(self) -> List[Region, str]:
+    def indexed_references(self) -> List[Tuple[Region, str]]:
         """
         A list of the Region and name of symbols.
         Deprecated
@@ -1281,7 +1282,7 @@ class View:
         Set the overwrite status. See overwrite_status().
         """
         ...
-    def show_popup_menu(self, items: [str], on_done: Callable[[int], None], flags=0):
+    def show_popup_menu(self, items: List[str], on_done: Callable[[int], None], flags=0):
         """
         Show a popup menu at the caret, for selecting an item in a list.
         :param items: The list of entries to show in the list.
@@ -1371,16 +1372,16 @@ class View:
 class Buffer:
     """Represents a text buffer. Multiple View objects may share the same buffer."""
 
-    def id() -> int:
+    def id(self) -> int:
         """Returns a number that uniquely identifies this buffer."""
         ...
-    def file_name() -> Optional[str]:
+    def file_name(self) -> Optional[str]:
         """The full name file the file associated with the buffer, or None if it doesn’t exist on disk."""
         ...
-    def views() -> [View]:
+    def views(self) -> List[View]:
         """Returns a list of all views that are associated with this buffer."""
         ...
-    def primary_view() -> View:
+    def primary_view(self) -> View:
         """The primary view associated with this buffer."""
         ...
 
@@ -1402,56 +1403,56 @@ class Region:
         :param xpos:  In a selection this is the target horizontal position of the region. This affects behavior when pressing the up or down keys. Use -1 if undefined.
         """
         ...
-    def __len__() -> int:
+    def __len__(self, ) -> int:
         """
         :return: The size of the region.
         """
         ...
-    def __contains__(v: Union[Region, Point]) -> bool:
+    def __contains__(self, v: Union[Region, Point]) -> bool:
         """
         :return: Whether the provided Region or Point is entirely contained within this region.
         """
-    def to_tuple():
+    def to_tuple(self, ):
         """
         :return: This region as a tuple (a, b).
         """
         ...
-    def empty() -> bool:
+    def empty(self, ) -> bool:
         """
         :return: Whether the region is empty, ie. a == b.
         """
         ...
-    def begin() -> Point:
+    def begin(self, ) -> Point:
         """
         :return: The smaller of a and b.
         """
         ...
-    def end() -> Point:
+    def end(self, ) -> Point:
         """
         :return: The larger of a and b.
         """
         ...
-    def size() -> int:
+    def size(self, ) -> int:
         """
         Equivalent to __len__.
         """
         ...
-    def contains(x: Point) -> bool:
+    def contains(self, x: Point) -> bool:
         """
         Equivalent to __contains__.
         """
         ...
-    def cover(region: Region) -> Region:
+    def cover(self, region: Region) -> Region:
         """
         :return: A Region spanning both regions.
         """
         ...
-    def intersection(region: Region) -> Region:
+    def intersection(self, region: Region) -> Region:
         """
         :return: A Region covered by both regions.
         """
         ...
-    def intersects(region: Region) -> bool:
+    def intersects(self, region: Region) -> bool:
         """
         :return: Whether the provided region intersects this region.
         """
@@ -1555,6 +1556,7 @@ OP_REGEX_MATCH = QueryOperator.REGEX_MATCH
 OP_NOT_REGEX_MATCH = QueryOperator.NOT_REGEX_MATCH
 OP_REGEX_CONTAINS = QueryOperator.REGEX_CONTAINS
 OP_NOT_REGEX_CONTAINS = QueryOperator.NOT_REGEX_CONTAINS
+
 
 def set_timeout(callback, delay) -> None:
     """Runs the callback in the main thread after the given delay (in milliseconds). Callbacks with an equal delay will be run in the order they were added."""
@@ -1810,3 +1812,26 @@ def channel() -> str:
     """
     Returns the release channel this build of Sublime Text is from: "dev" or "stable"
     """
+
+
+####TBD:
+class Sheet:
+    ...
+
+class KindId:
+    ...
+
+class CompletionItem:
+    ...
+
+class NewFileFlags:
+    ...
+
+class SymbolLocation:
+    ...
+
+class SymbolFlags:
+    ...
+
+class SymbolSource:
+    ...

@@ -3,12 +3,13 @@ import logging
 import os.path
 import re
 from enum import Enum
-from typing import List, NamedTuple, Optional, Tuple
+from functools import partial
+from typing import Callable, List, NamedTuple, Optional, Tuple, Union
 
 import sublime
 import sublime_plugin
 
-from . import engine, settings
+from . import debug, engine, mapper, settings, util
 
 
 class InputSource(str, Enum):
@@ -47,7 +48,7 @@ class OutputTarget:
 basepackage = re.sub(r"\.lib$", "", __package__)
 pluginname = "ToolRunner"
 
-_logger = logging.getLogger("ToolRunner:Mapper")
+_logger = logging.getLogger(__package__)
 
 TR_SETTING_TARGET_OUTPUT_NAME = "tr-target-output-name"
 TR_SETTING_IS_OUTPUT = "tr-is-output"
@@ -210,10 +211,10 @@ def find_view_by_id(view_id):
     return None
 
 
-def create_output_provider(cmd: sublime_plugin.WindowCommand, output: OutputTarget):
-    _logger.info(f"Output configuration: {output}")
+def create_output_provider(cmd: sublime_plugin.WindowCommand, output_target: OutputTarget):
+    _logger.info(f"Output configuration: {output_target}")
 
-    if output.mode == OutputTargetMode.NONE:
+    if output_target.mode == OutputTargetMode.NONE:
         return NullOutputProvider()
 
     source_view = cmd.window.active_view()
@@ -327,3 +328,118 @@ def show_panel(window: sublime.Window, panel_name: str):
 
 def close_panel(window: sublime.Window, panel_name: str):
     window.destroy_output_panel(panel_name)
+
+
+def run_tool(
+    cmd: sublime_plugin.WindowCommand,
+    tool_id: str,
+    input_source: Optional[str],
+    output_target: Optional[dict],
+    placeholder_values: Optional[dict],
+    *args,
+    **kwargs,
+):
+    if input_source is None:
+        input_source = mapper.InputSource.AUTO_FILE
+    else:
+        input_source = mapper.InputSource(input_source)
+
+    if output_target is None:
+        output_target = mapper.OutputTarget()
+    else:
+        output_target = mapper.OutputTarget(**output_target)
+
+    input_provider = mapper.create_input_provider_from(
+        cmd.window.active_view(), input_source
+    )
+
+    output_provider = mapper.create_output_provider(cmd, output_target)
+
+    _logger.debug("Ignoring parameters %s, %s", args, kwargs)
+
+    _logger.info("Input: %s", input_provider)
+
+    tool_settings = settings.get_tool(tool_id)
+
+    if tool_settings is None:
+        raise Exception(f"Tool {tool_id} doesn't exists")
+
+    util.notify(f"Running {tool_settings['name']}")
+
+    engine_tool = engine.Tool(
+        name=tool_settings.get("name"),
+        cmd=tool_settings.get("cmd", [tool_id]),
+        arguments=tool_settings.get("arguments", []),
+        input=engine.Input(**tool_settings.get("input", {})),
+        output=engine.Output(**tool_settings.get("output", {})),
+        placeholders={
+            key: engine.Placeholder(**value)
+            for key, value in tool_settings.get("params", {}).items()
+        },
+    )
+
+    engine_cmd = engine.Command(
+        tool=engine_tool,
+        input_provider=input_provider,
+        output_provider=output_provider,
+        placeholders_values=placeholder_values,
+        environment={"PYTHONUNBUFFERED": "1"},
+        platform=sublime.platform(),
+    )
+
+    def callback(return_code: int):
+        if return_code != 0:
+            util.notify("Command finished with error.")
+        else:
+            util.notify("Command finished successfully.")
+
+    engine.run_command(engine_cmd, callback)
+
+
+def run_group(
+    cmd: sublime_plugin.WindowCommand,
+    group: str,
+    profile: str,
+    input_source: Optional[str],
+    output_target: Optional[dict],
+):
+    group_descriptor = None
+    profile_descriptor = None
+
+    group_list = settings.get_groups()
+
+    for single_group in group_list:
+        if single_group["name"] == group:
+            group_descriptor = single_group
+            break
+
+    if group_descriptor is None:
+        raise Exception(f"No group named {group}")
+
+    _logger.info("Running command for group: %s", group_descriptor)
+
+    for single_profile in group_descriptor["profiles"]:
+        if single_profile["name"] == profile:
+            profile_descriptor = single_profile
+
+    _logger.info("Running command for profile: %s", profile_descriptor)
+
+    tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
+
+    input_source = (
+        input_source
+        or profile_descriptor.get("input_source")
+        or group_descriptor.get("input_source")
+    )
+    output_target = (
+        output_target or profile_descriptor.get("output_target") or group_descriptor.get("output_target")
+    )
+
+    run_tool(
+        cmd=cmd,
+        desc=f"{group}/{profile}",
+        tool_id=tool_id,
+        input_source=input_source,
+        output_target=output_target,
+        placeholder_values=profile_descriptor.get("params", {}),
+    )

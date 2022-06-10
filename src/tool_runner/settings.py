@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import sublime
 
@@ -12,8 +12,8 @@ class ToolRunnerSettings:
         self.tool_list = []
 
 
-_tool_list = None
-_tool_map: Optional[dict] = None
+_tool_map: Dict[str, Dict[str, "sublime.Value"]] = {}
+_tool_list: List[Dict[str, "sublime.Value"]] = []
 
 _plugin_loaded = False
 _on_plugin_loaded_callbacks = list()
@@ -22,19 +22,19 @@ basepackage = re.sub(r"\.lib$", "", __package__)
 
 _settings = better_settings.load_for(basepackage, "ToolRunner")
 
-_logger = logging.getLogger("ToolRunner:Settings")
+_logger = logging.getLogger(__package__)
 
 _settings = None
 
 
-def settings():
+def settings() -> better_settings._BetterSettings:
     global _settings
     if not _settings:
         _settings = better_settings.load_for(basepackage, "ToolRunner")
     return _settings
 
 
-def get_setting(setting_name, default=None):
+def get_setting(setting_name, default=None) -> Any:
     return settings().get(setting_name, default)
 
 

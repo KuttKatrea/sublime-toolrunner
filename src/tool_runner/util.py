@@ -7,7 +7,7 @@ import sublime
 
 from . import settings
 
-_logger = logging.getLogger("ToolRunner:Util")
+_logger = logging.getLogger(__package__)
 
 
 def expand(value, view):

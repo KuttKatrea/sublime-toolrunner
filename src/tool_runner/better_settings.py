@@ -29,7 +29,7 @@ ASK_SCOPE_ITEMS = [
 __DEBUG__ = False
 
 _valid_scopes = {SCOPE_DEFAULT, SCOPE_OS, SCOPE_HOST, SCOPE_HOST_OS}
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__package__)
 
 
 class _BetterSettings:
