@@ -2,7 +2,7 @@
   // General
   {
     "keys": [
-      "ctrl+k",
+      "primary+k",
       "r",
       "x"
     ],
@@ -18,7 +18,7 @@
   },
   {
     "keys": [
-      "ctrl+k",
+      "primary+k",
       "r",
       "c"
     ],
@@ -31,7 +31,7 @@
   },
   {
     "keys": [
-      "ctrl+k",
+      "primary+k",
       "r",
       "o"
     ],
@@ -44,7 +44,7 @@
   },
   {
     "keys": [
-      "ctrl+k",
+      "primary+k",
       "r",
       "s"
     ],
@@ -71,7 +71,7 @@
   },
   {
     "keys": [
-      "ctrl+f5"
+      "primary+f5"
     ],
     "command": "tool_runner",
     "args": {
@@ -86,7 +86,7 @@
   },
   {
     "keys": [
-      "ctrl+f5"
+      "primary+f5"
     ],
     "command": "tool_runner",
     "args": {

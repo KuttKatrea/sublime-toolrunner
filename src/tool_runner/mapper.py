@@ -3,13 +3,12 @@ import logging
 import os.path
 import re
 from enum import Enum
-from functools import partial
-from typing import Callable, List, NamedTuple, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple
 
 import sublime
 import sublime_plugin
 
-from . import debug, engine, mapper, settings, util
+from . import engine, mapper, settings, util
 
 
 class InputSource(str, Enum):
@@ -211,7 +210,9 @@ def find_view_by_id(view_id):
     return None
 
 
-def create_output_provider(cmd: sublime_plugin.WindowCommand, output_target: OutputTarget):
+def create_output_provider(
+    cmd: sublime_plugin.WindowCommand, output_target: OutputTarget
+):
     _logger.info(f"Output configuration: {output_target}")
 
     if output_target.mode == OutputTargetMode.NONE:
@@ -333,29 +334,24 @@ def close_panel(window: sublime.Window, panel_name: str):
 def run_tool(
     cmd: sublime_plugin.WindowCommand,
     tool_id: str,
-    input_source: Optional[str],
-    output_target: Optional[dict],
-    placeholder_values: Optional[dict],
-    *args,
-    **kwargs,
+    desc: Optional[str] = None,
+    input_source: Optional[str] = None,
+    output_target: Optional[dict] = None,
+    placeholder_values: Optional[dict] = None,
 ):
     if input_source is None:
         input_source = mapper.InputSource.AUTO_FILE
-    else:
-        input_source = mapper.InputSource(input_source)
 
     if output_target is None:
-        output_target = mapper.OutputTarget()
-    else:
-        output_target = mapper.OutputTarget(**output_target)
+        output_target = {}
 
     input_provider = mapper.create_input_provider_from(
-        cmd.window.active_view(), input_source
+        cmd.window.active_view(), mapper.InputSource(input_source)
     )
 
-    output_provider = mapper.create_output_provider(cmd, output_target)
-
-    _logger.debug("Ignoring parameters %s, %s", args, kwargs)
+    output_provider = mapper.create_output_provider(
+        cmd, mapper.OutputTarget(**output_target)
+    )
 
     _logger.info("Input: %s", input_provider)
 
@@ -364,7 +360,10 @@ def run_tool(
     if tool_settings is None:
         raise Exception(f"Tool {tool_id} doesn't exists")
 
-    util.notify(f"Running {tool_settings['name']}")
+    if not desc:
+        desc = tool_settings["name"]
+
+    util.notify(f"Running {desc}")
 
     engine_tool = engine.Tool(
         name=tool_settings.get("name"),
@@ -398,7 +397,7 @@ def run_tool(
 
 def run_group(
     cmd: sublime_plugin.WindowCommand,
-    group: str,
+    group_id: str,
     profile: str,
     input_source: Optional[str],
     output_target: Optional[dict],
@@ -409,12 +408,12 @@ def run_group(
     group_list = settings.get_groups()
 
     for single_group in group_list:
-        if single_group["name"] == group:
+        if single_group["name"] == group_id:
             group_descriptor = single_group
             break
 
     if group_descriptor is None:
-        raise Exception(f"No group named {group}")
+        raise Exception(f"No group named {group_id}")
 
     _logger.info("Running command for group: %s", group_descriptor)
 
@@ -432,12 +431,14 @@ def run_group(
         or group_descriptor.get("input_source")
     )
     output_target = (
-        output_target or profile_descriptor.get("output_target") or group_descriptor.get("output_target")
+        output_target
+        or profile_descriptor.get("output_target")
+        or group_descriptor.get("output_target")
     )
 
     run_tool(
         cmd=cmd,
-        desc=f"{group}/{profile}",
+        desc=f"{group_id}/{profile}",
         tool_id=tool_id,
         input_source=input_source,
         output_target=output_target,

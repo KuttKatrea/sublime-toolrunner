@@ -1,18 +1,14 @@
 import logging
-from typing import Any, Optional, Union
 
-import sublime
-import sublime_plugin
-
-logging.basicConfig(level=logging.INFO)
-
-from .src.tool_runner import debug, manager, settings, util
+from .src.tool_runner import debug
 from .src.tool_runner.cmd.focus_output import ToolRunnerFocusOutput
 from .src.tool_runner.cmd.focus_source import ToolRunnerFocusSource
 from .src.tool_runner.cmd.listener import ToolRunnerListener
 from .src.tool_runner.cmd.main import ToolRunner
 from .src.tool_runner.cmd.open_settings import ToolRunnerOpenSettings
 from .src.tool_runner.cmd.switch_default_profile import ToolRunnerSwitchDefaultProfile
+
+logging.basicConfig(level=logging.INFO)
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 
@@ -33,3 +29,11 @@ def plugin_unloaded():
         _logger.exception("Error when unloading modules", exc_info=ex)
 
     _logger.info("Plugin Unloaded")
+
+
+assert ToolRunnerFocusOutput
+assert ToolRunnerFocusSource
+assert ToolRunnerListener
+assert ToolRunner
+assert ToolRunnerOpenSettings
+assert ToolRunnerSwitchDefaultProfile

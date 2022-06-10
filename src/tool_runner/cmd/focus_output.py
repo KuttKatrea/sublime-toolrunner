@@ -1,10 +1,15 @@
 import sublime_plugin
 
-from .. import mapper, util
+from .. import debug, mapper, util
 
 
 class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
-    def run(self):
+    def run(
+        self,
+        *args,
+        **kwargs,
+    ):
+        debug.log_unused_args(*args, **kwargs)
         source_view = self.window.active_view()
 
         target_view_name = source_view.settings().get(

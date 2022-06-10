@@ -1,13 +1,10 @@
 import functools
 import logging
 import sys
-from typing import Callable, TypeVar, cast
 
 from . import util
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
-
-T = TypeVar("T", bound=Callable)
 
 
 def notify_on_error(error_msg: str = "Unhandled error"):
@@ -23,6 +20,10 @@ def notify_on_error(error_msg: str = "Unhandled error"):
         return wrapper
 
     return decorator
+
+
+def log_unused_args(*args, **kwargs):
+    _logger.info("Unused parameters: {}, {}", args, kwargs)
 
 
 def forget_modules():

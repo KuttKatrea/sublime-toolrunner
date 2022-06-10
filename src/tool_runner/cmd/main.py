@@ -5,7 +5,7 @@ from typing import Callable, Optional, Union
 import sublime
 import sublime_plugin
 
-from .. import debug, mapper, settings, util
+from .. import debug, mapper, settings
 
 RunToolCallback = Callable[[str], None]
 RunGroupCallback = Callable[[str, str], None]
@@ -27,7 +27,11 @@ class ToolRunner(sublime_plugin.WindowCommand):
         input_source: Optional[str] = None,
         output_target: Optional[dict] = None,
         params: Optional[dict] = None,
+        *args,
+        **kwargs,
     ):
+        debug.log_unused_args(*args, **kwargs)
+
         _logger.info(
             "RUN %s/%s/%s/%s/%s", tool, group, profile, default_profile, input_source
         )
@@ -41,10 +45,17 @@ class ToolRunner(sublime_plugin.WindowCommand):
         _logger.info("Selected tool and group: %s, %s", tool, group)
 
         if tool is not None:
-            mapper.run_tool(self, tool, input_source, output_target, params)
+            mapper.run_tool(
+                cmd=self,
+                tool_id=tool,
+                input_source=input_source,
+                output_target=output_target,
+                placeholder_values=params,
+            )
         elif group is not None:
             if default_profile:
                 profile = settings.get_default_profile(group)
+
             if profile is not None:
                 mapper.run_group(self, group, profile, input_source, output_target)
             else:
@@ -68,7 +79,9 @@ def create_run_tool_callback(
 ) -> RunToolCallback:
     @debug.notify_on_error("Error running tool on callback")
     def run_tool_callback(tool: str):
-        mapper.run_tool(self, tool, input_source, output_target, {})
+        mapper.run_tool(
+            self, tool_id=tool, input_source=input_source, output_target=output_target
+        )
 
     return run_tool_callback
 

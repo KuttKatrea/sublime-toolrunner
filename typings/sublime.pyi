@@ -385,7 +385,7 @@ class Window:
         ...
     def layout(
         self,
-    ) -> Dict[str, sublime.Value]:
+    ) -> Dict[str, Value]:
         """
         Get the group layout of the window.
         """
@@ -399,7 +399,7 @@ class Window:
         Use layout() instead
         """
         ...
-    def set_layout(self, layout: Dict[str, sublime.Value]):
+    def set_layout(self, layout: Dict[str, Value]):
         """
         Set the group layout of the window.
         """

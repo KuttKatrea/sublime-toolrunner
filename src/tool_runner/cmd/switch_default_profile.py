@@ -3,7 +3,7 @@ import logging
 import sublime
 import sublime_plugin
 
-from .. import settings
+from .. import debug, settings
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 
@@ -19,7 +19,14 @@ class ToolRunnerSwitchDefaultProfile(sublime_plugin.WindowCommand):
 
         self.profile_list = []
 
-    def run(self, profile_group=None, profile=None):
+    def run(
+        self,
+        profile_group=None,
+        profile=None,
+        *args,
+        **kwargs,
+    ):
+        debug.log_unused_args(*args, **kwargs)
         _logger.info("Switching command for profile group: %s", str(profile_group))
         if profile_group is None:
             self.ask_group_and_switch_profile()
