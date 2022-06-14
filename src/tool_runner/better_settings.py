@@ -11,6 +11,7 @@ configuration for each host without interfering between them.
 import logging
 import platform
 from collections import OrderedDict
+from typing import Any, Mapping
 
 import sublime
 
@@ -33,18 +34,18 @@ _logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 class _BetterSettings:
-    def __init__(self, default_settings_dir, scoped_settings):
+    def __init__(self, default_settings_dir: str, scoped_settings: Mapping[str, Any]):
         self.default_settings_dir = default_settings_dir
         self.scoped_settings = scoped_settings
 
-    def get(self, setting_name, default=None):
+    def get(self, setting_name: str, default: Any = None) -> Any:
         for item in self.scoped_settings.values():
             if item.settings.has(setting_name):
                 return item.settings.get(setting_name)
 
         return default
 
-    def get_scoped(self, scope, setting_name, default=None):
+    def get_scoped(self, scope: str, setting_name: str, default: Any = None) -> Any:
         _ensure_valid_scope(scope)
         return self.scoped_settings[scope].settings.get(setting_name, default)
 

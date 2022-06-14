@@ -30,13 +30,13 @@ class Input:
     file_suffix: str = ""
     codec: str = DEFAULT_INPUT_CODEC
 
-    def is_file(self):
+    def is_file(self) -> bool:
         return self.mode in {"tmpfile-path"}
 
-    def is_pipe(self):
+    def is_pipe(self) -> bool:
         return self.mode in {"pipe"}
 
-    def is_commandline(self):
+    def is_commandline(self) -> bool:
         return self.mode in {"cmdline"}
 
 
@@ -82,7 +82,7 @@ class InputProvider(Protocol):
 
 class OutputProvider(Protocol):
     @abstractmethod
-    def writeline(self, line: str):
+    def writeline(self, line: str) -> None:
         raise NotImplementedError()
 
 
@@ -99,7 +99,7 @@ class Command:
 
 def get_command_array(
     command: Command, input_file=None, input_text=None, output_file=None
-):
+) -> List[str]:
     positional_arguments = []
     named_arguments = []
     flag_arguments = []

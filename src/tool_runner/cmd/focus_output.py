@@ -13,7 +13,7 @@ class ToolRunnerFocusOutput(sublime_plugin.WindowCommand):
         source_view = self.window.active_view()
 
         target_view_name = source_view.settings().get(
-            mapper.TR_SETTING_TARGET_OUTPUT_NAME, None
+            mapper.TR_SETTING_TARGET_OUTPUT_ID, None
         )
 
         if target_view_name:

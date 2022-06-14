@@ -38,7 +38,7 @@
 		</dict>
 	</array>
 	<key>scopeName</key>
-	<string>source.mssql_query_results</string>
+	<string>tool-runner.text.mssql-query-results</string>
 	<key>uuid</key>
 	<string>417e7aab-61ba-4587-96d4-0572fed4bf75</string>
 </dict>

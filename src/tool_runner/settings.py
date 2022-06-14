@@ -129,39 +129,11 @@ def _build_tool_list():
                 _tool_list.append(tool_item)
 
 
-def on_loaded():
-    global _plugin_loaded
-
-    if _plugin_loaded:
-        _logger.info("Plugin already loaded")
-        return
-
-    _logger.info("Registering Settings Callbacks")
-
-    if _on_plugin_loaded_callbacks is not None:
-        for callback in _on_plugin_loaded_callbacks:
-            callback()
-
-    _plugin_loaded = True
-    del _on_plugin_loaded_callbacks[:]
-
-
-def on_unloaded():
-    del _on_plugin_loaded_callbacks[:]
-
-
-def register_on_plugin_loaded(callback):
-    if _plugin_loaded:
-        callback()
-    else:
-        _on_plugin_loaded_callbacks.append(callback)
-
-
-def open_settings(window, scope):
+def open_settings(window: sublime.Window, scope: str) -> None:
     settings().open_settings(window, scope)
 
 
-def get_scopes_mapping() -> dict:
+def get_scopes_mapping() -> Dict[str, Any]:
     scopes_mapping = {}
     for settings_map in (
         settings().get_scoped(

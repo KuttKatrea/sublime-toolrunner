@@ -5,7 +5,7 @@ import os.path
 import re
 import tempfile
 from enum import Enum
-from typing import List, NamedTuple, Optional, Tuple, cast
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union, cast
 
 import sublime
 import sublime_plugin
@@ -66,7 +66,7 @@ class CwdSource:
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 
-TR_SETTING_TARGET_OUTPUT_NAME = "tr-target-output-name"
+TR_SETTING_TARGET_OUTPUT_ID = "tr-target-output-id"
 TR_SETTING_IS_OUTPUT = "tr-is-output"
 TR_SETTING_OUTPUT_ID = "tr-output-id"
 TR_SETTING_SOURCE_VIEW_ID = "tr-source-view-id"
@@ -77,7 +77,7 @@ class InlineInputProvider(engine.InputProvider):
         self._input_text = input_text
         self.source = source
 
-    def get_input_text(self):
+    def get_input_text(self) -> str:
         return self._input_text
 
     def __repr__(self):
@@ -97,11 +97,19 @@ class NullOutputProvider(engine.OutputProvider):
     def writeline(self, line: str):
         pass
 
+    def scroll_to_start(self):
+        pass
+
 
 class ViewOutputProvider(engine.OutputProvider):
-    def __init__(self, target_view: sublime.View) -> None:
+    def __init__(self, target_view: sublime.View, start_point: "sublime.Point") -> None:
         super().__init__()
         self._target_view = target_view
+        self._start_point = start_point
+
+    def scroll_to_start(self):
+        viewport_position = self._target_view.text_to_layout(self._start_point)
+        self._target_view.set_viewport_position(viewport_position)
 
     def writeline(self, line: str):
         line = line.replace("\r\n", "\n")
@@ -235,43 +243,13 @@ def create_output_provider(
     if output_target.mode == OutputTargetMode.NONE:
         return NullOutputProvider()
 
-    source_view = cmd.window.active_view()
+    if output_target.mode == OutputTargetMode.PANEL:
+        return get_panel_output_provider(cmd, output_target)
 
-    assert source_view
+    if output_target.mode == OutputTargetMode.BUFFER:
+        return get_buffer_output_provider(cmd, output_target)
 
-    source_view_id = str(source_view.id())
-    target_view_name: str = cast(
-        str, source_view.settings().get(TR_SETTING_TARGET_OUTPUT_NAME)
-    )
-
-    target_view = (
-        cmd.window.find_output_panel(target_view_name) if target_view_name else None
-    )
-
-    if not target_view:
-        target_view_name = f"ToolRunner Output ({source_view_id})"
-        target_view = cmd.window.create_output_panel(target_view_name)
-        target_view.settings().set(TR_SETTING_IS_OUTPUT, True)
-        target_view.settings().set(TR_SETTING_OUTPUT_ID, target_view_name)
-        target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
-        target_view.settings().set("line_numbers", False)
-        target_view.settings().set("translate_tabs_to_spaces", False)
-        target_view.set_read_only(True)
-
-        target_view_id = str(target_view.id())
-        source_view.settings().set(TR_SETTING_TARGET_OUTPUT_NAME, target_view_name)
-
-        _logger.info(
-            "Created view with id %s as %s for view %s",
-            target_view_id,
-            target_view_name,
-            source_view_id,
-        )
-
-    show_panel(cmd.window, target_view_name)
-    target_view.set_name(f"ToolRunner Output for {source_view.name()}")
-
-    return ViewOutputProvider(target_view)
+    raise Exception(f"Unknown output target {output_target}")
 
 
 def extract_extension(file_name: Optional[str]) -> str:
@@ -283,7 +261,9 @@ def extract_extension(file_name: Optional[str]) -> str:
     return pieces[1][1:]
 
 
-def discovered_as_tuple(data: Optional[dict]) -> Tuple[Optional[str], Optional[str]]:
+def discovered_as_tuple(
+    data: Optional[Dict[str, Any]]
+) -> Tuple[Optional[str], Optional[str]]:
     if not data:
         return (
             None,
@@ -359,19 +339,20 @@ def run_tool(
     tool_id: str,
     desc: Optional[str] = None,
     input_source: Optional[str] = None,
-    output_target: Optional[dict] = None,
-    placeholder_values: Optional[dict] = None,
-    cwd_sources: Optional[List[dict]] = None,
-    environment: Optional[dict] = None,
+    output_target: Optional[Dict[str, Any]] = None,
+    placeholder_values: Optional[Dict[str, Union[str, bool]]] = None,
+    cwd_sources: Optional[List[Dict[str, str]]] = None,
+    environment: Optional[Dict[str, str]] = None,
 ):
     if input_source is None:
         input_source = InputSource.AUTO_FILE
 
-    if output_target is None:
-        output_target = settings.get_default_output_target()
+    output_target = util.merge_maps_as_new(
+        settings.get_default_output_target(), output_target
+    )
 
     if cwd_sources is None:
-        cwd_sources = settings.get_default_cwd_sources()
+        cwd_sources = settings.get_default_cwd_sources() or []
 
     if environment is None:
         environment = {}
@@ -438,6 +419,8 @@ def run_tool(
         else:
             util.notify("Command finished successfully.")
 
+        output_provider.scroll_to_start()
+
     engine.run_command(engine_cmd, callback)
 
 
@@ -446,9 +429,9 @@ def run_group(
     group_id: str,
     profile: str,
     input_source: Optional[str],
-    output_target: Optional[dict],
-    environment: Optional[dict],
-    cwd_sources: Optional[List[dict]],
+    output_target: Optional[Dict[str, Any]],
+    environment: Optional[Dict[str, str]],
+    cwd_sources: Optional[List[Dict[str, str]]],
 ):
     group_descriptor = None
     profile_descriptor = None
@@ -482,10 +465,10 @@ def run_group(
         or group_descriptor.get("input_source")
     )
 
-    output_target = (
-        output_target
-        or profile_descriptor.get("output_target")
-        or group_descriptor.get("output_target")
+    output_target = util.merge_maps_as_new(
+        group_descriptor.get("output_target"),
+        profile_descriptor.get("output_target"),
+        output_target,
     )
 
     cwd_sources = (
@@ -494,10 +477,10 @@ def run_group(
         or group_descriptor.get("cwd_sources")
     )
 
-    environment = (
-        environment
-        or profile_descriptor.get("environment")
-        or group_descriptor.get("environment")
+    environment = util.merge_maps_as_new(
+        group_descriptor.get("environment"),
+        profile_descriptor.get("environment"),
+        environment,
     )
 
     run_tool(
@@ -615,3 +598,214 @@ def discover_path(current_dir: str, discovery_patterns: List[str]) -> Optional[s
         current_dir = new_current_dir
 
     return None
+
+
+def get_panel_output_provider(
+    cmd: sublime_plugin.WindowCommand, output_target: OutputTarget
+):
+    source_view = cmd.window.active_view()
+
+    assert source_view
+
+    source_view_id = str(source_view.id())
+    target_view_id: str = cast(
+        str, source_view.settings().get(TR_SETTING_TARGET_OUTPUT_ID)
+    )
+
+    target_view = (
+        cmd.window.find_output_panel(target_view_id) if target_view_id else None
+    )
+
+    if not target_view:
+        target_view_id = f"ToolRunner Output ({source_view_id})"  # Output panels are identified by a name
+
+        target_view = cmd.window.create_output_panel(target_view_id)
+        target_view.settings().set(TR_SETTING_IS_OUTPUT, True)
+        target_view.settings().set(TR_SETTING_OUTPUT_ID, target_view_id)
+        target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
+        target_view.settings().set("line_numbers", False)
+        target_view.settings().set("translate_tabs_to_spaces", False)
+        target_view.set_read_only(True)
+        if output_target.syntax:
+            target_view.assign_syntax(output_target.syntax)
+
+        target_view_id = str(target_view.id())
+        source_view.settings().set(TR_SETTING_TARGET_OUTPUT_ID, target_view_id)
+
+        _logger.info(
+            "Created view with id %s for view %s",
+            target_view_id,
+            source_view_id,
+        )
+
+        start_point = 0
+    else:
+        start_point = target_view.size()
+
+    show_panel(cmd.window, target_view_id)
+    target_view.set_name(f"ToolRunner Output for {source_view_id}")
+
+    return ViewOutputProvider(target_view, start_point)
+
+
+def get_buffer_output_provider(
+    cmd: sublime_plugin.WindowCommand, output_target: OutputTarget
+):
+    source_view = cmd.window.active_view()
+
+    assert source_view
+
+    source_view_id = source_view.id()
+    target_view_id = source_view.settings().get(TR_SETTING_TARGET_OUTPUT_ID)
+
+    target_view = None
+
+    if target_view_id is not None:
+        _logger.info("Looking for target_view_id: %s", target_view_id)
+        for view in cmd.window.views():
+            if view.id() == target_view_id:
+                _logger.info("Found: %s", view.name())
+                target_view = view
+
+    if not target_view:
+        target_view_name = f"ToolRunner Output ({source_view_id})"
+
+        target_view = create_output_buffer(cmd.window, source_view, output_target)
+        target_view_id = target_view.id()
+
+        target_view.settings().set(TR_SETTING_IS_OUTPUT, True)
+        target_view.settings().set(TR_SETTING_OUTPUT_ID, target_view_id)
+        target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
+        target_view.settings().set("line_numbers", False)
+        target_view.settings().set("translate_tabs_to_spaces", False)
+        target_view.set_read_only(True)
+        target_view.set_scratch(True)
+
+        if output_target.syntax:
+            target_view.assign_syntax(output_target.syntax)
+
+        source_view.settings().set(TR_SETTING_TARGET_OUTPUT_ID, target_view_id)
+
+        _logger.info(
+            "Created view with id %s as %s for view %s",
+            target_view_id,
+            target_view_name,
+            source_view_id,
+        )
+
+        start_point = 0
+    else:
+        start_point = target_view.size()
+
+    # cmd.window.focus_group()
+    cmd.window.focus_view(target_view)
+
+    target_view.set_name(f"ToolRunner Output for {source_view_id}")
+
+    return ViewOutputProvider(target_view, start_point)
+
+
+def create_output_buffer(
+    win: sublime.Window, view: sublime.View, output_target: OutputTarget
+) -> sublime.View:
+    group, idx = win.get_view_index(view)
+
+    if output_target.position not in set(
+        [
+            OutputTargetPosition.BOTTOM,
+            OutputTargetPosition.TOP,
+            OutputTargetPosition.LEFT,
+            OutputTargetPosition.RIGHT,
+        ]
+    ):
+        target = group
+    else:
+        layout = win.layout()
+
+        x1 = 0
+        y1 = 1
+        x2 = 2
+        y2 = 3
+
+        origin_coords = layout["cells"][group]
+        _logger.info(origin_coords)
+        #  min_y = 0
+        #  min_x = 0
+        max_target = None
+        min_target = None
+
+        for idx in range(0, len(layout["cells"])):
+            if idx == group:
+                continue
+            tgroup = layout["cells"][idx]
+
+            if tgroup[y1] == origin_coords[y2]:
+                _logger.info("Y-Matches: %s, %s", idx, tgroup)
+                if tgroup[x1] >= origin_coords[x1]:
+                    if max_target is None or tgroup[x1] < max_target:
+                        _logger.info("X Max Matches: %s, %s", idx, tgroup)
+                        max_target = idx
+                if tgroup[x1] <= origin_coords[x1]:
+                    if min_target is None or tgroup[x1] > min_target:
+                        _logger.info("X Min Matches: %s, %s", idx, tgroup)
+                        min_target = idx
+
+        _logger.info("Target: %s, %s", max_target, min_target)
+
+        target = max_target or min_target
+
+        if target is None:
+            cells = layout["cells"]
+
+            new_cells = list()
+            for cell in cells:
+                new_cells.append(
+                    [
+                        layout["cols"][cell[x1]],
+                        layout["rows"][cell[y1]],
+                        layout["cols"][cell[x2]],
+                        layout["rows"][cell[y2]],
+                    ]
+                )
+
+            current_cell = new_cells[group]
+
+            _logger.info("Cells: %s, %s", new_cells, current_cell)
+
+            new_cell = list(current_cell)
+
+            nc_height = (current_cell[y2] - current_cell[y1]) / 3
+            dic_y = current_cell[y2] - nc_height
+
+            new_cell[y1] = dic_y
+            current_cell[y2] = dic_y
+
+            new_cells.append(new_cell)
+
+            layout["rows"].append(dic_y)
+            rows = list(sorted(set(layout["rows"])))
+
+            layout["rows"] = rows
+
+            for cell in new_cells:
+                cell[x1] = layout["cols"].index(cell[x1])
+                cell[y1] = layout["rows"].index(cell[y1])
+                cell[x2] = layout["cols"].index(cell[x2])
+                cell[y2] = layout["rows"].index(cell[y2])
+
+            _logger.info("New cells: %s", new_cells)
+
+            layout["cells"] = new_cells
+
+            target = len(new_cells) - 1
+
+            win.set_layout(layout)
+
+        if target is not None:
+            win.focus_group(target)
+
+    target_view = win.new_file()
+
+    group, idx = win.get_view_index(view)
+
+    return target_view

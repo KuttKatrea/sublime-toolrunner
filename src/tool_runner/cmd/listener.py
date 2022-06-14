@@ -43,7 +43,7 @@ class ToolRunnerListener(sublime_plugin.EventListener):
 
     def on_pre_close(self, view):
         target_output_name = view.settings().get(
-            mapper.TR_SETTING_TARGET_OUTPUT_NAME, None
+            mapper.TR_SETTING_TARGET_OUTPUT_ID, None
         )
         if target_output_name:
             mapper.close_panel(view.window(), target_output_name)
