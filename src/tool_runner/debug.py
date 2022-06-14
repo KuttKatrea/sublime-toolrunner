@@ -23,7 +23,7 @@ def notify_on_error(error_msg: str = "Unhandled error"):
 
 
 def log_unused_args(*args, **kwargs):
-    _logger.info("Unused parameters: {}, {}", args, kwargs)
+    _logger.info("Unused parameters: %s, %s", args, kwargs)
 
 
 def forget_modules():

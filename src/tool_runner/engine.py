@@ -42,7 +42,7 @@ class Input:
 
 @dataclass()
 class Output:
-    mode: OutputMode = OutputMode
+    mode: OutputMode = "pipe"
     codec: str = DEFAULT_OUTPUT_CODEC
 
 
@@ -71,6 +71,7 @@ class Tool:
     input: Input = field(default_factory=Input)
     output: Output = field(default_factory=Output)
     placeholders: Dict[str, Placeholder] = field(default_factory=dict)
+    environment: Dict[str, str] = field(default_factory=dict)
 
 
 class InputProvider(Protocol):
@@ -93,6 +94,7 @@ class Command:
     placeholders_values: Dict[str, PlaceholderValue] = field(default_factory=dict)
     environment: Dict[str, str] = field(default_factory=dict)
     platform: str = sys.platform
+    cwd: str = os.getcwd()
 
 
 def get_command_array(
@@ -120,7 +122,7 @@ def get_command_array(
                 if placeholder_value:
                     flag_arguments.append(param.argument)
 
-    full_command_template = [] + command.tool.cmd + command.tool.arguments
+    full_command_template: List[str] = [] + command.tool.cmd + command.tool.arguments
     full_command = []
 
     for argument in full_command_template:
@@ -203,6 +205,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
 
     environment = {}
     environment.update(os.environ)
+    environment.update(command.tool.environment)
     environment.update(command.environment)
 
     startupinfo = None
@@ -219,9 +222,9 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=environment,
-            # shell=tool.shell,
+            shell=command.tool.shell,
             startupinfo=startupinfo,
-            # cwd=self._working_directory,
+            cwd=command.cwd,
         )
     except FileNotFoundError as err:
         raise Exception(f"Executable not found: {err}")
@@ -234,11 +237,16 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
     tool_process.stdin.write(input_stream)
     tool_process.stdin.close()
 
+    cancel_event = threading.Event()
+
     def subprocess_thread():
         assert tool_process.stdout is not None
 
         command.output_provider.writeline("> Reading stdout\n")
         while line := tool_process.stdout.readline():
+            if cancel_event.is_set():
+                pass
+                ### ?? tool_process.stdout.close()
             command.output_provider.writeline(line.decode(command.tool.output.codec))
         tool_process.wait()
         command.output_provider.writeline("> Process finished\n")

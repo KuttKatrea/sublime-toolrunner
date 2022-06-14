@@ -69,6 +69,8 @@ def get_tools():
 
 
 def get_tool(tool_id):
+    if tool_id is None:
+        return None
     _build_tool_list()
     return _tool_map.get(tool_id.lower(), None)
 
@@ -201,3 +203,11 @@ def get_extensions_mapping():
 def get_default_profile(group: str):
     default_profiles = get_setting("default_profiles", default=dict())
     return default_profiles.get(group, None)
+
+
+def get_default_output_target():
+    return get_setting("default_output_target")
+
+
+def get_default_cwd_sources():
+    return get_setting("default_cwd_sources")

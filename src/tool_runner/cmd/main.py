@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import Callable, Optional, Union
+from typing import Callable, List, Optional, Union
 
 import sublime
 import sublime_plugin
@@ -27,6 +27,8 @@ class ToolRunner(sublime_plugin.WindowCommand):
         input_source: Optional[str] = None,
         output_target: Optional[dict] = None,
         params: Optional[dict] = None,
+        environment: Optional[dict] = None,
+        cwd_sources: Optional[List[dict]] = None,
         *args,
         **kwargs,
     ):
@@ -51,24 +53,40 @@ class ToolRunner(sublime_plugin.WindowCommand):
                 input_source=input_source,
                 output_target=output_target,
                 placeholder_values=params,
+                environment=environment,
+                cwd_sources=cwd_sources,
             )
         elif group is not None:
             if default_profile:
                 profile = settings.get_default_profile(group)
 
             if profile is not None:
-                mapper.run_group(self, group, profile, input_source, output_target)
+                mapper.run_group(
+                    self,
+                    group_id=group,
+                    profile=profile,
+                    input_source=input_source,
+                    output_target=output_target,
+                    environment=environment,
+                    cwd_sources=cwd_sources,
+                )
             else:
                 ask_profile_to_run(
                     self,
                     group,
-                    create_run_group_callback(self, input_source, output_target),
+                    create_run_group_callback(
+                        self, input_source, output_target, environment, cwd_sources
+                    ),
                 )
         else:
             ask_type_to_run(
                 self,
-                create_run_tool_callback(self, input_source, output_target),
-                create_run_group_callback(self, input_source, output_target),
+                create_run_tool_callback(
+                    self, input_source, output_target, environment, cwd_sources
+                ),
+                create_run_group_callback(
+                    self, input_source, output_target, environment, cwd_sources
+                ),
             )
 
 
@@ -76,11 +94,18 @@ def create_run_tool_callback(
     self: sublime_plugin.WindowCommand,
     input_source: Optional[str],
     output_target: Optional[dict],
+    environment: Optional[dict],
+    cwd_sources: Optional[List[dict]],
 ) -> RunToolCallback:
     @debug.notify_on_error("Error running tool on callback")
     def run_tool_callback(tool: str):
         mapper.run_tool(
-            self, tool_id=tool, input_source=input_source, output_target=output_target
+            self,
+            tool_id=tool,
+            input_source=input_source,
+            output_target=output_target,
+            environment=environment,
+            cwd_sources=cwd_sources,
         )
 
     return run_tool_callback
@@ -90,10 +115,20 @@ def create_run_group_callback(
     self: sublime_plugin.WindowCommand,
     input_source: Optional[str],
     output_target: Optional[dict],
+    environment: Optional[dict],
+    cwd_sources: Optional[List[dict]],
 ) -> RunGroupCallback:
     @debug.notify_on_error("Error running profile on callback")
     def run_group_callback(group: str, profile: str):
-        mapper.run_group(self, group, profile, input_source, output_target)
+        mapper.run_group(
+            self,
+            group_id=group,
+            profile=profile,
+            input_source=input_source,
+            output_target=output_target,
+            environment=environment,
+            cwd_sources=cwd_sources,
+        )
 
     return run_group_callback
 
@@ -141,7 +176,7 @@ def ask_tool_to_run(
         desc = single_tool.get("desc")
 
         if desc is not None:
-            tool_selection_list.append(desc + " (" + tool_name + ")")
+            tool_selection_list.append(f"{desc} ({tool_name})")
         else:
             tool_selection_list.append(tool_name)
 

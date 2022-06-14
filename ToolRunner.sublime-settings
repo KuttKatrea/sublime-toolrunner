@@ -198,7 +198,10 @@
       "desc": "Python",
       "cmd": [
         "python"
-      ]
+      ],
+      "environment": {
+        "PYTHONUNBUFFERED": "1"
+      }
     },
     {
       "name": "ruby",
@@ -470,7 +473,8 @@
       "name": "wt-new-tab",
       "desc": "Windows Terminal",
       "cmd": [
-        "wt", "new-tab"
+        "wt",
+        "new-tab"
       ],
       "shell": false,
       "arguments": [
@@ -546,25 +550,72 @@
     }
   ],
   "default_scopes_mapping": {
-    "source.python": {"tool": "python" },
-    "source.ruby": {"tool": "ruby" },
-    "source.js": {"tool": "node" },
-    "source.powershell": {"tool": "pwsh" },
-    "source.dosbatch": {"tool": "cmd" },
-    "source.shell.bash": {"tool": "bash" },
-    "source.shell.fish": {"tool": "fish" },
-    "source.mongodb.js": {"tool": "mongodb" },
-    "source.cs": {"tool": "csi" }
+    "source.python": {
+      "tool": "python"
+    },
+    "source.ruby": {
+      "tool": "ruby"
+    },
+    "source.js": {
+      "tool": "node"
+    },
+    "source.powershell": {
+      "tool": "pwsh"
+    },
+    "source.dosbatch": {
+      "tool": "cmd"
+    },
+    "source.shell.bash": {
+      "tool": "bash"
+    },
+    "source.shell.fish": {
+      "tool": "fish"
+    },
+    "source.mongodb.js": {
+      "tool": "mongodb"
+    },
+    "source.cs": {
+      "tool": "csi"
+    }
   },
   "default_extensions_mapping": {
-    "mongodb": {"tool": "mongodb"},
-    "bat": {"tool": "cmd"},
-    "cmd": {"tool": "cmd"}
+    "mongodb": {
+      "tool": "mongodb"
+    },
+    "bat": {
+      "tool": "cmd"
+    },
+    "cmd": {
+      "tool": "cmd"
+    }
   },
   "default_output_target": {
     "mode": "panel",
     "syntax_file": "Packages/${package}/lang/ToolRunner Output.tmLanguage"
   },
+  "default_cwd_sources": [
+    {
+      "strategy": "project-source-file-folder"
+    },
+    {
+      "strategy": "project-folder"
+    },
+    {
+      "strategy": "project-file-dir"
+    },
+    {
+      "strategy": "source-file-dir"
+    },
+    {
+      "strategy": "tmp"
+    },
+    {
+      "strategy": "home"
+    },
+    {
+      "strategy": "unspecified"
+    },
+  ],
   "user_scopes_mapping": {},
   "user_extensions_mapping": {},
   // User-defined tools. Tools are appended Host + Platform + User + Default
@@ -574,7 +625,13 @@
   // User-tools
   "user_tool_overrides": {},
   "default_profiles": {}, // host-specific
-  "enable_default_keymap": true,
+  "enabled_default_keymap": true,
   "enable_default_tools_keymap": true,
-  "cwd": ["project", "file", "container:node_modules", "home", "other:/tmp"]
+  "cwd": [
+    "project",
+    "file",
+    "container:node_modules",
+    "home",
+    "other:/tmp"
+  ]
 }

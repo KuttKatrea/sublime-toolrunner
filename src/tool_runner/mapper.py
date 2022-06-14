@@ -1,14 +1,16 @@
 import dataclasses
 import logging
+import os
 import os.path
 import re
+import tempfile
 from enum import Enum
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple, cast
 
 import sublime
 import sublime_plugin
 
-from . import engine, mapper, settings, util
+from . import engine, settings, util
 
 
 class InputSource(str, Enum):
@@ -44,8 +46,23 @@ class OutputTarget:
     syntax: str = ""
 
 
-basepackage = re.sub(r"\.lib$", "", __package__)
-pluginname = "ToolRunner"
+class CwdStrategy(str, Enum):
+    UNSPECIFIED = "unspecified"
+    PROJECT_FILE_DIR = "project-file-dir"
+    PROJECT_FOLDER = "project-folder"
+    PROJECT_SOURCE_FILE_FOLDER = "project-source-file-folder"
+    SOURCE_FILE_DIR = "source-file-dir"
+    DISCOVER = "discover"
+    HOME = "home"
+    TMP = "tmp"
+
+
+@dataclasses.dataclass
+class CwdSource:
+    strategy: CwdStrategy
+    discovery_patterns: List[str] = dataclasses.field(default_factory=list)
+    folder_index: int = 0
+
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 
@@ -182,6 +199,9 @@ def create_input_provider_from(
         )
         update_selection = True
 
+    if region is None:
+        raise Exception(f"Invalid input-source: {input_source}")
+
     if update_selection:
 
         def selection_update():
@@ -189,9 +209,6 @@ def create_input_provider_from(
             source_view.sel().add(region)
 
         sublime.set_timeout(selection_update, 0)
-
-    if region is None:
-        raise Exception(f"Invalid input-source: {input_source}")
 
     input_text = source_view.substr(region)
 
@@ -220,8 +237,12 @@ def create_output_provider(
 
     source_view = cmd.window.active_view()
 
+    assert source_view
+
     source_view_id = str(source_view.id())
-    target_view_name = source_view.settings().get(TR_SETTING_TARGET_OUTPUT_NAME)
+    target_view_name: str = cast(
+        str, source_view.settings().get(TR_SETTING_TARGET_OUTPUT_NAME)
+    )
 
     target_view = (
         cmd.window.find_output_panel(target_view_name) if target_view_name else None
@@ -253,9 +274,9 @@ def create_output_provider(
     return ViewOutputProvider(target_view)
 
 
-def extract_extension(file_name: Optional[str]) -> Optional[str]:
+def extract_extension(file_name: Optional[str]) -> str:
     if not file_name:
-        return None
+        return ""
 
     pieces = os.path.splitext(file_name)
     # TODO: Empty extension
@@ -281,8 +302,10 @@ def discovered_as_tuple(data: Optional[dict]) -> Tuple[Optional[str], Optional[s
             data["group"],
         )
 
+    raise Exception("No tool or group key in dict")
 
-def discover_tool(source_view: sublime.View) -> Tuple[str, str]:
+
+def discover_tool(source_view: sublime.View) -> Tuple[Optional[str], Optional[str]]:
     current_selection = source_view.sel()[0]
     selection_scope = get_scopes(source_view, current_selection)
     _logger.info("Discovering tool from %s", selection_scope)
@@ -291,7 +314,7 @@ def discover_tool(source_view: sublime.View) -> Tuple[str, str]:
     _logger.info("Scope mappings: %s", scope_mapping)
 
     for scope in selection_scope.scopes:
-        tool_data = scope_mapping.get(scope)  # type: dict
+        tool_data = scope_mapping.get(scope)
 
         if tool_data:
             return discovered_as_tuple(tool_data)
@@ -338,22 +361,43 @@ def run_tool(
     input_source: Optional[str] = None,
     output_target: Optional[dict] = None,
     placeholder_values: Optional[dict] = None,
+    cwd_sources: Optional[List[dict]] = None,
+    environment: Optional[dict] = None,
 ):
     if input_source is None:
-        input_source = mapper.InputSource.AUTO_FILE
+        input_source = InputSource.AUTO_FILE
 
     if output_target is None:
-        output_target = {}
+        output_target = settings.get_default_output_target()
 
-    input_provider = mapper.create_input_provider_from(
-        cmd.window.active_view(), mapper.InputSource(input_source)
+    if cwd_sources is None:
+        cwd_sources = settings.get_default_cwd_sources()
+
+    if environment is None:
+        environment = {}
+
+    _logger.info(
+        "Running tool: tool_id=%s desc=%s input_source=%s output_target=%s placeholder_values=%s cwd_sources=%s environment=%s",
+        tool_id,
+        desc,
+        input_source,
+        output_target,
+        placeholder_values,
+        cwd_sources,
+        environment,
     )
 
-    output_provider = mapper.create_output_provider(
-        cmd, mapper.OutputTarget(**output_target)
-    )
+    source_view = cmd.window.active_view()
 
-    _logger.info("Input: %s", input_provider)
+    assert source_view
+
+    input_provider = create_input_provider_from(source_view, InputSource(input_source))
+
+    output_provider = create_output_provider(cmd, OutputTarget(**output_target))
+
+    cwd = get_usable_cwd_from(
+        cmd, [CwdSource(**cwd_source) for cwd_source in cwd_sources]
+    )
 
     tool_settings = settings.get_tool(tool_id)
 
@@ -361,7 +405,7 @@ def run_tool(
         raise Exception(f"Tool {tool_id} doesn't exists")
 
     if not desc:
-        desc = tool_settings["name"]
+        desc = cast(str, tool_settings["name"])
 
     util.notify(f"Running {desc}")
 
@@ -375,6 +419,7 @@ def run_tool(
             key: engine.Placeholder(**value)
             for key, value in tool_settings.get("params", {}).items()
         },
+        environment=tool_settings.get("environment", {}),
     )
 
     engine_cmd = engine.Command(
@@ -382,8 +427,9 @@ def run_tool(
         input_provider=input_provider,
         output_provider=output_provider,
         placeholders_values=placeholder_values,
-        environment={"PYTHONUNBUFFERED": "1"},
+        environment=environment,
         platform=sublime.platform(),
+        cwd=cwd,
     )
 
     def callback(return_code: int):
@@ -401,6 +447,8 @@ def run_group(
     profile: str,
     input_source: Optional[str],
     output_target: Optional[dict],
+    environment: Optional[dict],
+    cwd_sources: Optional[List[dict]],
 ):
     group_descriptor = None
     profile_descriptor = None
@@ -421,6 +469,9 @@ def run_group(
         if single_profile["name"] == profile:
             profile_descriptor = single_profile
 
+    if profile_descriptor is None:
+        raise Exception(f"No profile named {profile} for the group {group_id}")
+
     _logger.info("Running command for profile: %s", profile_descriptor)
 
     tool_id = profile_descriptor.get("tool", group_descriptor.get("tool"))
@@ -430,10 +481,23 @@ def run_group(
         or profile_descriptor.get("input_source")
         or group_descriptor.get("input_source")
     )
+
     output_target = (
         output_target
         or profile_descriptor.get("output_target")
         or group_descriptor.get("output_target")
+    )
+
+    cwd_sources = (
+        cwd_sources
+        or profile_descriptor.get("cwd_sources")
+        or group_descriptor.get("cwd_sources")
+    )
+
+    environment = (
+        environment
+        or profile_descriptor.get("environment")
+        or group_descriptor.get("environment")
     )
 
     run_tool(
@@ -443,4 +507,111 @@ def run_group(
         input_source=input_source,
         output_target=output_target,
         placeholder_values=profile_descriptor.get("params", {}),
+        cwd_sources=cwd_sources,
+        environment=environment,
     )
+
+
+def get_usable_cwd_from(
+    cmd: sublime_plugin.WindowCommand, cwd_sources: List[CwdSource]
+) -> str:
+
+    _logger.info("Testing: %s", cwd_sources)
+
+    for k in cwd_sources:
+        cwd = get_cwd_from(cmd, k)
+        _logger.info("Testing: %s", k)
+        if cwd is not None:
+            _logger.info("Returning: %s", cwd)
+            return cwd
+
+    _logger.info("Returning CWD")
+    return os.getcwd()
+
+
+def get_cwd_from(
+    cmd: sublime_plugin.WindowCommand, cwd_source: CwdSource
+) -> Optional[str]:
+    if cwd_source.strategy == CwdStrategy.PROJECT_FILE_DIR:
+        project_filename = cmd.window.project_file_name()
+
+        if not project_filename:
+            _logger.info("No project opened")
+            return None
+
+        return os.path.dirname(project_filename)
+
+    if cwd_source.strategy == CwdStrategy.PROJECT_FOLDER:
+        folders = cmd.window.folders()
+        if not folders:
+            _logger.info("No folders opened")
+            return None
+
+        if len(folders) < cwd_source.folder_index:
+            _logger.info(f"No folder with index {cwd_source.folder_index}")
+            return None
+
+        return folders[cwd_source.folder_index]
+
+    if cwd_source.strategy == CwdStrategy.PROJECT_SOURCE_FILE_FOLDER:
+        filename = get_active_filename(cmd)
+        if not filename:
+            return None
+
+        for folder in cmd.window.folders():
+            if folder in filename:
+                return folder
+
+        return None
+
+    if cwd_source.strategy == CwdStrategy.SOURCE_FILE_DIR:
+        filename = get_active_filename(cmd)
+        if not filename:
+            return None
+
+        return os.path.dirname(filename)
+
+    if cwd_source.strategy == CwdStrategy.DISCOVER:
+        filename = get_active_filename(cmd)
+        if not filename:
+            return None
+
+        return discover_path(os.path.dirname(filename), cwd_source.discovery_patterns)
+
+    if cwd_source.strategy == CwdStrategy.HOME:
+        return os.path.expanduser("~")
+
+    if cwd_source.strategy == CwdStrategy.TMP:
+        tempdir = os.path.join(tempfile.gettempdir(), "toolrunner")
+        if not os.path.exists(tempdir):
+            os.mkdir(tempdir)
+        return tempdir
+
+    return None
+
+
+def get_active_filename(cmd: sublime_plugin.WindowCommand):
+    active_view = cmd.window.active_view()
+    assert active_view
+    file_name = active_view.file_name()
+    if not file_name:
+        return None
+    return file_name
+
+
+def discover_path(current_dir: str, discovery_patterns: List[str]) -> Optional[str]:
+    while current_dir:
+        _logger.info("Testing %s for %s", current_dir, discovery_patterns)
+
+        for item in os.listdir(current_dir):
+            for pattern in discovery_patterns:
+                _logger.info("Matching %s with %s", item, pattern)
+                if re.fullmatch(pattern, item):
+                    return current_dir
+
+        new_current_dir = os.path.dirname(current_dir)
+        if current_dir == new_current_dir:  # we are in root
+            return None
+        current_dir = new_current_dir
+
+    return None

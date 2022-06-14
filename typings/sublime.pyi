@@ -1,5 +1,6 @@
 from enum import IntEnum, IntFlag
-from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union, Any
+
 
 DIP = float
 """Represents a device-independent pixel position."""
@@ -10,7 +11,7 @@ Vector = Tuple[DIP, DIP]
 Point = int
 """Represents the offset from the beginning of the editor buffer."""
 
-Value = Union[bool, str, int, float, List["Value"], Dict[str, "Value"]]
+Value = Union[bool, str, int, float, List[Any], Dict[str, Any]]
 """A JSON-equivalent value."""
 
 CommandArgs = Optional[Dict[str, Value]]
@@ -104,7 +105,7 @@ Represents an available auto-completion item. completion values may be of severa
 class Settings:
     """A dict like object that a settings hierarchy."""
 
-    def __setitem__(self, key: str, value: Value):
+    def __setitem__(self, key: str, value: Value) -> None:
         """Set the named key to the provided value."""
     def __getitem__(self, key: str) -> Value:
         """Get the named item to the provided value."""
@@ -112,9 +113,9 @@ class Settings:
         """Deletes the provided key from the setting. Note that a parent setting may also provide this key, thus deleting may not entirely remove a key."""
     def __contains__(self, key: str) -> bool:
         """Returns whether the provided key is set."""
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return the settings as a dict. This is not very fast."""
-    def setdefault(self, key: str, value: Value):
+    def setdefault(self, key: str, value: Value) -> Value:
         """Returns the value associated with the provided key. If it’s not present the provided value is assigned to the key and then returned."""
     def update(self, other=(), /, **kwargs):
         """
@@ -1458,6 +1459,7 @@ class Region:
         """
         ...
 
+
 class Selection(Sequence[Region]):
     def __len__(self) -> int:
         "The number of regions in the selection."
@@ -1670,7 +1672,7 @@ def find_resources(pattern) -> List[str]:
     # Finds resources whose file name matches the given pattern.
     pass
 
-def ui_info() -> dict:
+def ui_info() -> Dict[str, Any]:
     # Returns information about the user interface, including top-level keys system, theme and color_scheme   4096
     pass
 
@@ -1763,7 +1765,7 @@ def run_command(string, *args) -> None:
     Runs the named ApplicationCommand with the (optional) given args.
     """
 
-def get_macro() -> List[dict]:
+def get_macro() -> List[Dict[str, Any]]:
     """
     Returns a list of the commands and args that compromise the currently recorded macro. Each dict will contain the keys "command" and "args".
     """
@@ -1818,14 +1820,53 @@ def channel() -> str:
 class Sheet:
     ...
 
-class KindId:
-    ...
-
 class CompletionItem:
     ...
 
-class NewFileFlags:
-    ...
+class NewFileFlags(IntFlag):
+    """
+    Flags for creating/opening files in various ways.
+
+    See Window.new_html_sheet, Window.new_file and Window.open_file.
+
+    For backwards compatibility these values are also available outside this enumeration (without a prefix).
+    """
+    NONE = 0
+    ENCODED_POSITION = 1
+    """
+    Indicates that the file name should be searched for a :row or :row:col suffix.
+    """
+
+    TRANSIENT = 4
+    """
+    Open the file as a preview only: it won’t have a tab assigned it until modified.
+    """
+
+    FORCE_GROUP = 8
+    """
+    Don't select the file if it is open in a different group. Instead make a new clone of that file in the desired group.
+    """
+
+    SEMI_TRANSIENT = 16
+    """
+    If a sheet is newly created, it will be set to semi-transient. Semi-transient sheets generally replace other semi-transient sheets. This is used for the side-bar preview. Only valid with ADD_TO_SELECTION or REPLACE_MRU.
+    """
+
+    ADD_TO_SELECTION = 32
+    """
+    Add the file to the currently selected sheets in the group.
+    """
+    
+    REPLACE_MRU = 64
+    """
+    Causes the sheet to replace the most-recently used sheet in the current sheet selection.
+    """
+
+    CLEAR_TO_RIGHT = 128
+    """
+    All currently selected sheets to the right of the most-recently used sheet will be unselected before opening the file. Only valid in combination with ADD_TO_SELECTION.
+    """
+
 
 class SymbolLocation:
     ...
@@ -1833,5 +1874,289 @@ class SymbolLocation:
 class SymbolFlags:
     ...
 
-class SymbolSource:
-    ...
+class SymbolSource(IntEnum):
+    """
+    See Window.symbol_locations.
+
+    For backwards compatibility these values are also available outside this enumeration with a SYMBOL_SOURCE_ prefix.
+    """
+
+    ANY = 0
+    """
+    Use any source - both the index and open files.
+    """
+
+    INDEX = 1
+    """
+    Use the index created when scanning through files in a project folder.
+    """
+
+    OPEN_FILES = 2
+    """
+    Use the open files, unsaved or otherwise.
+    """
+
+class QuickPanelFlags(IntFlag):
+    """
+    Flags for use with a quick panel.
+    See Window.show_quick_panel.
+
+    For backwards compatibility these values are also available outside this enumeration (without a prefix).
+    """
+
+    NONE = 0
+
+    MONOSPACE_FONT = 1
+    """
+    Use a monospace font.
+    """
+
+    KEEP_OPEN_ON_FOCUS_LOST = 2
+    """
+    Keep the quick panel open if the window loses input focus.
+    """
+
+    WANT_EVENT = 4
+    """
+    Pass a second parameter to the on_done callback, a Event.
+    """
+
+class SymbolType(IntEnum):
+    """
+    See Window.symbol_locations and View.indexed_symbol_regions.
+
+    For backwards compatibility these values are also available outside this enumeration with a SYMBOL_TYPE_ prefix.
+    """
+
+    ANY = 0
+    """
+    Any symbol type - both definitions and references.
+    """
+
+    DEFINITION = 1
+    """
+    Only definitions.
+    """
+
+    REFERENCE = 2
+    """
+    Only references.
+    """
+
+class KindId(IntEnum):
+    """
+    For backwards compatibility these values are also available outside this enumeration with a KIND_ID_ prefix.
+    """
+
+    AMBIGUOUS = 0
+    KEYWORD = 1
+    TYPE = 2
+    FUNCTION = 3
+    NAMESPACE = 4
+    NAVIGATION = 5
+    MARKUP = 6
+    VARIABLE = 7
+    SNIPPET = 8
+    COLOR_REDISH = 9
+    COLOR_ORANGISH = 10
+    COLOR_YELLOWISH = 11
+    COLOR_GREENISH = 12
+    COLOR_CYANISH = 13
+    COLOR_BLUISH = 14
+    COLOR_PURPLISH = 15
+    COLOR_PINKISH = 16
+    COLOR_DARK = 17
+    COLOR_LIGHT = 18
+
+KIND_AMBIGUOUS = (KindId.AMBIGUOUS, '', '')
+
+KIND_KEYWORD = (KindId.KEYWORD, '', '')
+
+KIND_TYPE = (KindId.TYPE, '', '')
+
+KIND_FUNCTION = (KindId.FUNCTION, '', '')
+
+KIND_NAMESPACE = (KindId.NAMESPACE, '', '')
+
+KIND_NAVIGATION = (KindId.NAVIGATION, '', '')
+
+KIND_MARKUP = (KindId.MARKUP, '', '')
+
+KIND_VARIABLE = (KindId.VARIABLE, '', '')
+
+KIND_SNIPPET = (KindId.SNIPPET, 's', 'Snippet')
+
+class Edit:
+    """
+    A grouping of buffer modifications.
+    Edit objects are passed to TextCommands, and can not be created by the user. Using an invalid Edit object, or an Edit object from a different View, will cause the functions that require them to fail.
+    """
+
+class FindFlags(IntFlag):
+    """
+    Flags for use when searching through a View.
+
+    See View.find and View.find_all.
+
+    For backwards compatibility these values are also available outside this enumeration (without a prefix).
+    """
+
+    NONE = 0
+
+    IGNORECASE = 2
+    """
+    Whether case should be considered when matching the find pattern.
+    """
+
+    LITERAL = 1
+    """
+    Whether the find pattern should be matched literally or as a regex.
+    """
+
+class ContextStackFrame:
+    """
+    Represents a single stack frame in the syntax highlighting. See View.context_backtrace.
+    """
+
+    context_name: str
+    """
+    The name of the context.
+    """
+
+    source_file: str
+    """
+    The name of the file the context is defined in.
+    """
+
+    source_location: Tuple[int, int]
+    """
+    The location of the context inside the source file as a pair of row and column. Maybe be (-1, -1) if the location is unclear, like in tmLanguage based syntaxes.
+    """
+
+class RegionFlags(IntFlag):
+    """
+    Flags for use with added regions. See View.add_regions.
+
+    For backwards compatibility these values are also available outside this enumeration (without a prefix).
+    """
+    NONE = 0
+
+    DRAW_EMPTY = 1
+    """
+    Draw empty regions with a vertical bar. By default, they aren’t drawn at all.
+    """
+
+    HIDE_ON_MINIMAP = 2
+    """
+    Don’t show the regions on the minimap.
+    """
+
+    DRAW_EMPTY_AS_OVERWRITE = 4
+    """
+    Draw empty regions with a horizontal bar instead of a vertical one.
+    """
+
+    PERSISTENT = 16
+    """
+    Save the regions in the session.
+    """
+
+    DRAW_NO_FILL = 32
+    """
+    Disable filling the regions, leaving only the outline.
+    """
+
+    HIDDEN = 128
+    """
+    Don’t draw the regions.
+    """
+
+    DRAW_NO_OUTLINE = 256
+    """
+    Disable drawing the outline of the regions.
+    """
+
+    DRAW_SOLID_UNDERLINE = 512
+    """
+    Draw a solid underline below the regions.
+    """
+
+    DRAW_STIPPLED_UNDERLINE = 1024
+    """
+    Draw a stippled underline below the regions.
+    """
+
+    DRAW_SQUIGGLY_UNDERLINE = 2048
+    """
+    Draw a squiggly underline below the regions.
+    """
+
+    NO_UNDO = 8192
+
+
+class SymbolRegion:
+    """
+    Contains information about a Region of a View that contains a symbol.
+    """
+
+    name: str
+    """
+    The name of the symbol.
+    """
+
+    region: Region
+    """
+    The location of the symbol within the View.
+    """
+
+    syntax: str
+    """
+    The name of the syntax for the symbol.
+    """
+
+    type: SymbolType
+    """
+    The type of the symbol. See SymbolType.
+    """
+
+    kind: Kind
+    """
+    The kind of the symbol. See Kind.
+    """
+
+
+class PopupFlags(IntFlag):
+    """
+    Flags for use with popups.
+
+    See View.show_popup.
+
+    For backwards compatibility these values are also available outside this enumeration (without a prefix).
+    """
+
+    NONE = 0
+
+    COOPERATE_WITH_AUTO_COMPLETE = 2
+    """
+    Causes the popup to display next to the auto complete menu.
+    """
+
+    HIDE_ON_MOUSE_MOVE = 4
+    """
+    Causes the popup to hide when the mouse is moved, clicked or scrolled.
+    """
+
+    HIDE_ON_MOUSE_MOVE_AWAY = 8
+    """
+    Causes the popup to hide when the mouse is moved (unless towards the popup), or when clicked or scrolled.
+    """
+
+    KEEP_ON_SELECTION_MODIFIED = 16
+    """
+    Prevent the popup from hiding when the selection is modified.
+    """
+
+    HIDE_ON_CHARACTER_EVENT = 32
+    """
+    Hide the popup when a character is typed.
+    """
