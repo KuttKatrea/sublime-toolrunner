@@ -1,0 +1,15 @@
+%YAML 1.2
+---
+version: 2
+file_extensions: []
+scope: tool-runner.output
+contexts:
+  prototype:
+    - include: comments
+
+  main: []
+
+  comments:
+    # Comments begin with a '//' and finish at the end of the line.
+    - match: '^::.*::$\n'
+      scope: punctuation.definition.comment

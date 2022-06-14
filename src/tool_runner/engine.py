@@ -6,6 +6,7 @@ import tempfile
 import threading
 from abc import abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Callable, Dict, List, Literal, Optional, Protocol, TextIO, Union
 
 TEMPFILE_PREFIX = "sttr_"
@@ -215,6 +216,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
             startupinfo.dwFlags |= subprocess.CREATE_NEW_CONSOLE
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
+    command.output_provider.writeline(f":: Started: {datetime.now()} ::\n")
     try:
         tool_process = subprocess.Popen(
             args=command_array,
@@ -227,9 +229,10 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
             cwd=command.cwd,
         )
     except FileNotFoundError as err:
+        command.output_provider.writeline(f":: Error: {err} ::\n")
         raise Exception(f"Executable not found: {err}")
 
-    command.output_provider.writeline("> Process started\n")
+    _logger.info("Process started\n")
     assert tool_process.stdin is not None
 
     _logger.info("Feeding input")
@@ -242,14 +245,15 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
     def subprocess_thread():
         assert tool_process.stdout is not None
 
-        command.output_provider.writeline("> Reading stdout\n")
+        _logger.info("Reading stdout\n")
         while line := tool_process.stdout.readline():
             if cancel_event.is_set():
                 pass
                 ### ?? tool_process.stdout.close()
             command.output_provider.writeline(line.decode(command.tool.output.codec))
         tool_process.wait()
-        command.output_provider.writeline("> Process finished\n")
+        command.output_provider.writeline(f":: Finished: {datetime.now()} ::\n")
+        _logger.info("Process finished\n")
 
         if on_exit_callback is not None:
             on_exit_callback(tool_process.returncode)

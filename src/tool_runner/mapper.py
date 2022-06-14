@@ -43,7 +43,7 @@ class OutputTargetPosition(str, Enum):
 class OutputTarget:
     mode: OutputTargetMode = OutputTargetMode.PANEL
     position: OutputTargetPosition = OutputTargetPosition.BOTTOM
-    syntax: str = ""
+    syntax: str = "scope:tool-runner.output"
 
 
 class CwdStrategy(str, Enum):
