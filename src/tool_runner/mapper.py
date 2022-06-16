@@ -194,7 +194,7 @@ def create_input_provider_from(
         region = source_view.expand_by_class(
             current_selection, sublime.CLASS_EMPTY_LINE
         )
-        region.a += 1
+        # region.a += 1
         # region.b -= 1
         update_selection = True
 
@@ -629,7 +629,6 @@ def get_panel_output_provider(
         if output_target.syntax:
             target_view.assign_syntax(output_target.syntax)
 
-        target_view_id = str(target_view.id())
         source_view.settings().set(TR_SETTING_TARGET_OUTPUT_ID, target_view_id)
 
         _logger.info(
