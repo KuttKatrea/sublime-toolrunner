@@ -12,6 +12,11 @@ import sublime_plugin
 
 from . import engine, settings, util
 
+CELL_X1 = 0
+CELL_Y1 = 1
+CELL_X2 = 2
+CELL_Y2 = 3
+
 
 class InputSource(str, Enum):
     NONE = "none"
@@ -33,10 +38,8 @@ class OutputTargetMode(str, Enum):
 
 
 class OutputTargetPosition(str, Enum):
-    TOP = "top"
     BOTTOM = "bottom"
     RIGHT = "right"
-    LEFT = "left"
 
 
 @dataclasses.dataclass
@@ -115,7 +118,8 @@ class ViewOutputProvider(engine.OutputProvider):
         line = line.replace("\r\n", "\n")
 
         _logger.info("Writing: %s", line)
-        # self._target_view.run_command("move_to", {"to": "eof"})
+
+        _logger.info("Selection: %s", self._target_view.sel())
 
         read_only = self._target_view.is_read_only()
 
@@ -127,7 +131,10 @@ class ViewOutputProvider(engine.OutputProvider):
         if read_only:
             self._target_view.set_read_only(True)
 
-        self._target_view.show(self._target_view.size())
+        if self._target_view != self._target_view.window().active_view():
+            self._target_view.run_command("move_to", {"to": "eof"})
+
+        #    self._target_view.show(self._target_view.size())
 
 
 class SelectionScope(NamedTuple):
@@ -697,7 +704,7 @@ def get_buffer_output_provider(
         start_point = target_view.size()
 
     # cmd.window.focus_group()
-    cmd.window.focus_view(target_view)
+    # cmd.window.focus_view(target_view)
 
     target_view.set_name(f"ToolRunner Output for {source_view_id}")
 
@@ -711,100 +718,110 @@ def create_output_buffer(
 
     if output_target.position not in set(
         [
-            OutputTargetPosition.BOTTOM,
-            OutputTargetPosition.TOP,
-            OutputTargetPosition.LEFT,
             OutputTargetPosition.RIGHT,
+            OutputTargetPosition.BOTTOM,
         ]
     ):
         target = group
     else:
         layout = win.layout()
 
-        x1 = 0
-        y1 = 1
-        x2 = 2
-        y2 = 3
+        target = get_existing_target(
+            layout=layout, source_group=group, position=output_target.position
+        )
 
-        origin_coords = layout["cells"][group]
-        _logger.info(origin_coords)
-        #  min_y = 0
-        #  min_x = 0
-        max_target = None
-        min_target = None
-
-        for idx in range(0, len(layout["cells"])):
-            if idx == group:
-                continue
-            tgroup = layout["cells"][idx]
-
-            if tgroup[y1] == origin_coords[y2]:
-                _logger.info("Y-Matches: %s, %s", idx, tgroup)
-                if tgroup[x1] >= origin_coords[x1]:
-                    if max_target is None or tgroup[x1] < max_target:
-                        _logger.info("X Max Matches: %s, %s", idx, tgroup)
-                        max_target = idx
-                if tgroup[x1] <= origin_coords[x1]:
-                    if min_target is None or tgroup[x1] > min_target:
-                        _logger.info("X Min Matches: %s, %s", idx, tgroup)
-                        min_target = idx
-
-        _logger.info("Target: %s, %s", max_target, min_target)
-
-        target = max_target or min_target
+        _logger.info("Found target: %s", target)
 
         if target is None:
-            cells = layout["cells"]
+            layout, target = create_layout_cell(
+                layout=layout, source_group=group, position=output_target.position
+            )
 
-            new_cells = list()
-            for cell in cells:
-                new_cells.append(
-                    [
-                        layout["cols"][cell[x1]],
-                        layout["rows"][cell[y1]],
-                        layout["cols"][cell[x2]],
-                        layout["rows"][cell[y2]],
-                    ]
-                )
-
-            current_cell = new_cells[group]
-
-            _logger.info("Cells: %s, %s", new_cells, current_cell)
-
-            new_cell = list(current_cell)
-
-            nc_height = (current_cell[y2] - current_cell[y1]) / 3
-            dic_y = current_cell[y2] - nc_height
-
-            new_cell[y1] = dic_y
-            current_cell[y2] = dic_y
-
-            new_cells.append(new_cell)
-
-            layout["rows"].append(dic_y)
-            rows = list(sorted(set(layout["rows"])))
-
-            layout["rows"] = rows
-
-            for cell in new_cells:
-                cell[x1] = layout["cols"].index(cell[x1])
-                cell[y1] = layout["rows"].index(cell[y1])
-                cell[x2] = layout["cols"].index(cell[x2])
-                cell[y2] = layout["rows"].index(cell[y2])
-
-            _logger.info("New cells: %s", new_cells)
-
-            layout["cells"] = new_cells
-
-            target = len(new_cells) - 1
+            _logger.info("Created layout and target: %s, %s", layout, target)
 
             win.set_layout(layout)
 
-        if target is not None:
-            win.focus_group(target)
-
+    win.focus_group(target)
     target_view = win.new_file()
-
-    group, idx = win.get_view_index(view)
+    # group, idx = win.get_view_index(view)
+    win.focus_group(group)
 
     return target_view
+
+
+def get_existing_target(layout, source_group: int, position: OutputTargetPosition):
+    source_cell = layout["cells"][source_group]
+
+    if position == OutputTargetPosition.RIGHT:
+        match_coords_cross = (CELL_X2, CELL_X1)
+        match_coords_equal = (CELL_Y1, CELL_Y2)
+
+    else:
+        match_coords_cross = (CELL_Y2, CELL_Y1)
+        match_coords_equal = (CELL_X1, CELL_X2)
+
+    for idx, cell in enumerate(layout["cells"]):
+        if idx == source_group:
+            continue
+
+        if cell[match_coords_cross[1]] == source_cell[match_coords_cross[0]]:
+            if cell[match_coords_equal[0]] == source_cell[match_coords_equal[0]]:
+                if cell[match_coords_equal[1]] == source_cell[match_coords_equal[1]]:
+                    return idx
+
+    return None
+
+
+def create_layout_cell(layout, source_group, position):
+    rows = layout["rows"]
+    cols = layout["cols"]
+    cells = layout["cells"]
+
+    source_cell = cells[source_group]
+
+    if position == OutputTargetPosition.RIGHT:
+        KEEP_AXIS_1 = CELL_Y1
+        KEEP_AXIS_2 = CELL_Y2
+        SPLIT_AXIS_1 = CELL_X1
+        SPLIT_AXIS_2 = CELL_X2
+
+        list_to_split = cols
+    else:
+        KEEP_AXIS_1 = CELL_X1
+        KEEP_AXIS_2 = CELL_X2
+        SPLIT_AXIS_1 = CELL_Y1
+        SPLIT_AXIS_2 = CELL_Y2
+
+        list_to_split = rows
+
+    abs_1 = list_to_split[source_cell[SPLIT_AXIS_1]]
+    abs_2 = list_to_split[source_cell[SPLIT_AXIS_2]]
+
+    split = abs_1 + (abs_2 - abs_1) * 2 / 3
+
+    split_insert_position = [i for i, v in enumerate(list_to_split) if v > split][0]
+    list_to_split.insert(split_insert_position, split)
+
+    for cell in cells:
+        if cell[SPLIT_AXIS_1] >= split_insert_position:
+            cell[SPLIT_AXIS_1] += 1
+
+        if cell[SPLIT_AXIS_2] >= split_insert_position:
+            cell[SPLIT_AXIS_2] += 1
+
+    source_position = source_cell[SPLIT_AXIS_2]
+
+    source_cell[SPLIT_AXIS_2] = split_insert_position
+
+    target = len(cells)
+
+    new_cell = [0 for i in range(4)]
+
+    new_cell[KEEP_AXIS_1] = source_cell[KEEP_AXIS_1]
+    new_cell[KEEP_AXIS_2] = source_cell[KEEP_AXIS_2]
+    new_cell[SPLIT_AXIS_1] = split_insert_position
+    new_cell[SPLIT_AXIS_2] = source_position
+
+    cells.append(new_cell)
+
+    return {"rows": rows, "cols": cols, "cells": cells}, target
