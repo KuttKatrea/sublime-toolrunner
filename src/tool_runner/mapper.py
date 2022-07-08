@@ -703,8 +703,8 @@ def get_buffer_output_provider(
     else:
         start_point = target_view.size()
 
-    # cmd.window.focus_group()
-    # cmd.window.focus_view(target_view)
+    cmd.window.focus_view(target_view)
+    cmd.window.focus_view(source_view)
 
     target_view.set_name(f"ToolRunner Output for {source_view_id}")
 
@@ -743,7 +743,6 @@ def create_output_buffer(
 
     win.focus_group(target)
     target_view = win.new_file()
-    # group, idx = win.get_view_index(view)
     win.focus_group(group)
 
     return target_view
