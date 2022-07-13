@@ -7,6 +7,7 @@ from .src.tool_runner.cmd.listener import ToolRunnerListener
 from .src.tool_runner.cmd.main import ToolRunner
 from .src.tool_runner.cmd.open_settings import ToolRunnerOpenSettings
 from .src.tool_runner.cmd.switch_default_profile import ToolRunnerSwitchDefaultProfile
+from .src.tool_runner.cmd.unlink_output import ToolRunnerUnlinkOutput
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,3 +38,4 @@ assert ToolRunnerListener
 assert ToolRunner
 assert ToolRunnerOpenSettings
 assert ToolRunnerSwitchDefaultProfile
+assert ToolRunnerUnlinkOutput

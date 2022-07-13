@@ -4,9 +4,9 @@ from typing import Any, Optional
 import sublime
 import sublime_plugin
 
-_logger = logging.getLogger(f"{__package__}.{__name__}")
-
 from .. import mapper, settings
+
+_logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
 class ToolRunnerListener(sublime_plugin.EventListener):

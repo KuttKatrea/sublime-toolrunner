@@ -632,7 +632,7 @@ def get_panel_output_provider(
         target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
         target_view.settings().set("line_numbers", False)
         target_view.settings().set("translate_tabs_to_spaces", False)
-        target_view.set_read_only(True)
+
         if output_target.syntax:
             target_view.assign_syntax(output_target.syntax)
 
@@ -684,7 +684,6 @@ def get_buffer_output_provider(
         target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
         target_view.settings().set("line_numbers", False)
         target_view.settings().set("translate_tabs_to_spaces", False)
-        target_view.set_read_only(True)
         target_view.set_scratch(True)
 
         if output_target.syntax:

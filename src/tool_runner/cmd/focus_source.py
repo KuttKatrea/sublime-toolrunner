@@ -21,6 +21,6 @@ class ToolRunnerFocusSource(sublime_plugin.WindowCommand):
             util.notify("This view is not an output")
 
         for view in target_window.views():
-            if str(view.id()) == source_view_id:
+            if view.id() == source_view_id:
                 target_window.focus_view(view)
                 return

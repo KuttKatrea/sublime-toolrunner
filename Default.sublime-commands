@@ -22,5 +22,8 @@
         {
         "caption": "ToolRunner: Focus Source",
         "command": "tool_runner_focus_source"
+    }, {
+        "caption": "ToolRunner: Unlink Output",
+        "command": "tool_runner_unlink_output"
     }
 ]
