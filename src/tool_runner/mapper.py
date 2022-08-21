@@ -47,6 +47,7 @@ class OutputTarget:
     mode: OutputTargetMode = OutputTargetMode.PANEL
     position: OutputTargetPosition = OutputTargetPosition.BOTTOM
     syntax: str = "scope:tool-runner.output"
+    size: float = 0.5
 
 
 class CwdStrategy(str, Enum):
@@ -630,6 +631,7 @@ def get_panel_output_provider(
         target_view.settings().set(TR_SETTING_IS_OUTPUT, True)
         target_view.settings().set(TR_SETTING_OUTPUT_ID, target_view_id)
         target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
+        target_view.settings().set("word_wrap", False)
         target_view.settings().set("line_numbers", False)
         target_view.settings().set("translate_tabs_to_spaces", False)
 
@@ -682,6 +684,7 @@ def get_buffer_output_provider(
         target_view.settings().set(TR_SETTING_IS_OUTPUT, True)
         target_view.settings().set(TR_SETTING_OUTPUT_ID, target_view_id)
         target_view.settings().set(TR_SETTING_SOURCE_VIEW_ID, source_view_id)
+        target_view.settings().set("word_wrap", False)
         target_view.settings().set("line_numbers", False)
         target_view.settings().set("translate_tabs_to_spaces", False)
         target_view.set_scratch(True)
@@ -733,7 +736,12 @@ def create_output_buffer(
 
         if target is None:
             layout, target = create_layout_cell(
-                layout=layout, source_group=group, position=output_target.position
+                layout=layout,
+                source_group=group,
+                position=output_target.position,
+                size=output_target.size
+                if output_target.size < 1 and output_target.size > 0
+                else 0.5,
             )
 
             _logger.info("Created layout and target: %s, %s", layout, target)
@@ -770,7 +778,7 @@ def get_existing_target(layout, source_group: int, position: OutputTargetPositio
     return None
 
 
-def create_layout_cell(layout, source_group, position):
+def create_layout_cell(layout, source_group, position, size: float):
     rows = layout["rows"]
     cols = layout["cols"]
     cells = layout["cells"]
@@ -795,7 +803,7 @@ def create_layout_cell(layout, source_group, position):
     abs_1 = list_to_split[source_cell[SPLIT_AXIS_1]]
     abs_2 = list_to_split[source_cell[SPLIT_AXIS_2]]
 
-    split = abs_1 + (abs_2 - abs_1) * 2 / 3
+    split = abs_1 + (abs_2 - abs_1) * (1 - size)
 
     split_insert_position = [i for i, v in enumerate(list_to_split) if v > split][0]
     list_to_split.insert(split_insert_position, split)

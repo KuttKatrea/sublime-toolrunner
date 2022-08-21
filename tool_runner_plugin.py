@@ -9,8 +9,6 @@ from .src.tool_runner.cmd.open_settings import ToolRunnerOpenSettings
 from .src.tool_runner.cmd.switch_default_profile import ToolRunnerSwitchDefaultProfile
 from .src.tool_runner.cmd.unlink_output import ToolRunnerUnlinkOutput
 
-logging.basicConfig(level=logging.INFO)
-
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 
 
