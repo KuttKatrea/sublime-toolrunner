@@ -77,8 +77,8 @@ def get_tool(tool_id):
 
 def get_override(tool_id):
     project_tool_overrides = (
-        sublime.active_window()
-        .project_data()
+        (sublime.active_window()
+        .project_data() or {})
         .get("tool_runner", {})
         .get("tool_overrides", {})
     )
