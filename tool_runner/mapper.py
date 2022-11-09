@@ -132,8 +132,10 @@ class ViewOutputProvider(engine.OutputProvider):
         if read_only:
             self._target_view.set_read_only(True)
 
-        if self._target_view != self._target_view.window().active_view():
-            self._target_view.run_command("move_to", {"to": "eof"})
+        target_window = self._target_view.window()
+        if target_window:
+            if self._target_view != target_window.active_view():
+                self._target_view.run_command("move_to", {"to": "eof"})
 
         #    self._target_view.show(self._target_view.size())
 
@@ -361,6 +363,9 @@ def run_tool(
 
     if cwd_sources is None:
         cwd_sources = settings.get_default_cwd_sources() or []
+
+    if placeholder_values is None:
+        placeholder_values = {}
 
     if environment is None:
         environment = {}

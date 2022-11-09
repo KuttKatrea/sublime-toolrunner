@@ -2,7 +2,7 @@ import logging
 
 import sublime_plugin
 
-from .. import debug, mapper, settings, util
+from .. import debug, mapper, util
 
 _logger = logging.getLogger(f"{__package__}.{__name__}")
 

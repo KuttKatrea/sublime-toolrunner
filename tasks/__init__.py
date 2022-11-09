@@ -3,7 +3,7 @@ Development tasks for usage with Invoke
 """
 from invoke import Exit, UnexpectedExit, run, task
 
-SOURCE_PATHS = "tool_runner_plugin.py src tasks test"
+SOURCE_PATHS = "tool_runner"
 
 
 @task()
@@ -18,7 +18,7 @@ def flake8(_, warn=False):
 
 @task()
 def mypy(_, warn=False):
-    run(f"mypy --strict {SOURCE_PATHS}", warn=warn)
+    run(f"mypy --explicit-package-bases {SOURCE_PATHS}", warn=warn)
 
 
 @task()

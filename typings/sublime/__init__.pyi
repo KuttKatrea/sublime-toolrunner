@@ -10,7 +10,7 @@ import collections.abc
 DIP = float
 Vector = Tuple[DIP, DIP]
 Point = int
-Value = Union[bool, str, int, float, List[Any], Dict[str, Any]]
+Value = Union[bool, str, int, float, List["Value"], Dict[str, "Value"]]
 CommandArgs = Optional[Dict[str, Value]]
 Kind = Tuple[KindId, str, str]
 Event = dict
@@ -41,7 +41,7 @@ class Settings:
         """Returns the value associated with the provided key. If it’s not present the provided value is assigned to the key and then returned."""
         ...
     
-    def update(self, other: collections.abc.Mapping[str, Any], **kwargs) -> None:
+    def update(self, other: collections.abc.Mapping[str, Any], **kwargs: Any) -> None:
         """
         Update the settings from the provided argument(s).
 
@@ -139,7 +139,7 @@ class Window:
         """
         ...
     
-    def new_html_sheet(self, name: str, contents: str, flags: Literal[NewFileFlags.TRANSIENT, NewFileFlags.ADD_TO_SELECTION], group=...) -> Sheet:
+    def new_html_sheet(self, name: str, contents: str, flags: Literal[NewFileFlags.TRANSIENT, NewFileFlags.ADD_TO_SELECTION], group: int = ...) -> Sheet:
         """
         Construct a sheet with HTML contents rendered using minihtml Reference.
         :param name: The name of the sheet to show in the tab.
@@ -155,7 +155,7 @@ class Window:
         """
         ...
     
-    def new_file(self, flags: Literal[0, NewFileFlags.TRANSIENT], syntax: str) -> View:
+    def new_file(self, flags: NewFileFlags = NewFileFlags.NONE, syntax: str = '') -> View:
         """
         Create a new empty file.
         :param flags: Either 0 or NewFileFlags.TRANSIENT.
@@ -164,7 +164,7 @@ class Window:
         """
         ...
     
-    def open_file(self, fname: str, flags=..., group=...) -> View:
+    def open_file(self, fname: str, flags: NewFileFlags =..., group: int=...) -> View:
         """
         Open the named file. If the file is already opened, it will be brought to the front. Note that as file loading is asynchronous, operations on the returned view won’t be possible until its is_loading() method returns False.
         :param fname: The path to the file to open.
@@ -229,13 +229,13 @@ class Window:
         """
         ...
     
-    def get_sheet_index(self, sheet: Sheet) -> None:
+    def get_sheet_index(self, sheet: Sheet) -> Tuple[int, int]:
         """
         :returns: The a tuple of the group and index within the group of the given Sheet.
         """
         ...
     
-    def get_view_index(self, view: View) -> None:
+    def get_view_index(self, view: View) -> Tuple[int, int]:
         """
         :returns: The a tuple of the group and index within the group of the given View.
         """
@@ -253,7 +253,7 @@ class Window:
         """
         ...
     
-    def move_sheets_to_group(self, sheets: List[Sheet], group: int, insertion_idx=..., select=...) -> None:
+    def move_sheets_to_group(self, sheets: List[Sheet], group: int, insertion_idx: Point=..., select: bool=...) -> None:
         """
          Moves all provided sheets to specified group at insertion index provided. If an index is not provided defaults to last index of the destination group.
         :param sheets: The sheets to move.
@@ -946,7 +946,7 @@ class View:
         """
         ...
     
-    def expand_by_class(self, x: Union[Region, Point], classes: PointClassification, separators=..., sub_word_separators=...) -> Region:
+    def expand_by_class(self, x: Union[Region, Point], classes: PointClassification, separators='', sub_word_separators='') -> Region:
         """
         Expand the provided Point or Region to the left and right until each side lands on a location that matches the provided PointClassification. See find_by_class.
 
@@ -1501,20 +1501,21 @@ class PointClassification(IntFlag):
 
     For backwards compatibility these values are also available outside this enumeration with a CLASS_ prefix.
     """
-    NONE = ...
-    WORD_START = ...
-    WORD_END = ...
-    PUNCTUATION_START = ...
-    PUNCTUATION_END = ...
-    SUB_WORD_START = ...
-    SUB_WORD_END = ...
-    LINE_START = ...
-    LINE_END = ...
-    EMPTY_LINE = ...
+    NONE = 0
+    WORD_START = 1
+    WORD_END = 2
+    PUNCTUATION_START = 4
+    PUNCTUATION_END = 8
+    SUB_WORD_START = 16
+    SUB_WORD_END = 32
+    LINE_START = 64
+    LINE_END = 128
+    EMPTY_LINE = 256
 
 
-CLASS_NONE = ...
-CLASS_EMPTY_LINE = ...
+CLASS_NONE = PointClassification.NONE
+CLASS_EMPTY_LINE = PointClassification.EMPTY_LINE
+
 class QueryOperator(IntEnum):
     """
     Enumeration of operators able to be used when querying contexts.
@@ -1769,14 +1770,15 @@ class NewFileFlags(IntFlag):
 
     For backwards compatibility these values are also available outside this enumeration (without a prefix).
     """
-    NONE = ...
-    ENCODED_POSITION = ...
-    TRANSIENT = ...
-    FORCE_GROUP = ...
-    SEMI_TRANSIENT = ...
-    ADD_TO_SELECTION = ...
-    REPLACE_MRU = ...
-    CLEAR_TO_RIGHT = ...
+    NONE = 0
+    ENCODED_POSITION = 1
+    TRANSIENT = 4
+    FORCE_GROUP = 8
+    SEMI_TRANSIENT = 16
+    ADD_TO_SELECTION = 32
+    REPLACE_MRU = 64
+    CLEAR_TO_RIGHT = 128
+    FORCE_CLONE = 256
 
 
 class SymbolLocation:

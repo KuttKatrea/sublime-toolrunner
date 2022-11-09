@@ -7,7 +7,17 @@ import threading
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, List, Literal, Optional, Protocol, TextIO, Union
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Protocol,
+    TextIO,
+    Union,
+    cast,
+)
 
 TEMPFILE_PREFIX = "sttr_"
 
@@ -101,9 +111,9 @@ class Command:
 def get_command_array(
     command: Command, input_file=None, input_text=None, output_file=None
 ) -> List[str]:
-    positional_arguments = []
-    named_arguments = []
-    flag_arguments = []
+    positional_arguments: List[str] = []
+    named_arguments: List[str] = []
+    flag_arguments: List[str] = []
 
     if command.placeholders_values:
         for placeholder_key, placeholder_value in command.placeholders_values.items():
@@ -115,13 +125,13 @@ def get_command_array(
                 )
 
             if param.type == "positional":
-                positional_arguments.append(placeholder_value)
+                positional_arguments.append(cast(str, placeholder_value))
             elif param.type == "named":
-                named_arguments.append(param.argument)
-                named_arguments.append(placeholder_value)
+                named_arguments.append(cast(str, param.argument))
+                named_arguments.append(cast(str, placeholder_value))
             elif param.type == "flag":
                 if placeholder_value:
-                    flag_arguments.append(param.argument)
+                    flag_arguments.append(cast(str, param.argument))
 
     full_command_template: List[str] = [] + command.tool.cmd + command.tool.arguments
     full_command = []
@@ -204,7 +214,7 @@ def run_command(command: Command, on_exit_callback: Optional[Callable[[int], Non
     )
     _logger.info("Command to run: %s", command_array)
 
-    environment = {}
+    environment: Dict[str, str] = {}
     environment.update(os.environ)
     environment.update(command.tool.environment)
     environment.update(command.environment)

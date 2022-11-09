@@ -14,9 +14,6 @@ class ToolRunnerSettings:
 _tool_map: Dict[str, Dict[str, "sublime.Value"]] = {}
 _tool_list: List[Dict[str, "sublime.Value"]] = []
 
-_plugin_loaded = False
-_on_plugin_loaded_callbacks = list()
-
 basepackage = __package__.split(".", 1)[0]
 
 _settings = better_settings.load_for(basepackage, "ToolRunner")
@@ -77,8 +74,7 @@ def get_tool(tool_id):
 
 def get_override(tool_id):
     project_tool_overrides = (
-        (sublime.active_window()
-        .project_data() or {})
+        (sublime.active_window().project_data() or {})
         .get("tool_runner", {})
         .get("tool_overrides", {})
     )
@@ -110,6 +106,8 @@ def _build_tool_list():
             elif cmd and len(cmd) > 0:
                 key = cmd[0]
                 tool_item["name"] = key
+            else:
+                key = None
 
             if not key:
                 _logger.info("Tool has no valid name: %s", tool_item)
