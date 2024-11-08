@@ -29,6 +29,8 @@ class InputSource(str, Enum):
     FILE = "file"
     SCOPE = "scope"
     AUTO_SCOPE = "auto-scope"
+    DELIMITER = "delimiter"
+    AUTO_DELIMITER = "auto-delimiter"
 
 
 class OutputTargetMode(str, Enum):
@@ -178,6 +180,7 @@ def create_input_provider_from(
         InputSource.AUTO_BLOCK,
         InputSource.AUTO_LINE,
         InputSource.AUTO_SCOPE,
+        InputSource.AUTO_DELIMITER,
     }:
         if len(current_selection) > 0:
             return InlineInputProvider(
@@ -204,6 +207,42 @@ def create_input_provider_from(
         region = source_view.expand_by_class(
             current_selection, sublime.CLASS_EMPTY_LINE
         )
+
+        update_selection = True
+
+    if input_source in {InputSource.DELIMITER, InputSource.AUTO_DELIMITER}:
+
+        region_start = source_view.find(
+            pattern="%%",
+            start_pt=current_selection.begin(),
+            flags=sublime.FindFlags.LITERAL | sublime.FindFlags.REVERSE,
+        )
+
+        if not region_start.empty():
+            full_line_start = source_view.full_line(region_start.begin())
+            point_start = full_line_start.end()
+        else:
+            point_start = 0
+
+        region_end = source_view.find(
+            pattern="%%",
+            start_pt=current_selection.end(),
+            flags=sublime.FindFlags.LITERAL,
+        )
+
+        if not region_end.empty():
+            full_line_end = source_view.full_line(region_end.end())
+            point_end = full_line_end.begin()
+        else:
+            point_end = source_view.size()
+
+        region = sublime.Region(point_start, point_end)
+
+        sel = source_view.sel()
+
+        sel.clear()
+        sel.add(region)
+
         # region.a += 1
         # region.b -= 1
         update_selection = True

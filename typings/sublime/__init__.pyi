@@ -1874,9 +1874,27 @@ class FindFlags(IntFlag):
 
     For backwards compatibility these values are also available outside this enumeration (without a prefix).
     """
-    NONE = ...
-    IGNORECASE = ...
-    LITERAL = ...
+
+    NONE = 0
+
+    IGNORECASE = 1
+
+    LITERAL = 2
+
+    """
+    Whether to only match whole words. (4149)
+    """
+    WHOLEWORD = 4
+
+    """
+    Whether to search backwards. (4149)
+    """
+    REVERSE = 8
+
+    """
+    Whether to wrap around once the end is reached. (4149)
+    """
+    WRAP = 16
 
 
 class ContextStackFrame:
